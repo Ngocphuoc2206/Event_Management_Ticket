@@ -38,6 +38,7 @@ src/main/java
 ├── service/                # Service interfaces / service orchestration
 ├── util/                   # Shared utility classes
 └── Application.java
+```
 
 ## Rules
 
@@ -208,4 +209,7 @@ Use structured and meaningful logs.
 - remove unused imports and methods
 
 ---
+
+```
+
 ```
