@@ -23,33 +23,21 @@
 Prefer **package-by-feature** instead of package-by-layer for medium and large projects.
 
 ```
-src/main/java/com/example/project
-├── common/
-│   ├── config/
-│   ├── exception/
-│   ├── response/
-│   ├── utils/
-│   └── constants/
-│
-├── modules/
-│   ├── auth/
-│   │   ├── controller/
-│   │   ├── service/
-│   │   ├── dto/
-│   │   ├── entity/
-│   │   ├── repository/
-│   │   └── mapper/
-│   │
-│   ├── user/
-│   │   ├── controller/
-│   │   ├── service/
-│   │   ├── dto/
-│   │   ├── entity/
-│   │   ├── repository/
-│   │   └── mapper/
-│
+src/main/java
+├── config/                 # Spring configuration classes
+├── constant/               # Application constants
+├── context/                # Context holders / request context / security context helpers
+├── controller/             # REST controllers
+├── domain/                 # Domain models / entities / DTO definitions if applicable
+├── exception/              # Custom exceptions and global exception handlers
+├── interceptor/            # Request/response interceptors
+├── logger/                 # Logging utilities / custom logger components
+├── logic/                  # Business logic implementation
+├── mapper/                 # Object mapping between request, domain, response
+├── repository/             # Data access layer
+├── service/                # Service interfaces / service orchestration
+├── util/                   # Shared utility classes
 └── Application.java
-```
 
 ## Rules
 
@@ -67,6 +55,7 @@ src/main/java/com/example/project
 Use clear verb-based names.
 
 ```
+
 createUser()
 updateUser()
 deleteUser()
@@ -111,10 +100,11 @@ JWT_EXPIRATION_TIME
 Use plural resource names.
 
 ```
-GET    /api/users
-GET    /api/users/{id}
-POST   /api/users
-PUT    /api/users/{id}
+
+GET /api/users
+GET /api/users/{id}
+POST /api/users
+PUT /api/users/{id}
 DELETE /api/users/{id}
 
 ```
@@ -128,9 +118,9 @@ Use a common response wrapper when project requires consistency.
 @Getter
 @Builder
 public class ApiResponse<T> {
-    private boolean success;
-    private T data;
-    private String message;
+private boolean success;
+private T data;
+private String message;
 
     public static <T> ApiResponse<T> success(T data) {
         return ApiResponse.<T>builder()
@@ -139,6 +129,7 @@ public class ApiResponse<T> {
                 .message("Success")
                 .build();
     }
+
 }
 
 ```
@@ -217,3 +208,4 @@ Use structured and meaningful logs.
 - remove unused imports and methods
 
 ---
+```
