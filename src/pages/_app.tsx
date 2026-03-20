@@ -1,16 +1,18 @@
-import type { AppProps } from "next/app";
-import { Provider } from "react-redux";
-import { PersistGate } from "redux-persist/integration/react";
-
-import { store, persistor } from "@/stores";
 import "@/styles/globals.css";
+import type { AppProps } from "next/app";
+// Import font hỗ trợ tiếng Việt hoàn hảo
+import { Be_Vietnam_Pro } from 'next/font/google';
 
-export default function MyApp({ Component, pageProps }: AppProps) {
+const beVietnamPro = Be_Vietnam_Pro({ 
+  subsets: ['latin', 'vietnamese'],
+  weight: ['400', '500', '600', '700', '800', '900'],
+});
+
+export default function App({ Component, pageProps }: AppProps) {
   return (
-    <Provider store={store}>
-      <PersistGate loading={null} persistor={persistor}>
-        <Component {...pageProps} />
-      </PersistGate>
-    </Provider>
+    // Áp dụng font này cho toàn bộ ứng dụng
+    <main className={beVietnamPro.className}>
+      <Component {...pageProps} />
+    </main>
   );
 }
