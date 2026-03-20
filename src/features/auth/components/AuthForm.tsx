@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+import { AUTH_DIVIDER_TEXT_CLASSNAME, AUTH_SOCIAL_BUTTON_CLASSNAME } from "@/features/auth/constants";
+
 type AuthFieldProps = {
   children: ReactNode;
   error?: string;
@@ -11,9 +13,7 @@ export function AuthField({ children, error, label, trailing }: AuthFieldProps) 
   return (
     <label className="block">
       <span className="mb-2 flex items-center justify-between gap-4">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-          {label}
-        </span>
+        <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">{label}</span>
         {trailing}
       </span>
       {children}
@@ -51,12 +51,40 @@ type AuthAlertProps = {
   tone?: "error" | "success" | "warning";
 };
 
-export function AuthAlert({ message, tone = "warning" }: AuthAlertProps) {
-  const toneClasses = {
-    error: "border-rose-200 bg-rose-50 text-rose-600",
-    success: "border-emerald-200 bg-emerald-50 text-emerald-700",
-    warning: "border-amber-200 bg-amber-50 text-amber-700",
-  };
+const AUTH_ALERT_TONE_CLASSNAMES = {
+  error: "border-rose-200 bg-rose-50 text-rose-600",
+  success: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  warning: "border-amber-200 bg-amber-50 text-amber-700",
+} as const;
 
-  return <div className={`rounded-2xl border px-4 py-3 text-sm ${toneClasses[tone]}`}>{message}</div>;
+export function AuthAlert({ message, tone = "warning" }: AuthAlertProps) {
+  return <div className={`rounded-2xl border px-4 py-3 text-sm ${AUTH_ALERT_TONE_CLASSNAMES[tone]}`}>{message}</div>;
+}
+
+type AuthDividerProps = {
+  label: string;
+};
+
+export function AuthDivider({ label }: AuthDividerProps) {
+  return (
+    <div className="flex items-center gap-4">
+      <div className="h-px flex-1 bg-slate-200" />
+      <span className={AUTH_DIVIDER_TEXT_CLASSNAME}>{label}</span>
+      <div className="h-px flex-1 bg-slate-200" />
+    </div>
+  );
+}
+
+type AuthSocialButtonProps = {
+  icon: ReactNode;
+  label: string;
+};
+
+export function AuthSocialButton({ icon, label }: AuthSocialButtonProps) {
+  return (
+    <button type="button" className={AUTH_SOCIAL_BUTTON_CLASSNAME}>
+      {icon}
+      <span>{label}</span>
+    </button>
+  );
 }
