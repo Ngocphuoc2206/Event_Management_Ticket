@@ -9,10 +9,13 @@ public enum ErrorCode {
     NOT_FOUND(1002, "Not found!"),
     VALIDATION_ERROR(1003, "Validation Error"),
     EMAIL_ALREADY(1004, "Email already used"),
-    PHONE_NUMBER_USED(1005, "Phone number has used"),
+    EMAIL_NOT_FOUND(1005, "Email not found!"),
+    PHONE_NUMBER_USED(1006, "Phone number has used"),
+    INCORRECT_PASSWORD (1007, "Incorrect password!"),
     INTERNAL_ERROR (9999, "Internal Error!")
     ;
     private final int code;
+
     private final String message;
     ErrorCode(int code, String message){
         this.code = code;
