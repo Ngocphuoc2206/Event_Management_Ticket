@@ -1,4 +1,4 @@
-package com.envenHub.backend.modules.controller;
+package com.envenHub.backend.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
