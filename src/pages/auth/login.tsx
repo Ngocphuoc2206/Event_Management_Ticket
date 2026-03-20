@@ -3,8 +3,21 @@ import Link from "next/link";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
-import { AUTH_SHELL_CLASSNAME } from "@/features/auth/constants";
-import { AuthAlert, AuthField, AuthInputShell } from "@/features/auth/components/AuthForm";
+import {
+  AUTH_CHECKBOX_CLASSNAME,
+  AUTH_PASSWORD_TOGGLE_CLASSNAME,
+  AUTH_PRIMARY_BUTTON_CLASSNAME,
+  AUTH_SHELL_CLASSNAME,
+  AUTH_TEXT_INPUT_CLASSNAME,
+  AUTH_TEXT_LINK_CLASSNAME,
+} from "@/features/auth/constants";
+import {
+  AuthAlert,
+  AuthDivider,
+  AuthField,
+  AuthInputShell,
+  AuthSocialButton,
+} from "@/features/auth/components/AuthForm";
 import {
   EyeIcon,
   FacebookMark,
@@ -69,7 +82,7 @@ export default function LoginPage() {
                 <input
                   type="text"
                   placeholder="name@company.com"
-                  className="ml-3 w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
+                  className={AUTH_TEXT_INPUT_CLASSNAME}
                   {...register("identity", {
                     required: "Please enter your email or username",
                   })}
@@ -106,7 +119,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword((value) => !value)}
-                  className="ml-3 transition hover:text-slate-700"
+                  className={AUTH_PASSWORD_TOGGLE_CLASSNAME}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   <EyeIcon off={showPassword} />
@@ -117,51 +130,29 @@ export default function LoginPage() {
             <label className="flex items-center gap-3 text-sm leading-6 text-slate-500">
               <input
                 type="checkbox"
-                className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                className={AUTH_CHECKBOX_CLASSNAME}
                 {...register("rememberMe")}
               />
               <span>Remember me for 30 days</span>
             </label>
 
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="h-14 w-full rounded-2xl bg-gradient-to-r from-blue-700 to-violet-600 text-base font-semibold text-white shadow-[0_12px_30px_rgba(76,92,193,0.32)] transition hover:translate-y-[-1px] hover:shadow-[0_18px_40px_rgba(76,92,193,0.4)] disabled:cursor-not-allowed disabled:opacity-70"
-            >
+            <button type="submit" disabled={isSubmitting} className={AUTH_PRIMARY_BUTTON_CLASSNAME}>
               {isSubmitting ? "Logging In..." : "Log In"}
             </button>
           </form>
 
           <div className="mt-8">
-            <div className="flex items-center gap-4">
-              <div className="h-px flex-1 bg-slate-200" />
-              <span className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400">
-                Or continue with
-              </span>
-              <div className="h-px flex-1 bg-slate-200" />
-            </div>
+            <AuthDivider label="Or continue with" />
 
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              <button
-                type="button"
-                className="flex h-12 items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-white"
-              >
-                <GoogleMark />
-                <span>Google</span>
-              </button>
-              <button
-                type="button"
-                className="flex h-12 items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-white"
-              >
-                <FacebookMark />
-                <span>Facebook</span>
-              </button>
+              <AuthSocialButton icon={<GoogleMark />} label="Google" />
+              <AuthSocialButton icon={<FacebookMark />} label="Facebook" />
             </div>
           </div>
 
           <p className="mt-8 text-center text-sm text-slate-500">
             Don&apos;t have an account?{" "}
-            <Link href="/auth/register" className="font-semibold text-blue-700 transition hover:text-violet-600">
+            <Link href="/auth/register" className={AUTH_TEXT_LINK_CLASSNAME}>
               Sign Up
             </Link>
           </p>
