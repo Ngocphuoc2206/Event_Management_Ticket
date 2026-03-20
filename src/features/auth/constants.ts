@@ -1,3 +1,25 @@
+import type { UserRole } from "@/features/auth/types";
+
+export const APP_NAME = "EventHub";
+export const DEFAULT_PAGE_TITLE = "Event Ticketing System";
+export const DEFAULT_API_BASE_URL = "http://localhost:8080";
+
+export const AUTH_STORAGE_KEYS = {
+  accessToken: "accessToken",
+  refreshToken: "refreshToken",
+  userRole: "userRole",
+} as const;
+
+export const AUTH_REDIRECT_ROUTES: Record<UserRole, string> = {
+  ADMIN: "/admin",
+  ORGANIZER: "/organizer",
+  CUSTOMER: "/customer",
+};
+
+export const LOGIN_ENDPOINT = process.env.NEXT_PUBLIC_LOGIN_ENDPOINT || "/auth/login";
+export const REGISTER_ENDPOINT = process.env.NEXT_PUBLIC_REGISTER_ENDPOINT || "/auth/register";
+export const BACKEND_HEALTH_ENDPOINT = "/api/health";
+
 export const AUTH_FOOTER_LINKS = [
   { href: "/terms", label: "Terms of Service" },
   { href: "/privacy", label: "Privacy Policy" },

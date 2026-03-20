@@ -1,5 +1,6 @@
 import { isAxiosError } from "axios";
 
+import { AUTH_REDIRECT_ROUTES, AUTH_STORAGE_KEYS } from "@/features/auth/constants";
 import type { ApiResponse, ApiResult, AuthPayload, UserRole } from "@/features/auth/types";
 
 export function isApiResponse<T>(response: ApiResult<T>): response is ApiResponse<T> {
@@ -49,27 +50,18 @@ export function persistAuthTokens(payload?: AuthPayload) {
   }
 
   if (payload.accessToken) {
-    localStorage.setItem("accessToken", payload.accessToken);
+    localStorage.setItem(AUTH_STORAGE_KEYS.accessToken, payload.accessToken);
   }
 
   if (payload.refreshToken) {
-    localStorage.setItem("refreshToken", payload.refreshToken);
+    localStorage.setItem(AUTH_STORAGE_KEYS.refreshToken, payload.refreshToken);
   }
 
   if (payload.role) {
-    localStorage.setItem("userRole", payload.role);
+    localStorage.setItem(AUTH_STORAGE_KEYS.userRole, payload.role);
   }
 }
 
 export function getPostAuthRoute(role?: UserRole) {
-  switch (role) {
-    case "ADMIN":
-      return "/admin";
-    case "ORGANIZER":
-      return "/organizer";
-    case "CUSTOMER":
-      return "/customer";
-    default:
-      return "/";
-  }
+  return role ? AUTH_REDIRECT_ROUTES[role] : "/";
 }

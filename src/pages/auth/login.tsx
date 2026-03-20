@@ -5,9 +5,11 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
 import {
+  APP_NAME,
   AUTH_PRIMARY_BUTTON_CLASSNAME,
   AUTH_SHELL_CLASSNAME,
   AUTH_TEXT_INPUT_CLASSNAME,
+  DEFAULT_API_BASE_URL,
 } from "@/features/auth/constants";
 import {
   AuthAlert,
@@ -121,7 +123,7 @@ export default function LoginPage() {
   return (
     <>
       <Head>
-        <title>Login | EventHub</title>
+        <title>Login | {APP_NAME}</title>
       </Head>
 
       <AuthPageLayout logo={<LoginBrandMark />} logoText="EventHub">
@@ -133,7 +135,7 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-5">
             {isBackendAvailable === false ? (
-              <AuthAlert message="Frontend cannot reach backend at http://localhost:8080." tone="warning" />
+              <AuthAlert message={`Frontend cannot reach backend at ${DEFAULT_API_BASE_URL}.`} tone="warning" />
             ) : null}
             {submitError ? <AuthAlert message={submitError} tone="error" /> : null}
             {submitSuccess ? <AuthAlert message={submitSuccess} tone="success" /> : null}

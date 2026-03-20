@@ -1,9 +1,11 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
+import type { UserRole } from "@/features/auth/types";
+
 type UserState = {
   id: string | null;
   fullName: string | null;
-  role: "CUSTOMER" | "ORGANIZER" | "ADMIN" | null;
+  role: UserRole | null;
   isLoggedIn: boolean;
 };
 

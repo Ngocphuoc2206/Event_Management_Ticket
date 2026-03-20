@@ -1,8 +1,6 @@
-import axiosClient from "@/features/httpClient/axiosClient";
-
+import { LOGIN_ENDPOINT } from "@/features/auth/constants";
 import type { ApiResult, LoginPayload, LoginResponse } from "@/features/auth/types";
-
-const LOGIN_ENDPOINT = process.env.NEXT_PUBLIC_LOGIN_ENDPOINT || "/auth/login";
+import axiosClient from "@/features/httpClient/axiosClient";
 
 export async function loginUser(payload: LoginPayload) {
   const response = await axiosClient.post<ApiResult<LoginResponse>>(LOGIN_ENDPOINT, payload);

@@ -1,11 +1,13 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
+import { DEFAULT_PAGE_TITLE } from "@/features/auth/constants";
+
 type LayoutState = {
   title: string;
 };
 
 const initialState: LayoutState = {
-  title: "Event Ticketing System",
+  title: DEFAULT_PAGE_TITLE,
 };
 
 const layoutSlice = createSlice({
