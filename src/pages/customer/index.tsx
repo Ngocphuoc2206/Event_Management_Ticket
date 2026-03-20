@@ -1,9 +1,40 @@
-import UserLayout from "@/components/templates/UserLayout/UserLayout";
+import Head from "next/head";
+import { useRouter } from "next/router";
+
+import {
+  CustomerDashboardContent,
+  CustomerDashboardSidebar,
+  customerNavigationItems,
+  customerProfile,
+  customerRecentOrders,
+  customerStatCards,
+  customerUpcomingTickets,
+} from "@/features/customer";
 
 export default function CustomerDashboardPage() {
+  const router = useRouter();
+
   return (
-    <UserLayout title="Customer Dashboard">
-      <div className="mx-auto max-w-7xl px-6 py-10">Customer Dashboard</div>
-    </UserLayout>
+    <>
+      <Head>
+        <title>Customer Dashboard | EventHub</title>
+      </Head>
+
+      <main className="min-h-screen w-full bg-[#eef2f8] text-slate-900">
+        <div className="flex min-h-screen w-full flex-col xl:flex-row">
+          <CustomerDashboardSidebar
+            navigationItems={customerNavigationItems}
+            profile={customerProfile}
+            onLogout={() => void router.push("/auth/login")}
+          />
+          <CustomerDashboardContent
+            customerName={customerProfile.name}
+            statCards={customerStatCards}
+            upcomingTickets={customerUpcomingTickets}
+            recentOrders={customerRecentOrders}
+          />
+        </div>
+      </main>
+    </>
   );
 }

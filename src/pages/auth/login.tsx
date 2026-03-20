@@ -1,10 +1,21 @@
 import Head from "next/head";
 import Link from "next/link";
-import { useState } from "react";
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
-import { AUTH_SHELL_CLASSNAME } from "@/features/auth/constants";
-import { AuthAlert, AuthField, AuthInputShell } from "@/features/auth/components/AuthForm";
+import {
+  AUTH_PRIMARY_BUTTON_CLASSNAME,
+  AUTH_SHELL_CLASSNAME,
+  AUTH_TEXT_INPUT_CLASSNAME,
+} from "@/features/auth/constants";
+import {
+  AuthAlert,
+  AuthDivider,
+  AuthField,
+  AuthInputShell,
+  AuthSocialButton,
+} from "@/features/auth/components/AuthForm";
 import {
   EyeIcon,
   FacebookMark,
@@ -14,22 +25,37 @@ import {
   LoginBrandMark,
 } from "@/features/auth/components/AuthIcons";
 import { AuthPageLayout } from "@/features/auth/components/AuthPageLayout";
+import { loginUser } from "@/features/auth/services/login.service";
+import type { LoginResponse } from "@/features/auth/types";
+import {
+  getApiErrorMessage,
+  getApiResultData,
+  getApiResultMessage,
+  getPostAuthRoute,
+  persistAuthTokens,
+} from "@/features/auth/utils";
+import { checkBackendHealth } from "@/features/httpClient/health.service";
 
 type LoginFormValues = {
-  identity: string;
+  email: string;
   password: string;
   rememberMe: boolean;
 };
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 const INITIAL_FORM_VALUES: LoginFormValues = {
-  identity: "",
+  email: "",
   password: "",
   rememberMe: false,
 };
 
 export default function LoginPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
-  const [submitMessage, setSubmitMessage] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
+  const [isBackendAvailable, setIsBackendAvailable] = useState<boolean | null>(null);
   const {
     register,
     handleSubmit,
@@ -38,9 +64,58 @@ export default function LoginPage() {
     defaultValues: INITIAL_FORM_VALUES,
   });
 
-  const onSubmit = async () => {
-    setSubmitMessage("Login API will be connected when backend is ready.");
-    await Promise.resolve();
+  useEffect(() => {
+    let isMounted = true;
+
+    const verifyBackend = async () => {
+      try {
+        await checkBackendHealth();
+        if (isMounted) {
+          setIsBackendAvailable(true);
+        }
+      } catch {
+        if (isMounted) {
+          setIsBackendAvailable(false);
+        }
+      }
+    };
+
+    void verifyBackend();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const onSubmit = async (data: LoginFormValues) => {
+    setSubmitError(null);
+    setSubmitSuccess(null);
+
+    try {
+      const response = await loginUser({
+        email: data.email.trim(),
+        password: data.password,
+      });
+
+      const session = getApiResultData<LoginResponse>(response);
+      const responseMessage = getApiResultMessage(response);
+      const shouldRedirect = Boolean(session?.accessToken);
+
+      persistAuthTokens(session);
+      setSubmitSuccess(
+        responseMessage ||
+          (shouldRedirect ? "Login successful. Redirecting..." : "Login successful.")
+      );
+
+      if (shouldRedirect) {
+        const destination = getPostAuthRoute(session?.role);
+        window.setTimeout(() => {
+          void router.push(destination);
+        }, 800);
+      }
+    } catch (error) {
+      setSubmitError(getApiErrorMessage(error, "Login failed. Please check your credentials."));
+    }
   };
 
   return (
@@ -52,26 +127,30 @@ export default function LoginPage() {
       <AuthPageLayout logo={<LoginBrandMark />} logoText="EventHub">
         <div className={AUTH_SHELL_CLASSNAME}>
           <div className="text-left">
-            <h1 className="text-[2rem] font-bold tracking-tight text-slate-900 sm:text-[2.2rem]">
-              Welcome Back
-            </h1>
-            <p className="mt-3 max-w-md text-sm leading-6 text-slate-500">
-              Please enter your details to access your events.
-            </p>
+            <h1 className="text-[2rem] font-bold tracking-tight text-slate-900 sm:text-[2.2rem]">Welcome Back</h1>
+            <p className="mt-3 max-w-md text-sm leading-6 text-slate-500">Please enter your details to access your events.</p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-5">
-            {submitMessage ? <AuthAlert message={submitMessage} /> : null}
+            {isBackendAvailable === false ? (
+              <AuthAlert message="Frontend cannot reach backend at http://localhost:8080." tone="warning" />
+            ) : null}
+            {submitError ? <AuthAlert message={submitError} tone="error" /> : null}
+            {submitSuccess ? <AuthAlert message={submitSuccess} tone="success" /> : null}
 
-            <AuthField label="Email Or Username" error={errors.identity?.message}>
-              <AuthInputShell hasError={Boolean(errors.identity)} borderClassName="border-slate-300 focus-within:border-blue-400">
+            <AuthField label="Email Address" error={errors.email?.message}>
+              <AuthInputShell hasError={Boolean(errors.email)} borderClassName="border-slate-300 focus-within:border-blue-400">
                 <IdentityIcon />
                 <input
-                  type="text"
+                  type="email"
                   placeholder="name@company.com"
-                  className="ml-3 w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
-                  {...register("identity", {
-                    required: "Please enter your email or username",
+                  className={AUTH_TEXT_INPUT_CLASSNAME}
+                  {...register("email", {
+                    required: "Please enter your email address",
+                    pattern: {
+                      value: EMAIL_PATTERN,
+                      message: "Please enter a valid email address",
+                    },
                   })}
                 />
               </AuthInputShell>
@@ -81,10 +160,7 @@ export default function LoginPage() {
               label="Password"
               error={errors.password?.message}
               trailing={
-                <Link
-                  href="/auth/forgot-password"
-                  className="text-xs font-semibold text-blue-700 transition hover:text-violet-600"
-                >
+                <Link href="/auth/forgot-password" className="text-xs font-semibold text-blue-700 transition hover:text-violet-600">
                   Forgot password?
                 </Link>
               }
@@ -94,7 +170,7 @@ export default function LoginPage() {
                 <input
                   type={showPassword ? "text" : "password"}
                   placeholder="........"
-                  className="ml-3 w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
+                  className={AUTH_TEXT_INPUT_CLASSNAME}
                   {...register("password", {
                     required: "Please enter your password",
                     minLength: {
@@ -123,39 +199,17 @@ export default function LoginPage() {
               <span>Remember me for 30 days</span>
             </label>
 
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="h-14 w-full rounded-2xl bg-gradient-to-r from-blue-700 to-violet-600 text-base font-semibold text-white shadow-[0_12px_30px_rgba(76,92,193,0.32)] transition hover:translate-y-[-1px] hover:shadow-[0_18px_40px_rgba(76,92,193,0.4)] disabled:cursor-not-allowed disabled:opacity-70"
-            >
+            <button type="submit" disabled={isSubmitting} className={AUTH_PRIMARY_BUTTON_CLASSNAME}>
               {isSubmitting ? "Logging In..." : "Log In"}
             </button>
           </form>
 
           <div className="mt-8">
-            <div className="flex items-center gap-4">
-              <div className="h-px flex-1 bg-slate-200" />
-              <span className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400">
-                Or continue with
-              </span>
-              <div className="h-px flex-1 bg-slate-200" />
-            </div>
+            <AuthDivider label="Or continue with" />
 
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              <button
-                type="button"
-                className="flex h-12 items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-white"
-              >
-                <GoogleMark />
-                <span>Google</span>
-              </button>
-              <button
-                type="button"
-                className="flex h-12 items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-white"
-              >
-                <FacebookMark />
-                <span>Facebook</span>
-              </button>
+              <AuthSocialButton icon={<GoogleMark />} label="Google" />
+              <AuthSocialButton icon={<FacebookMark />} label="Facebook" />
             </div>
           </div>
 

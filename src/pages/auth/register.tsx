@@ -1,12 +1,21 @@
-import { isAxiosError } from "axios";
 import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
-import { AUTH_SHELL_CLASSNAME } from "@/features/auth/constants";
-import { AuthAlert, AuthField, AuthInputShell } from "@/features/auth/components/AuthForm";
+import {
+  AUTH_PRIMARY_BUTTON_CLASSNAME,
+  AUTH_SHELL_CLASSNAME,
+  AUTH_TEXT_INPUT_CLASSNAME,
+} from "@/features/auth/constants";
+import {
+  AuthAlert,
+  AuthDivider,
+  AuthField,
+  AuthInputShell,
+  AuthSocialButton,
+} from "@/features/auth/components/AuthForm";
 import {
   AppleMark,
   BrandMark,
@@ -14,63 +23,41 @@ import {
   GoogleMark,
   LockIcon,
   MailIcon,
+  PhoneIcon,
   UserIcon,
 } from "@/features/auth/components/AuthIcons";
 import { AuthPageLayout } from "@/features/auth/components/AuthPageLayout";
 import { registerUser } from "@/features/auth/services/register.service";
-import type { ApiResponse, ApiResult, RegisterResponse } from "@/features/auth/types";
+import type { RegisterResponse } from "@/features/auth/types";
+import {
+  getApiErrorMessage,
+  getApiResultData,
+  getApiResultMessage,
+  getPostAuthRoute,
+  persistAuthTokens,
+} from "@/features/auth/utils";
+import { checkBackendHealth } from "@/features/httpClient/health.service";
 
 type RegisterFormValues = {
   fullName: string;
   email: string;
+  phone: string;
   password: string;
   confirmPassword: string;
   acceptTerms: boolean;
 };
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_PATTERN = /^[0-9]{8,15}$/;
 
 const INITIAL_FORM_VALUES: RegisterFormValues = {
   fullName: "",
   email: "",
+  phone: "",
   password: "",
   confirmPassword: "",
   acceptTerms: false,
 };
-
-function getApiResultData(response: ApiResult<RegisterResponse>) {
-  return "data" in response ? response.data : response;
-}
-
-function getApiResultMessage(response: ApiResult<RegisterResponse>) {
-  return "message" in response ? response.message : undefined;
-}
-
-function getRegistrationErrorMessage(error: unknown) {
-  if (!isAxiosError<ApiResponse<RegisterResponse>>(error)) {
-    return "Registration failed. Please try again.";
-  }
-
-  const apiMessage =
-    error.response?.data?.message ||
-    (typeof error.response?.data === "string" ? error.response.data : null);
-
-  return apiMessage || "Registration failed. Please try again.";
-}
-
-function persistAuthTokens(response?: RegisterResponse) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  if (response?.accessToken) {
-    localStorage.setItem("accessToken", response.accessToken);
-  }
-
-  if (response?.refreshToken) {
-    localStorage.setItem("refreshToken", response.refreshToken);
-  }
-}
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -78,6 +65,7 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
+  const [isBackendAvailable, setIsBackendAvailable] = useState<boolean | null>(null);
   const {
     register,
     handleSubmit,
@@ -88,6 +76,29 @@ export default function RegisterPage() {
     defaultValues: INITIAL_FORM_VALUES,
   });
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const verifyBackend = async () => {
+      try {
+        await checkBackendHealth();
+        if (isMounted) {
+          setIsBackendAvailable(true);
+        }
+      } catch {
+        if (isMounted) {
+          setIsBackendAvailable(false);
+        }
+      }
+    };
+
+    void verifyBackend();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const onSubmit = async (data: RegisterFormValues) => {
     setSubmitError(null);
     setSubmitSuccess(null);
@@ -96,29 +107,31 @@ export default function RegisterPage() {
       const response = await registerUser({
         fullName: data.fullName.trim(),
         email: data.email.trim(),
+        phone: data.phone.trim(),
         password: data.password,
       });
 
-      const registeredUser = getApiResultData(response);
+      const registeredUser = getApiResultData<RegisterResponse>(response);
       const responseMessage = getApiResultMessage(response);
-      const shouldRedirectHome = Boolean(registeredUser?.accessToken);
+      const shouldRedirect = Boolean(registeredUser?.accessToken);
 
       persistAuthTokens(registeredUser);
       setSubmitSuccess(
         responseMessage ||
-          (shouldRedirectHome
+          (shouldRedirect
             ? "Account created successfully. Redirecting..."
             : "Account created successfully.")
       );
       reset(INITIAL_FORM_VALUES);
 
-      if (shouldRedirectHome) {
+      if (shouldRedirect) {
+        const destination = getPostAuthRoute(registeredUser?.role);
         window.setTimeout(() => {
-          void router.push("/");
+          void router.push(destination);
         }, 1200);
       }
     } catch (error) {
-      setSubmitError(getRegistrationErrorMessage(error));
+      setSubmitError(getApiErrorMessage(error, "Registration failed. Please try again."));
     }
   };
 
@@ -143,15 +156,16 @@ export default function RegisterPage() {
       >
         <div className={AUTH_SHELL_CLASSNAME}>
           <div className="text-center">
-            <h1 className="text-[2rem] font-bold tracking-tight text-slate-900 sm:text-[2.2rem]">
-              Create an account
-            </h1>
+            <h1 className="text-[2rem] font-bold tracking-tight text-slate-900 sm:text-[2.2rem]">Create an account</h1>
             <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-slate-500">
               Join thousands of event organizers and attendees worldwide.
             </p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-5">
+            {isBackendAvailable === false ? (
+              <AuthAlert message="Frontend cannot reach backend at http://localhost:8080." tone="warning" />
+            ) : null}
             {submitError ? <AuthAlert message={submitError} tone="error" /> : null}
             {submitSuccess ? <AuthAlert message={submitSuccess} tone="success" /> : null}
 
@@ -161,7 +175,7 @@ export default function RegisterPage() {
                 <input
                   type="text"
                   placeholder="Enter your full name"
-                  className="ml-3 w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
+                  className={AUTH_TEXT_INPUT_CLASSNAME}
                   {...register("fullName", {
                     required: "Please enter your full name",
                     minLength: {
@@ -179,12 +193,30 @@ export default function RegisterPage() {
                 <input
                   type="email"
                   placeholder="name@example.com"
-                  className="ml-3 w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
+                  className={AUTH_TEXT_INPUT_CLASSNAME}
                   {...register("email", {
                     required: "Please enter your email address",
                     pattern: {
                       value: EMAIL_PATTERN,
                       message: "Please enter a valid email address",
+                    },
+                  })}
+                />
+              </AuthInputShell>
+            </AuthField>
+
+            <AuthField label="Phone Number" error={errors.phone?.message}>
+              <AuthInputShell hasError={Boolean(errors.phone)}>
+                <PhoneIcon />
+                <input
+                  type="tel"
+                  placeholder="123456789"
+                  className={AUTH_TEXT_INPUT_CLASSNAME}
+                  {...register("phone", {
+                    required: "Please enter your phone number",
+                    pattern: {
+                      value: PHONE_PATTERN,
+                      message: "Phone number must contain 8 to 15 digits",
                     },
                   })}
                 />
@@ -198,7 +230,7 @@ export default function RegisterPage() {
                   <input
                     type={showPassword ? "text" : "password"}
                     placeholder="........"
-                    className="ml-3 w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
+                    className={AUTH_TEXT_INPUT_CLASSNAME}
                     {...register("password", {
                       required: "Please enter your password",
                       minLength: {
@@ -224,7 +256,7 @@ export default function RegisterPage() {
                   <input
                     type={showConfirmPassword ? "text" : "password"}
                     placeholder="........"
-                    className="ml-3 w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
+                    className={AUTH_TEXT_INPUT_CLASSNAME}
                     {...register("confirmPassword", {
                       required: "Please confirm your password",
                       validate: (value) => value === getValues("password") || "Passwords do not match",
@@ -262,45 +294,26 @@ export default function RegisterPage() {
                 .
               </span>
             </label>
-            {errors.acceptTerms ? (
-              <p className="-mt-3 text-sm text-rose-500">{errors.acceptTerms.message}</p>
-            ) : null}
+            {errors.acceptTerms ? <p className="-mt-3 text-sm text-rose-500">{errors.acceptTerms.message}</p> : null}
 
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="h-14 w-full rounded-2xl bg-gradient-to-r from-blue-700 to-violet-600 text-base font-semibold text-white shadow-[0_12px_30px_rgba(76,92,193,0.32)] transition hover:translate-y-[-1px] hover:shadow-[0_18px_40px_rgba(76,92,193,0.4)] disabled:cursor-not-allowed disabled:opacity-70"
-            >
+            <button type="submit" disabled={isSubmitting} className={AUTH_PRIMARY_BUTTON_CLASSNAME}>
               {isSubmitting ? "Creating Account..." : "Sign Up"}
             </button>
           </form>
 
           <div className="mt-8">
-            <div className="flex items-center gap-4">
-              <div className="h-px flex-1 bg-slate-200" />
-              <span className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400">
-                Or register with
-              </span>
-              <div className="h-px flex-1 bg-slate-200" />
-            </div>
+            <AuthDivider label="Or register with" />
 
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              <button
-                type="button"
-                className="flex h-12 items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-white"
-              >
-                <GoogleMark />
-                <span>Google</span>
-              </button>
-              <button
-                type="button"
-                className="flex h-12 items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-white"
-              >
-                <AppleMark />
-                <span>Apple</span>
-              </button>
+              <AuthSocialButton icon={<GoogleMark />} label="Google" />
+              <AuthSocialButton icon={<AppleMark />} label="Apple" />
             </div>
           </div>
+        </div>
+
+        <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/75 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500 shadow-[0_16px_40px_rgba(76,93,156,0.12)] backdrop-blur-xl">
+          <span className="h-2 w-2 rounded-full bg-rose-500" />
+          <span>Join 12,000+ active organizers</span>
         </div>
       </AuthPageLayout>
     </>
