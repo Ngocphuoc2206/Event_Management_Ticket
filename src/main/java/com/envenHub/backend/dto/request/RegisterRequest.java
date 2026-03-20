@@ -1,4 +1,4 @@
-package com.envenHub.backend.dto;
+package com.envenHub.backend.dto.request;
 
 import lombok.Data;
 

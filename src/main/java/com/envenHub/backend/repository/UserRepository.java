@@ -1,6 +1,6 @@
 package com.envenHub.backend.repository;
 
-import com.envenHub.backend.model.User;
+import com.envenHub.backend.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
