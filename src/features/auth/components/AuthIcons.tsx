@@ -59,6 +59,19 @@ export function UserIcon() {
   );
 }
 
+export function PhoneIcon() {
+  return (
+    <svg className="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path
+        d="m7.8 4.5 2 3.6a1.5 1.5 0 0 1-.25 1.8l-1.1 1.1a13.2 13.2 0 0 0 4.55 4.55l1.1-1.1a1.5 1.5 0 0 1 1.8-.25l3.6 2A1.5 1.5 0 0 1 20 17.5V20a1 1 0 0 1-1 1C10.72 21 3 13.28 3 4a1 1 0 0 1 1-1h2.5a1.5 1.5 0 0 1 1.3.75Z"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.8"
+      />
+    </svg>
+  );
+}
+
 export function LockIcon() {
   return (
     <svg className="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">

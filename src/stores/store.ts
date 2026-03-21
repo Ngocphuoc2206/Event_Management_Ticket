@@ -15,8 +15,8 @@ import userReducer from "./slices/user/user.slice";
 import layoutReducer from "./slices/layout/layout.slice";
 
 const rootReducer = combineReducers({
-  userReducer,
-  layoutReducer,
+  user: userReducer,
+  layout: layoutReducer,
 });
 
 const persistConfig = {
