@@ -1,4 +1,6 @@
 import Head from "next/head";
+
+import { APP_NAME, DEFAULT_PAGE_TITLE } from "@/features/auth/constants";
 import Header from "@/components/organisms/UserHeader/UserHeader";
 import Footer from "@/components/organisms/UserFooter/UserFooter";
 
@@ -11,7 +13,7 @@ export default function UserLayout({ title, children }: Props) {
   return (
     <>
       <Head>
-        <title>{title || "Event Ticketing System"}</title>
+        <title>{title ? `${title} | ${APP_NAME}` : DEFAULT_PAGE_TITLE}</title>
       </Head>
       <div className="min-h-screen flex flex-col">
         <Header />

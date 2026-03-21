@@ -1,18 +1,19 @@
-import { isAxiosError } from "axios";
 import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
 import {
+  APP_NAME,
   AUTH_CHECKBOX_CLASSNAME,
   AUTH_PASSWORD_TOGGLE_CLASSNAME,
   AUTH_PRIMARY_BUTTON_CLASSNAME,
-  AUTH_SHELL_CLASSNAME,
   AUTH_SECONDARY_LINK_CLASSNAME,
+  AUTH_SHELL_CLASSNAME,
   AUTH_TEXT_INPUT_CLASSNAME,
   AUTH_TEXT_LINK_CLASSNAME,
+  DEFAULT_API_BASE_URL,
 } from "@/features/auth/constants";
 import {
   AuthAlert,
@@ -28,56 +29,41 @@ import {
   GoogleMark,
   LockIcon,
   MailIcon,
+  PhoneIcon,
   UserIcon,
 } from "@/features/auth/components/AuthIcons";
 import { AuthPageLayout } from "@/features/auth/components/AuthPageLayout";
 import { registerUser } from "@/features/auth/services/register.service";
-import type { ApiResponse, RegisterResponse } from "@/features/auth/types";
-import { getApiResultData, getApiResultMessage } from "@/features/auth/utils/api-result";
+import type { RegisterResponse } from "@/features/auth/types";
+import {
+  getApiErrorMessage,
+  getApiResultData,
+  getApiResultMessage,
+  getPostAuthRoute,
+  persistAuthTokens,
+} from "@/features/auth/utils";
+import { checkBackendHealth } from "@/features/httpClient/health.service";
 
 type RegisterFormValues = {
   fullName: string;
   email: string;
+  phone: string;
   password: string;
   confirmPassword: string;
   acceptTerms: boolean;
 };
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_PATTERN = /^[0-9]{8,15}$/;
 
 const INITIAL_FORM_VALUES: RegisterFormValues = {
   fullName: "",
   email: "",
+  phone: "",
   password: "",
   confirmPassword: "",
   acceptTerms: false,
 };
-
-function getRegistrationErrorMessage(error: unknown) {
-  if (!isAxiosError<ApiResponse<RegisterResponse>>(error)) {
-    return "Registration failed. Please try again.";
-  }
-
-  const apiMessage =
-    error.response?.data?.message ||
-    (typeof error.response?.data === "string" ? error.response.data : null);
-
-  return apiMessage || "Registration failed. Please try again.";
-}
-
-function persistAuthTokens(response?: RegisterResponse) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  if (response?.accessToken) {
-    localStorage.setItem("accessToken", response.accessToken);
-  }
-
-  if (response?.refreshToken) {
-    localStorage.setItem("refreshToken", response.refreshToken);
-  }
-}
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -85,6 +71,9 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
+  const [isBackendAvailable, setIsBackendAvailable] = useState<boolean | null>(
+    null,
+  );
   const {
     register,
     handleSubmit,
@@ -95,6 +84,29 @@ export default function RegisterPage() {
     defaultValues: INITIAL_FORM_VALUES,
   });
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const verifyBackend = async () => {
+      try {
+        await checkBackendHealth();
+        if (isMounted) {
+          setIsBackendAvailable(true);
+        }
+      } catch {
+        if (isMounted) {
+          setIsBackendAvailable(false);
+        }
+      }
+    };
+
+    void verifyBackend();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const onSubmit = async (data: RegisterFormValues) => {
     setSubmitError(null);
     setSubmitSuccess(null);
@@ -103,36 +115,40 @@ export default function RegisterPage() {
       const response = await registerUser({
         fullName: data.fullName.trim(),
         email: data.email.trim(),
+        phone: data.phone.trim(),
         password: data.password,
       });
 
-      const registeredUser = getApiResultData(response);
+      const registeredUser = getApiResultData<RegisterResponse>(response);
       const responseMessage = getApiResultMessage(response);
-      const shouldRedirectHome = Boolean(registeredUser?.accessToken);
+      const shouldRedirect = Boolean(registeredUser?.accessToken);
 
       persistAuthTokens(registeredUser);
       setSubmitSuccess(
         responseMessage ||
-          (shouldRedirectHome
+          (shouldRedirect
             ? "Account created successfully. Redirecting..."
-            : "Account created successfully.")
+            : "Account created successfully."),
       );
       reset(INITIAL_FORM_VALUES);
 
-      if (shouldRedirectHome) {
+      if (shouldRedirect) {
+        const destination = getPostAuthRoute(registeredUser?.role);
         window.setTimeout(() => {
-          void router.push("/");
+          void router.push(destination);
         }, 1200);
       }
     } catch (error) {
-      setSubmitError(getRegistrationErrorMessage(error));
+      setSubmitError(
+        getApiErrorMessage(error, "Registration failed. Please try again."),
+      );
     }
   };
 
   return (
     <>
       <Head>
-        <title>Register | EventHub</title>
+        <title>Register | {APP_NAME}</title>
       </Head>
 
       <AuthPageLayout
@@ -150,15 +166,27 @@ export default function RegisterPage() {
       >
         <div className={AUTH_SHELL_CLASSNAME}>
           <div className="text-center">
-            <h1 className="text-[2rem] font-bold tracking-tight text-slate-900 sm:text-[2.2rem]">Create an account</h1>
+            <h1 className="text-[2rem] font-bold tracking-tight text-slate-900 sm:text-[2.2rem]">
+              Create an account
+            </h1>
             <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-slate-500">
               Join thousands of event organizers and attendees worldwide.
             </p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-5">
-            {submitError ? <AuthAlert message={submitError} tone="error" /> : null}
-            {submitSuccess ? <AuthAlert message={submitSuccess} tone="success" /> : null}
+            {isBackendAvailable === false ? (
+              <AuthAlert
+                message={`Frontend cannot reach backend at ${DEFAULT_API_BASE_URL}.`}
+                tone="warning"
+              />
+            ) : null}
+            {submitError ? (
+              <AuthAlert message={submitError} tone="error" />
+            ) : null}
+            {submitSuccess ? (
+              <AuthAlert message={submitSuccess} tone="success" />
+            ) : null}
 
             <AuthField label="Full Name" error={errors.fullName?.message}>
               <AuthInputShell hasError={Boolean(errors.fullName)}>
@@ -196,6 +224,24 @@ export default function RegisterPage() {
               </AuthInputShell>
             </AuthField>
 
+            <AuthField label="Phone Number" error={errors.phone?.message}>
+              <AuthInputShell hasError={Boolean(errors.phone)}>
+                <PhoneIcon />
+                <input
+                  type="tel"
+                  placeholder="123456789"
+                  className={AUTH_TEXT_INPUT_CLASSNAME}
+                  {...register("phone", {
+                    required: "Please enter your phone number",
+                    pattern: {
+                      value: PHONE_PATTERN,
+                      message: "Phone number must contain 8 to 15 digits",
+                    },
+                  })}
+                />
+              </AuthInputShell>
+            </AuthField>
+
             <div className="grid gap-5 sm:grid-cols-2">
               <AuthField label="Password" error={errors.password?.message}>
                 <AuthInputShell hasError={Boolean(errors.password)}>
@@ -216,14 +262,19 @@ export default function RegisterPage() {
                     type="button"
                     onClick={() => setShowPassword((value) => !value)}
                     className={AUTH_PASSWORD_TOGGLE_CLASSNAME}
-                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
                   >
                     <EyeIcon off={showPassword} />
                   </button>
                 </AuthInputShell>
               </AuthField>
 
-              <AuthField label="Confirm Password" error={errors.confirmPassword?.message}>
+              <AuthField
+                label="Confirm Password"
+                error={errors.confirmPassword?.message}
+              >
                 <AuthInputShell hasError={Boolean(errors.confirmPassword)}>
                   <LockIcon />
                   <input
@@ -232,14 +283,20 @@ export default function RegisterPage() {
                     className={AUTH_TEXT_INPUT_CLASSNAME}
                     {...register("confirmPassword", {
                       required: "Please confirm your password",
-                      validate: (value) => value === getValues("password") || "Passwords do not match",
+                      validate: (value) =>
+                        value === getValues("password") ||
+                        "Passwords do not match",
                     })}
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword((value) => !value)}
                     className={AUTH_PASSWORD_TOGGLE_CLASSNAME}
-                    aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                    aria-label={
+                      showConfirmPassword
+                        ? "Hide confirm password"
+                        : "Show confirm password"
+                    }
                   >
                     <EyeIcon off={showConfirmPassword} />
                   </button>
@@ -267,9 +324,17 @@ export default function RegisterPage() {
                 .
               </span>
             </label>
-            {errors.acceptTerms ? <p className="-mt-3 text-sm text-rose-500">{errors.acceptTerms.message}</p> : null}
+            {errors.acceptTerms ? (
+              <p className="-mt-3 text-sm text-rose-500">
+                {errors.acceptTerms.message}
+              </p>
+            ) : null}
 
-            <button type="submit" disabled={isSubmitting} className={AUTH_PRIMARY_BUTTON_CLASSNAME}>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className={AUTH_PRIMARY_BUTTON_CLASSNAME}
+            >
               {isSubmitting ? "Creating Account..." : "Sign Up"}
             </button>
           </form>
