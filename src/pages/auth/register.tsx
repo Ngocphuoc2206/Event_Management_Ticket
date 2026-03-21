@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useDispatch } from "react-redux";
 
 import {
   APP_NAME,
@@ -39,6 +40,7 @@ import {
   persistAuthTokens,
 } from "@/features/auth/utils";
 import { checkBackendHealth } from "@/features/httpClient/health.service";
+import { setUser } from "@/stores/slices/user/user.slice";
 
 type RegisterFormValues = {
   fullName: string;
@@ -63,6 +65,7 @@ const INITIAL_FORM_VALUES: RegisterFormValues = {
 
 export default function RegisterPage() {
   const router = useRouter();
+  const dispatch = useDispatch();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -115,9 +118,19 @@ export default function RegisterPage() {
 
       const registeredUser = getApiResultData<RegisterResponse>(response);
       const responseMessage = getApiResultMessage(response);
-      const shouldRedirect = Boolean(registeredUser?.accessToken);
+      const shouldRedirect = Boolean(registeredUser);
 
       persistAuthTokens(registeredUser);
+      if (registeredUser) {
+        dispatch(
+          setUser({
+            id: registeredUser.id ?? null,
+            fullName: registeredUser.fullName ?? null,
+            role: null,
+            isLoggedIn: true,
+          }),
+        );
+      }
       setSubmitSuccess(
         responseMessage ||
           (shouldRedirect
@@ -236,8 +249,8 @@ export default function RegisterPage() {
                     {...register("password", {
                       required: "Please enter your password",
                       minLength: {
-                        value: 8,
-                        message: "Password must be at least 8 characters",
+                        value: 6,
+                        message: "Password must be at least 6 characters",
                       },
                     })}
                   />

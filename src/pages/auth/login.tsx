@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useDispatch } from "react-redux";
 
 import {
   APP_NAME,
@@ -33,10 +34,10 @@ import {
   getApiErrorMessage,
   getApiResultData,
   getApiResultMessage,
-  getPostAuthRoute,
   persistAuthTokens,
 } from "@/features/auth/utils";
 import { checkBackendHealth } from "@/features/httpClient/health.service";
+import { setUser } from "@/stores/slices/user/user.slice";
 
 type LoginFormValues = {
   email: string;
@@ -54,6 +55,7 @@ const INITIAL_FORM_VALUES: LoginFormValues = {
 
 export default function LoginPage() {
   const router = useRouter();
+  const dispatch = useDispatch();
   const [showPassword, setShowPassword] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
@@ -101,18 +103,27 @@ export default function LoginPage() {
 
       const session = getApiResultData<LoginResponse>(response);
       const responseMessage = getApiResultMessage(response);
-      const shouldRedirect = Boolean(session?.accessToken);
+      const shouldRedirect = Boolean(session);
 
       persistAuthTokens(session);
+      if (session) {
+        dispatch(
+          setUser({
+            id: session.id ?? null,
+            fullName: session.fullName ?? null,
+            role: null,
+            isLoggedIn: true,
+          }),
+        );
+      }
       setSubmitSuccess(
         responseMessage ||
           (shouldRedirect ? "Login successful. Redirecting..." : "Login successful.")
       );
 
       if (shouldRedirect) {
-        const destination = getPostAuthRoute(session?.role);
         window.setTimeout(() => {
-          void router.push(destination);
+          void router.replace("/");
         }, 800);
       }
     } catch (error) {
