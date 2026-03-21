@@ -150,7 +150,7 @@ export default function RegisterPage() {
         headerAction={
           <p className="text-sm text-slate-500">
             Already have an account?{" "}
-            <Link href="/auth/login" className="font-semibold text-blue-700 transition hover:text-violet-600">
+            <Link href="/auth/login" className={AUTH_TEXT_LINK_CLASSNAME}>
               Log In
             </Link>
           </p>
@@ -244,7 +244,7 @@ export default function RegisterPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword((value) => !value)}
-                    className="ml-3 transition hover:text-slate-700"
+                    className={AUTH_PASSWORD_TOGGLE_CLASSNAME}
                     aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     <EyeIcon off={showPassword} />
@@ -267,7 +267,7 @@ export default function RegisterPage() {
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword((value) => !value)}
-                    className="ml-3 transition hover:text-slate-700"
+                    className={AUTH_PASSWORD_TOGGLE_CLASSNAME}
                     aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
                   >
                     <EyeIcon off={showConfirmPassword} />
@@ -279,18 +279,18 @@ export default function RegisterPage() {
             <label className="flex items-start gap-3 text-sm leading-6 text-slate-500">
               <input
                 type="checkbox"
-                className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                className={`mt-1 ${AUTH_CHECKBOX_CLASSNAME}`}
                 {...register("acceptTerms", {
                   required: "You must agree to the terms before continuing",
                 })}
               />
               <span>
                 I agree to the{" "}
-                <Link href="/terms" className="font-medium text-blue-700 hover:text-violet-600">
+                <Link href="/terms" className={AUTH_SECONDARY_LINK_CLASSNAME}>
                   Terms of Service
                 </Link>{" "}
                 and{" "}
-                <Link href="/privacy" className="font-medium text-blue-700 hover:text-violet-600">
+                <Link href="/privacy" className={AUTH_SECONDARY_LINK_CLASSNAME}>
                   Privacy Policy
                 </Link>
                 .

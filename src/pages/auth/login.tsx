@@ -184,7 +184,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword((value) => !value)}
-                  className="ml-3 transition hover:text-slate-700"
+                  className={AUTH_PASSWORD_TOGGLE_CLASSNAME}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   <EyeIcon off={showPassword} />
@@ -195,7 +195,7 @@ export default function LoginPage() {
             <label className="flex items-center gap-3 text-sm leading-6 text-slate-500">
               <input
                 type="checkbox"
-                className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                className={AUTH_CHECKBOX_CLASSNAME}
                 {...register("rememberMe")}
               />
               <span>Remember me for 30 days</span>
@@ -217,7 +217,7 @@ export default function LoginPage() {
 
           <p className="mt-8 text-center text-sm text-slate-500">
             Don&apos;t have an account?{" "}
-            <Link href="/auth/register" className="font-semibold text-blue-700 transition hover:text-violet-600">
+            <Link href="/auth/register" className={AUTH_TEXT_LINK_CLASSNAME}>
               Sign Up
             </Link>
           </p>
