@@ -6,9 +6,12 @@ import { useForm } from "react-hook-form";
 
 import {
   APP_NAME,
+  AUTH_CHECKBOX_CLASSNAME,
+  AUTH_PASSWORD_TOGGLE_CLASSNAME,
   AUTH_PRIMARY_BUTTON_CLASSNAME,
   AUTH_SHELL_CLASSNAME,
   AUTH_TEXT_INPUT_CLASSNAME,
+  AUTH_TEXT_LINK_CLASSNAME,
   DEFAULT_API_BASE_URL,
 } from "@/features/auth/constants";
 import {
@@ -57,7 +60,9 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
-  const [isBackendAvailable, setIsBackendAvailable] = useState<boolean | null>(null);
+  const [isBackendAvailable, setIsBackendAvailable] = useState<boolean | null>(
+    null,
+  );
   const {
     register,
     handleSubmit,
@@ -106,7 +111,9 @@ export default function LoginPage() {
       persistAuthTokens(session);
       setSubmitSuccess(
         responseMessage ||
-          (shouldRedirect ? "Login successful. Redirecting..." : "Login successful.")
+          (shouldRedirect
+            ? "Login successful. Redirecting..."
+            : "Login successful."),
       );
 
       if (shouldRedirect) {
@@ -116,7 +123,12 @@ export default function LoginPage() {
         }, 800);
       }
     } catch (error) {
-      setSubmitError(getApiErrorMessage(error, "Login failed. Please check your credentials."));
+      setSubmitError(
+        getApiErrorMessage(
+          error,
+          "Login failed. Please check your credentials.",
+        ),
+      );
     }
   };
 
@@ -129,19 +141,33 @@ export default function LoginPage() {
       <AuthPageLayout logo={<LoginBrandMark />} logoText="EventHub">
         <div className={AUTH_SHELL_CLASSNAME}>
           <div className="text-left">
-            <h1 className="text-[2rem] font-bold tracking-tight text-slate-900 sm:text-[2.2rem]">Welcome Back</h1>
-            <p className="mt-3 max-w-md text-sm leading-6 text-slate-500">Please enter your details to access your events.</p>
+            <h1 className="text-[2rem] font-bold tracking-tight text-slate-900 sm:text-[2.2rem]">
+              Welcome Back
+            </h1>
+            <p className="mt-3 max-w-md text-sm leading-6 text-slate-500">
+              Please enter your details to access your events.
+            </p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-5">
             {isBackendAvailable === false ? (
-              <AuthAlert message={`Frontend cannot reach backend at ${DEFAULT_API_BASE_URL}.`} tone="warning" />
+              <AuthAlert
+                message={`Frontend cannot reach backend at ${DEFAULT_API_BASE_URL}.`}
+                tone="warning"
+              />
             ) : null}
-            {submitError ? <AuthAlert message={submitError} tone="error" /> : null}
-            {submitSuccess ? <AuthAlert message={submitSuccess} tone="success" /> : null}
+            {submitError ? (
+              <AuthAlert message={submitError} tone="error" />
+            ) : null}
+            {submitSuccess ? (
+              <AuthAlert message={submitSuccess} tone="success" />
+            ) : null}
 
             <AuthField label="Email Address" error={errors.email?.message}>
-              <AuthInputShell hasError={Boolean(errors.email)} borderClassName="border-slate-300 focus-within:border-blue-400">
+              <AuthInputShell
+                hasError={Boolean(errors.email)}
+                borderClassName="border-slate-300 focus-within:border-blue-400"
+              >
                 <IdentityIcon />
                 <input
                   type="email"
@@ -162,12 +188,18 @@ export default function LoginPage() {
               label="Password"
               error={errors.password?.message}
               trailing={
-                <Link href="/auth/forgot-password" className="text-xs font-semibold text-blue-700 transition hover:text-violet-600">
+                <Link
+                  href="/auth/forgot-password"
+                  className="text-xs font-semibold text-blue-700 transition hover:text-violet-600"
+                >
                   Forgot password?
                 </Link>
               }
             >
-              <AuthInputShell hasError={Boolean(errors.password)} borderClassName="border-slate-300 focus-within:border-blue-400">
+              <AuthInputShell
+                hasError={Boolean(errors.password)}
+                borderClassName="border-slate-300 focus-within:border-blue-400"
+              >
                 <LockIcon />
                 <input
                   type={showPassword ? "text" : "password"}
@@ -201,7 +233,11 @@ export default function LoginPage() {
               <span>Remember me for 30 days</span>
             </label>
 
-            <button type="submit" disabled={isSubmitting} className={AUTH_PRIMARY_BUTTON_CLASSNAME}>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className={AUTH_PRIMARY_BUTTON_CLASSNAME}
+            >
               {isSubmitting ? "Logging In..." : "Log In"}
             </button>
           </form>
