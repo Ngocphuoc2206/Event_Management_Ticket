@@ -12,6 +12,8 @@ public enum ErrorCode {
     EMAIL_NOT_FOUND(1005, "Email not found!"),
     PHONE_NUMBER_USED(1006, "Phone number has used"),
     INCORRECT_PASSWORD (1007, "Incorrect password!"),
+    INVALID_REFRESH_TOKEN (1008, "Invalid Refresh Token"),
+    USER_NOT_FOUND (1009, "User not found"),
     INTERNAL_ERROR (9999, "Internal Error!")
     ;
     private final int code;
