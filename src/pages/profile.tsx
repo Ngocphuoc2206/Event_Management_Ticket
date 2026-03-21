@@ -162,10 +162,10 @@ export default function ProfilePage() {
                       <div className="hidden md:block absolute -top-4 -left-4 w-8 h-8 bg-[#F9FAFB] rounded-full border-b border-gray-100"></div>
                       <div className="hidden md:block absolute -bottom-4 -left-4 w-8 h-8 bg-[#F9FAFB] rounded-full border-t border-gray-100"></div>
 
-                      {ticket.qrCode ? (
-                        <>
-                          <div className="bg-white p-2 rounded-xl border border-gray-200 shadow-sm mb-3">
-                            <img src={ticket.qrCode} alt="QR Code" className="w-24 h-24" />
+                     {(ticket as any).qrCode ? (
+  <>
+    <div className="bg-white p-2 rounded-xl border border-gray-200 shadow-sm mb-3">
+      <img src={(ticket as any).qrCode} alt="QR Code" className="w-24 h-24" />
                           </div>
                           <p className="font-black text-gray-900 tracking-widest text-sm">{ticket.id}</p>
                           <button className="mt-4 text-xs font-bold text-indigo-600 hover:text-indigo-800 underline">Tải vé PDF</button>
