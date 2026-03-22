@@ -18,6 +18,20 @@ public class SecurityConfig {
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    // PermitAll endpoints;
+    public static final String[] PUBLIC_ENDPOINTS = {
+            "/api/health",
+            "/api/logout",
+            "/auth/register",
+            "/auth/login",
+            "/auth/refresh"
+    };
+
+    // Authenticated endpoints
+    public static final String[] PRIVATE_ENDPOINTS = {
+
+    };
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -33,11 +47,10 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                                 //API public
-//                                .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
-                                .requestMatchers("/auth/register","/auth/login").permitAll()
+                                .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
 
                                 // API authenticated
-                                .requestMatchers("/api/users/**").authenticated()
+                                .requestMatchers(PRIVATE_ENDPOINTS).authenticated()
                                 .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

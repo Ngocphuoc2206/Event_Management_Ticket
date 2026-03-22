@@ -41,10 +41,13 @@ public class UserController {
     private UserRepository userRepository;
 
     @PostMapping("/register")
-    public ApiResponse<User> register(@RequestBody RegisterRequest request) {
+    public ApiResponse<UserResponse> register(@RequestBody RegisterRequest request) {
         User user = userService.register(request);
-        ApiResponse<User> apiResponse = new ApiResponse<>();
-        apiResponse.setResults(user);
+
+        UserResponse userResponse = new UserResponse(user);
+
+        ApiResponse<UserResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setResults(userResponse);
         return apiResponse;
     }
 
@@ -105,7 +108,7 @@ public class UserController {
         Optional<RefreshToken> storedToken = refreshTokenRepository.findByToken(refreshToken);
 
         // Delete old refreshToken
-        refreshTokenRepository.delete(storedToken.get());
+        storedToken.ifPresent(refreshTokenRepository::delete);
 
         // Save new refreshToken
         RefreshToken newRt =new RefreshToken();
@@ -158,7 +161,7 @@ public class UserController {
         Cookie deleteCookie = new Cookie("refreshToken", null);
         deleteCookie.setHttpOnly(true);
         deleteCookie.setSecure(false);
-        deleteCookie.setPath("/");
+        deleteCookie.setPath("/auth/refresh");
         deleteCookie.setMaxAge(0);
 
         response.addCookie(deleteCookie);
@@ -170,5 +173,4 @@ public class UserController {
 
         return apiResponse;
     }
-
 }
