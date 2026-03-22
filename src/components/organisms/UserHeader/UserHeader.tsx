@@ -2,6 +2,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { useDispatch, useSelector } from "react-redux";
 
+import { clearPersistedAuth } from "@/features/auth/utils";
 import { clearUser } from "@/stores/slices/user/user.slice";
 import type { RootState } from "@/stores";
 
@@ -11,6 +12,7 @@ export default function UserHeader() {
   const { isLoggedIn, fullName } = useSelector((state: RootState) => state.user);
 
   const handleLogout = () => {
+    clearPersistedAuth();
     dispatch(clearUser());
     void router.push("/auth/login");
   };

@@ -7,8 +7,11 @@ import { useDispatch } from "react-redux";
 
 import {
   APP_NAME,
+  AUTH_CHECKBOX_CLASSNAME,
+  AUTH_PASSWORD_TOGGLE_CLASSNAME,
   AUTH_PRIMARY_BUTTON_CLASSNAME,
   AUTH_SHELL_CLASSNAME,
+  AUTH_TEXT_LINK_CLASSNAME,
   AUTH_TEXT_INPUT_CLASSNAME,
   DEFAULT_API_BASE_URL,
 } from "@/features/auth/constants";
@@ -34,6 +37,7 @@ import {
   getApiErrorMessage,
   getApiResultData,
   getApiResultMessage,
+  getPostAuthRoute,
   persistAuthTokens,
 } from "@/features/auth/utils";
 import { checkBackendHealth } from "@/features/httpClient/health.service";
@@ -111,7 +115,7 @@ export default function LoginPage() {
           setUser({
             id: session.id ?? null,
             fullName: session.fullName ?? null,
-            role: null,
+            role: session.role ?? null,
             isLoggedIn: true,
           }),
         );
@@ -122,8 +126,9 @@ export default function LoginPage() {
       );
 
       if (shouldRedirect) {
+        const destination = getPostAuthRoute(session?.role);
         window.setTimeout(() => {
-          void router.replace("/");
+          void router.replace(destination);
         }, 800);
       }
     } catch (error) {

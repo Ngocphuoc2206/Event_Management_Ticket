@@ -7,8 +7,12 @@ import { useDispatch } from "react-redux";
 
 import {
   APP_NAME,
+  AUTH_CHECKBOX_CLASSNAME,
+  AUTH_PASSWORD_TOGGLE_CLASSNAME,
   AUTH_PRIMARY_BUTTON_CLASSNAME,
+  AUTH_SECONDARY_LINK_CLASSNAME,
   AUTH_SHELL_CLASSNAME,
+  AUTH_TEXT_LINK_CLASSNAME,
   AUTH_TEXT_INPUT_CLASSNAME,
   DEFAULT_API_BASE_URL,
 } from "@/features/auth/constants";
@@ -126,7 +130,7 @@ export default function RegisterPage() {
           setUser({
             id: registeredUser.id ?? null,
             fullName: registeredUser.fullName ?? null,
-            role: null,
+            role: registeredUser.role ?? null,
             isLoggedIn: true,
           }),
         );
@@ -249,8 +253,6 @@ export default function RegisterPage() {
                     {...register("password", {
                       required: "Please enter your password",
                       minLength: {
-                        value: 6,
-                        message: "Password must be at least 6 characters",
                         value: 8,
                         message: "Password must be at least 8 characters",
                       },

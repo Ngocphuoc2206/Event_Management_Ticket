@@ -32,11 +32,11 @@ export type AuthPayload = UserResponse & {
   refreshToken?: string;
 };
 
-export type RegisterResponse = UserResponse;
+export type RegisterResponse = AuthPayload;
 
 export type LoginPayload = {
   email: string;
   password: string;
 };
 
-export type LoginResponse = UserResponse;
+export type LoginResponse = AuthPayload;
