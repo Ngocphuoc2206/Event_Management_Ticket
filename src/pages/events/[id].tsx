@@ -1,23 +1,23 @@
 import UserLayout from "@/components/templates/UserLayout/UserLayout";
 import { useRouter } from "next/router";
 import Link from "next/link";
-import { EVENT_LIST } from "../events"; // Tái sử dụng dữ liệu từ file events.tsx
+import { EVENT_LIST } from "../events"; // Reusing data from events.tsx
 
 export default function EventDetail() {
   const router = useRouter();
   const { id } = router.query;
   
-  // Tìm sự kiện theo ID, nếu không có lấy mặc định cái đầu tiên
+  // Find event by ID, fallback to the first event if not found
   const event = EVENT_LIST.find(e => e.id.toString() === id) || EVENT_LIST[0]; 
 
-  if (!event) return null; // Tránh lỗi chưa load dữ liệu
+  if (!event) return null; // Prevent rendering before data is loaded
 
-  // Hàm xử lý khi bấm nút "Chọn mua"
+  // Handle ticket selection
   const handleBuyTicket = (ticketType: string) => {
-    // Trong dự án thực tế, bạn sẽ lưu loại vé này vào Context/Redux hoặc LocalStorage tại đây
-    console.log(`Đã chọn mua vé ${ticketType} cho sự kiện: ${event.title}`);
+    // In a real project, store this ticket type in Context/Redux or LocalStorage here
+    console.log(`Selected ${ticketType} ticket for event: ${event.title}`);
     
-    // Chuyển hướng sang trang Giỏ hàng
+    // Redirect to Cart page
     router.push("/cart");
   };
 
@@ -25,21 +25,21 @@ export default function EventDetail() {
     <UserLayout title={event.title}>
       <div className="bg-white min-h-screen pb-20">
         
-        {/* 1. HERO IMAGE SECTION - Parallax mượt mà */}
+        {/* 1. HERO IMAGE SECTION - Smooth Parallax */}
         <div className="relative h-[65vh] w-full bg-gray-900">
           <img 
             src={event.image} 
             className="w-full h-full object-cover opacity-80" 
             alt={event.title} 
           />
-          {/* Gradient đen từ dưới lên để text nổi bật */}
+          {/* Bottom-to-top gradient for text visibility */}
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
           
           <div className="absolute bottom-12 left-0 w-full z-10">
             <div className="max-w-7xl mx-auto px-6">
               <Link href="/events" className="text-white/70 hover:text-white mb-6 flex items-center gap-2 w-max font-bold transition-colors">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                Quay lại danh sách
+                Back to list
               </Link>
               
               <div className="flex gap-3 mb-5">
@@ -76,11 +76,11 @@ export default function EventDetail() {
         <div className="max-w-7xl mx-auto px-6 mt-16">
           <div className="flex flex-col lg:flex-row gap-16">
             
-            {/* Cột trái: Thông tin chi tiết */}
+            {/* Left Column: Event details */}
             <div className="flex-1">
-              <h2 className="text-3xl font-black text-gray-900 mb-6">Giới thiệu sự kiện</h2>
+              <h2 className="text-3xl font-black text-gray-900 mb-6">About this event</h2>
               <p className="text-gray-600 leading-relaxed text-lg mb-12">
-                {event.description} Đây là một trong những sự kiện được mong chờ nhất trong năm nay. Với sự chuẩn bị kỹ lưỡng từ ban tổ chức, bạn sẽ được trải nghiệm một không gian đẳng cấp, hệ thống âm thanh ánh sáng hiện đại cùng những khách mời vô cùng đặc biệt. Đừng bỏ lỡ cơ hội tham gia sự kiện tuyệt vời này cùng bạn bè và người thân.
+                {event.description} This is one of the most highly anticipated events of the year. With careful preparation from the organizers, you will experience a world-class venue, state-of-the-art sound and lighting systems, and very special guest appearances. Don't miss out on this amazing opportunity to join us with your friends and family.
               </p>
               
               {/* Organized by */}
@@ -88,24 +88,24 @@ export default function EventDetail() {
                    <div className="flex items-center gap-5">
                      <img src="https://i.pravatar.cc/150?img=33" alt="Organizer" className="w-16 h-16 rounded-full shadow-md border-2 border-white" />
                      <div>
-                       <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Tổ chức bởi</p>
+                       <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Organized by</p>
                        <p className="text-xl font-black text-gray-900">EventHub Studio</p>
                      </div>
                    </div>
                    <button className="hidden md:block bg-white border border-gray-200 text-gray-900 px-6 py-3 rounded-xl font-bold text-sm hover:border-gray-400 transition-all shadow-sm">
-                      Theo dõi
+                     Follow
                    </button>
               </div>
 
-              {/* Lịch trình (Set Times) */}
+              {/* Set Times */}
               <div className="border-t border-gray-100 pt-12">
-                <h3 className="text-2xl font-black text-gray-900 mb-8">Lịch trình dự kiến</h3>
+                <h3 className="text-2xl font-black text-gray-900 mb-8">Event Schedule</h3>
                 <div className="space-y-4">
                   {[
-                    { time: "18:00", act: "Đón khách & Check-in" },
-                    { time: "19:00", act: "Khai mạc sự kiện" },
-                    { time: "20:00", act: "Hoạt động chính" },
-                    { time: "22:00", act: "Networking & Bế mạc" }
+                    { time: "18:00", act: "Welcome & Check-in" },
+                    { time: "19:00", act: "Opening Ceremony" },
+                    { time: "20:00", act: "Main Activities" },
+                    { time: "22:00", act: "Networking & Closing" }
                   ].map((item, idx) => (
                     <div key={idx} className="flex justify-between items-center bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:border-indigo-100 transition-colors">
                       <p className="font-black text-indigo-600 text-xl w-24">{item.time}</p>
@@ -116,49 +116,49 @@ export default function EventDetail() {
               </div>
             </div>
 
-            {/* Cột phải: Mua vé (Sticky) */}
+            {/* Right Column: Ticket Booking (Sticky) */}
             <div className="w-full lg:w-[420px]">
               <div className="sticky top-28 bg-white rounded-[40px] border border-gray-100 shadow-2xl p-8">
-                <h3 className="text-2xl font-black text-gray-900 mb-8">Chọn loại vé</h3>
+                <h3 className="text-2xl font-black text-gray-900 mb-8">Select Tickets</h3>
                 
                 <div className="space-y-5 mb-10">
-                   {/* Vé VIP */}
+                   {/* VIP Ticket */}
                    <div className="bg-[#F9FAFB] border border-gray-100 p-6 rounded-3xl group hover:border-indigo-600 hover:shadow-md transition-all">
                      <div className="flex justify-between items-start mb-4">
                        <div>
-                         <p className="font-black text-lg text-gray-900">Vé VIP (Hàng đầu)</p>
-                         <p className="text-xs text-red-500 font-bold mt-1 bg-red-50 w-max px-2 py-1 rounded-md">Chỉ còn 12 vé</p>
+                         <p className="font-black text-lg text-gray-900">VIP Ticket (Front Row)</p>
+                         <p className="text-xs text-red-500 font-bold mt-1 bg-red-50 w-max px-2 py-1 rounded-md">Only 12 left</p>
                        </div>
                        <span className="text-2xl font-black text-gray-900">${event.price + 50}</span>
                      </div>
                      <button 
                         onClick={() => handleBuyTicket('VIP')}
                         className="w-full bg-gray-900 text-white py-3.5 rounded-2xl font-bold group-hover:bg-indigo-600 transition-colors shadow-md active:scale-[0.98]">
-                        Chọn mua
+                        Select Ticket
                      </button>
                    </div>
 
-                   {/* Vé Thường */}
+                   {/* Standard Ticket */}
                    <div className="bg-[#F9FAFB] border border-gray-100 p-6 rounded-3xl group hover:border-indigo-600 hover:shadow-md transition-all">
                      <div className="flex justify-between items-start mb-4">
                        <div>
-                         <p className="font-black text-lg text-gray-900">Vé Tiêu Chuẩn</p>
-                         <p className="text-xs text-green-600 font-bold mt-1 bg-green-50 w-max px-2 py-1 rounded-md">Có sẵn</p>
+                         <p className="font-black text-lg text-gray-900">Standard Ticket</p>
+                         <p className="text-xs text-green-600 font-bold mt-1 bg-green-50 w-max px-2 py-1 rounded-md">Available</p>
                        </div>
                        <span className="text-2xl font-black text-gray-900">{event.price === 0 ? "Free" : `$${event.price}`}</span>
                      </div>
                      <button 
                         onClick={() => handleBuyTicket('STANDARD')}
                         className="w-full bg-white border border-gray-200 text-gray-900 py-3.5 rounded-2xl font-bold hover:bg-gray-50 transition-colors active:scale-[0.98]">
-                        Chọn mua
+                        Select Ticket
                      </button>
                    </div>
                 </div>
 
-                {/* Cam kết an toàn */}
+                {/* Security Promise */}
                 <div className="text-center text-xs text-gray-400 font-bold flex flex-col items-center gap-2">
                   <svg className="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                  Thanh toán bảo mật 100% qua EventHub
+                  100% Secure Payment via EventHub
                 </div>
               </div>
             </div>
