@@ -1,6 +1,6 @@
 import "@/styles/globals.css";
 import type { AppProps } from "next/app";
-// Import font hỗ trợ tiếng Việt hoàn hảo
+
 import { Be_Vietnam_Pro } from 'next/font/google';
 
 const beVietnamPro = Be_Vietnam_Pro({ 
@@ -10,7 +10,7 @@ const beVietnamPro = Be_Vietnam_Pro({
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
-    // Áp dụng font này cho toàn bộ ứng dụng
+  
     <main className={beVietnamPro.className}>
       <Component {...pageProps} />
     </main>
