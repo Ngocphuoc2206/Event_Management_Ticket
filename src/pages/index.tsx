@@ -407,6 +407,7 @@ export default function HomePage() {
     setExpandedCardId(null);
   };
 
+export default function HomePage() {
   return (
     <>
       <Head>
