@@ -1,4 +1,4 @@
-package com.envenHub.backend.Security;
+package com.envenHub.backend.security;
 
 import com.envenHub.backend.util.JwtUtil;
 import jakarta.servlet.FilterChain;
