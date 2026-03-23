@@ -18,6 +18,7 @@ export const AUTH_REDIRECT_ROUTES: Record<UserRole, string> = {
 
 export const LOGIN_ENDPOINT = process.env.NEXT_PUBLIC_LOGIN_ENDPOINT || "/auth/login";
 export const REGISTER_ENDPOINT = process.env.NEXT_PUBLIC_REGISTER_ENDPOINT || "/auth/register";
+export const LOGOUT_ENDPOINT = process.env.NEXT_PUBLIC_LOGOUT_ENDPOINT || "/auth/logout";
 export const BACKEND_HEALTH_ENDPOINT = "/api/health";
 
 export const AUTH_FOOTER_LINKS = [

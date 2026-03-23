@@ -1,6 +1,6 @@
 import Head from "next/head";
-import { useRouter } from "next/router";
 
+import { useAuth } from "@/features/auth/hooks/useAuth";
 import {
   CustomerDashboardContent,
   CustomerDashboardSidebar,
@@ -12,7 +12,7 @@ import {
 } from "@/features/customer";
 
 export default function CustomerDashboardPage() {
-  const router = useRouter();
+  const { logout } = useAuth();
 
   return (
     <>
@@ -25,7 +25,7 @@ export default function CustomerDashboardPage() {
           <CustomerDashboardSidebar
             navigationItems={customerNavigationItems}
             profile={customerProfile}
-            onLogout={() => void router.push("/auth/login")}
+            onLogout={() => void logout()}
           />
           <CustomerDashboardContent
             customerName={customerProfile.name}

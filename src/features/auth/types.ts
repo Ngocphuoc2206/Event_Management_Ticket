@@ -28,6 +28,16 @@ export type AuthPayload = {
   refreshToken?: string;
 };
 
+export type AuthSession = {
+  id: string | null;
+  fullName: string | null;
+  email: string | null;
+  phone: string | null;
+  role: UserRole | null;
+  accessToken: string | null;
+  refreshToken: string | null;
+};
+
 export type RegisterResponse = AuthPayload;
 
 export type LoginPayload = {
@@ -36,3 +46,9 @@ export type LoginPayload = {
 };
 
 export type LoginResponse = AuthPayload;
+
+export type LogoutPayload = Partial<LoginPayload>;
+
+export type LogoutResponse = {
+  message?: string;
+};
