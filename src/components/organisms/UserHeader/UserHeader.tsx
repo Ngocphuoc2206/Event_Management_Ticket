@@ -18,24 +18,36 @@ export default function UserHeader() {
   };
 
   return (
-    <header className="w-full flex justify-center border-b border-slate-300/20 bg-white/80 backdrop-blur-md">
-      <div data-layer="TopNavBar" className="Topnavbar w-full max-w-[1280px] px-6 py-4 inline-flex justify-between items-center">
-        <div data-layer="Container" className="Container flex-1 flex justify-start items-center gap-8">
-          <div data-layer="Container" className="Container inline-flex flex-col justify-start items-start">
-            <Link href="/" data-layer="Text" className="Text justify-center bg-gradient-to-r from-[#0058BE] to-[#6B38D4] bg-clip-text text-transparent text-2xl font-bold font-['Inter'] leading-8">
-              EventHub
-            </Link>
-          </div>
-          <div data-layer="Container" className="Container w-96 max-w-96 relative inline-flex flex-col justify-start items-start relative">
-            <div data-layer="Input" className="Input self-stretch pl-10 pr-3 py-2.5 bg-zinc-200 rounded-2xl flex flex-col justify-start items-start overflow-hidden">
-              <input 
-                type="text" 
-                placeholder="Search events, artists, or venues..."
-                className="w-full bg-transparent outline-none text-gray-500 text-base font-normal font-['Inter']"
-              />
-            </div>
-            <div data-layer="Container" className="Container h-full left-3 top-0 absolute inline-flex justify-start items-center pointer-events-none">
-              <div data-layer="Icon" className="Icon size-4 bg-gray-500 rounded-full" />
+    <header className="bg-white border-b border-gray-100 sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+        {/* Logo */}
+        <Link href="/" className="text-2xl font-black text-indigo-600 tracking-tighter">
+          EventHub
+        </Link>
+
+        {/* Menu chính */}
+        <nav className="hidden md:flex items-center gap-8 font-bold text-sm text-gray-600">
+          <Link href="/events" className="hover:text-indigo-600 transition-colors">Khám phá</Link>
+          <Link href="/profile" className="hover:text-indigo-600 transition-colors">Vé của tôi</Link>
+          <Link href="/organize" className="hover:text-indigo-600 transition-colors">Tổ chức sự kiện</Link>
+        </nav>
+
+        {/* Cụm Giỏ Hàng & Người Dùng */}
+        <div className="flex items-center gap-6">
+          {/* Nút Giỏ Hàng */}
+          <Link href="/cart" className="relative text-gray-600 hover:text-indigo-600 transition-colors">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            </svg>
+            <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-white">
+              1
+            </span>
+          </Link>
+
+          {/* Avatar User */}
+          <Link href="/profile" className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full border-2 border-indigo-100 overflow-hidden hover:border-indigo-500 transition-colors">
+              <img src="https://i.pravatar.cc/150?u=alex" alt="User" className="w-full h-full object-cover" />
             </div>
           </div>
         </div>

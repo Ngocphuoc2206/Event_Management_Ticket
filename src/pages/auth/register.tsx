@@ -14,6 +14,7 @@ import {
   AUTH_SHELL_CLASSNAME,
   AUTH_TEXT_LINK_CLASSNAME,
   AUTH_TEXT_INPUT_CLASSNAME,
+  AUTH_TEXT_LINK_CLASSNAME,
   DEFAULT_API_BASE_URL,
 } from "@/features/auth/constants";
 import {
@@ -74,7 +75,9 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
-  const [isBackendAvailable, setIsBackendAvailable] = useState<boolean | null>(null);
+  const [isBackendAvailable, setIsBackendAvailable] = useState<boolean | null>(
+    null,
+  );
   const {
     register,
     handleSubmit,
@@ -139,7 +142,7 @@ export default function RegisterPage() {
         responseMessage ||
           (shouldRedirect
             ? "Account created successfully. Redirecting..."
-            : "Account created successfully.")
+            : "Account created successfully."),
       );
       reset(INITIAL_FORM_VALUES);
 
@@ -150,7 +153,9 @@ export default function RegisterPage() {
         }, 1200);
       }
     } catch (error) {
-      setSubmitError(getApiErrorMessage(error, "Registration failed. Please try again."));
+      setSubmitError(
+        getApiErrorMessage(error, "Registration failed. Please try again."),
+      );
     }
   };
 
@@ -175,7 +180,9 @@ export default function RegisterPage() {
       >
         <div className={AUTH_SHELL_CLASSNAME}>
           <div className="text-center">
-            <h1 className="text-[2rem] font-bold tracking-tight text-slate-900 sm:text-[2.2rem]">Create an account</h1>
+            <h1 className="text-[2rem] font-bold tracking-tight text-slate-900 sm:text-[2.2rem]">
+              Create an account
+            </h1>
             <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-slate-500">
               Join thousands of event organizers and attendees worldwide.
             </p>
@@ -183,10 +190,17 @@ export default function RegisterPage() {
 
           <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-5">
             {isBackendAvailable === false ? (
-              <AuthAlert message={`Frontend cannot reach backend at ${DEFAULT_API_BASE_URL}.`} tone="warning" />
+              <AuthAlert
+                message={`Frontend cannot reach backend at ${DEFAULT_API_BASE_URL}.`}
+                tone="warning"
+              />
             ) : null}
-            {submitError ? <AuthAlert message={submitError} tone="error" /> : null}
-            {submitSuccess ? <AuthAlert message={submitSuccess} tone="success" /> : null}
+            {submitError ? (
+              <AuthAlert message={submitError} tone="error" />
+            ) : null}
+            {submitSuccess ? (
+              <AuthAlert message={submitSuccess} tone="success" />
+            ) : null}
 
             <AuthField label="Full Name" error={errors.fullName?.message}>
               <AuthInputShell hasError={Boolean(errors.fullName)}>
@@ -262,14 +276,19 @@ export default function RegisterPage() {
                     type="button"
                     onClick={() => setShowPassword((value) => !value)}
                     className={AUTH_PASSWORD_TOGGLE_CLASSNAME}
-                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
                   >
                     <EyeIcon off={showPassword} />
                   </button>
                 </AuthInputShell>
               </AuthField>
 
-              <AuthField label="Confirm Password" error={errors.confirmPassword?.message}>
+              <AuthField
+                label="Confirm Password"
+                error={errors.confirmPassword?.message}
+              >
                 <AuthInputShell hasError={Boolean(errors.confirmPassword)}>
                   <LockIcon />
                   <input
@@ -278,14 +297,20 @@ export default function RegisterPage() {
                     className={AUTH_TEXT_INPUT_CLASSNAME}
                     {...register("confirmPassword", {
                       required: "Please confirm your password",
-                      validate: (value) => value === getValues("password") || "Passwords do not match",
+                      validate: (value) =>
+                        value === getValues("password") ||
+                        "Passwords do not match",
                     })}
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword((value) => !value)}
                     className={AUTH_PASSWORD_TOGGLE_CLASSNAME}
-                    aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                    aria-label={
+                      showConfirmPassword
+                        ? "Hide confirm password"
+                        : "Show confirm password"
+                    }
                   >
                     <EyeIcon off={showConfirmPassword} />
                   </button>
@@ -313,9 +338,17 @@ export default function RegisterPage() {
                 .
               </span>
             </label>
-            {errors.acceptTerms ? <p className="-mt-3 text-sm text-rose-500">{errors.acceptTerms.message}</p> : null}
+            {errors.acceptTerms ? (
+              <p className="-mt-3 text-sm text-rose-500">
+                {errors.acceptTerms.message}
+              </p>
+            ) : null}
 
-            <button type="submit" disabled={isSubmitting} className={AUTH_PRIMARY_BUTTON_CLASSNAME}>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className={AUTH_PRIMARY_BUTTON_CLASSNAME}
+            >
               {isSubmitting ? "Creating Account..." : "Sign Up"}
             </button>
           </form>

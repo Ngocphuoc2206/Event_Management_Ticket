@@ -1,342 +1,211 @@
-﻿import { useState, useMemo } from "react";
-import UserLayout from "@/components/templates/UserLayout/UserLayout";
-import { LayoutGrid, Calendar, MapPin, Tag, Globe, X, Search, ChevronLeft, ChevronRight } from "lucide-react";
+﻿import UserLayout from "@/components/templates/UserLayout/UserLayout";
+import Link from "next/link";
+// Import các icon cần thiết để tránh lỗi build
+import { Search, MapPin, Calendar, ArrowRight, Heart } from "lucide-react";
 
-const MOCK_EVENTS = [
+// Dữ liệu sự kiện
+const FEATURED_EVENTS = [
   {
-    id: 1, title: "Neon Horizon Tour: 2024", category: "Music & Concerts", stats: "2.4k attending", badgeLabel: "Selling Fast", badgeColor: "bg-rose-700", badgePulse: true, date: "Aug 24 • 9:00 PM", timestamp: 1724533200000, dateCode: "next_month", location: "The Glass Arena, London", price: 75, priceLabel: "From", image: "https://images.unsplash.com/photo-1540039155732-61ee01518f8e?w=800&q=80", description: "Experience the most exclusive music event of the year with live performances from top artists and stunning visual effects."
+    id: 1,
+    title: "Neon Nights: Techno Festival",
+    type: "CONCERT",
+    date: "Oct 18 • 9:00 PM",
+    location: "Warehouse 42, Los Angeles",
+    price: "$45",
+    badge: "🔥 HOT",
+    image: "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?q=80&w=1000&auto=format&fit=crop",
+    attendees: [
+      "https://i.pravatar.cc/150?img=1",
+      "https://i.pravatar.cc/150?img=2",
+      "https://i.pravatar.cc/150?img=3"
+    ]
   },
   {
-    id: 2, title: "Future AI Global Summit", category: "Tech Conferences", stats: "500 tickets left", badgeLabel: "New Addition", badgeColor: "bg-violet-700", badgePulse: false, date: "Sept 12 • 10:00 AM", timestamp: 1726135200000, dateCode: "next_month", location: "Innovation Hub, SF", price: 299, priceLabel: "From", image: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=800&q=80", description: "Join industry leaders to discuss the next generation of artificial intelligence, machine learning, and their impact on global markets."
+    id: 2,
+    title: "Global AI & Tech Summit 2024",
+    type: "CONFERENCE",
+    date: "Nov 02 • 8:00 AM",
+    location: "Innovation Hub, SF",
+    price: "$199",
+    badge: "SELLING FAST",
+    image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=1000&auto=format&fit=crop",
+    attendees: [
+      "https://i.pravatar.cc/150?img=4",
+      "https://i.pravatar.cc/150?img=5",
+      "https://i.pravatar.cc/150?img=6"
+    ]
   },
   {
-    id: 3, title: "Bite of the City: Food Expo", category: "Art & Theater", stats: "Outdoor", badgeLabel: "Limited Slots", badgeColor: "bg-zinc-600", badgePulse: false, date: "Oct 05 • 11:00 AM", timestamp: 1728126000000, dateCode: "other", location: "Central Park South, NY", price: 15, priceLabel: "From", image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80", description: "A culinary journey featuring the best street food, fine dining, and dessert masters from all around the world in an open-air festival."
-  },
-  {
-    id: 4, title: "The Grand New Year's Prelude", category: "Music & Concerts", stats: "VIP Only", badgeLabel: "Featured", badgeColor: "bg-amber-600", badgePulse: false, date: "Dec 31 • 8:00 PM", timestamp: 1735675200000, dateCode: "other", location: "Platinum Harbor, Dubai", price: 550, priceLabel: "/ VIP", image: "https://images.unsplash.com/photo-1467810563316-b5476525c0f9?w=800&q=80", description: "Experience the most exclusive countdown event of the year with live entertainment, five-star dining, and spectacular fireworks."
-  },
-  {
-    id: 5, title: "Global Art & Design Fair", category: "Art & Theater", stats: "1.2k attending", badgeLabel: "Trending", badgeColor: "bg-blue-600", badgePulse: false, date: "Nov 15 • 9:00 AM", timestamp: 1731661200000, dateCode: "other", location: "Louvre Convention, Paris", price: 120, priceLabel: "From", image: "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=800&q=80", description: "Discover contemporary masterpieces from top emerging artists around the world, featuring exclusive gallery exhibitions and auctions."
-  },
-  {
-    id: 6, title: "StartUp Crunch Pitch Day", category: "Tech Conferences", stats: "In-Person", badgeLabel: "Free Entry", badgeColor: "bg-emerald-600", badgePulse: false, date: "Jan 10 • 1:00 PM", timestamp: 1736514000000, dateCode: "other", location: "Tech Valley, Berlin", price: 0, priceLabel: "Free", image: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=800&q=80", description: "Watch the top 10 promising startups pitch their revolutionary ideas to leading angel investors and venture capitalists in a vivid showdown."
-  },
-  {
-    id: 7, title: "Symphony Under The Stars", category: "Music & Concerts", stats: "Family Friendly", badgeLabel: "Tonight", badgeColor: "bg-sky-600", badgePulse: true, date: "Mar 23 • 7:00 PM", timestamp: 1774292400000, dateCode: "weekend", location: "Hollywood Bowl, LA", price: 45, priceLabel: "From", image: "https://images.unsplash.com/photo-1465847899084-d164df4dedc6?w=800&q=80", description: "A magical evening of classical music performed by the city's finest orchestra under the open night sky."
-  },
-  {
-    id: 8, title: "Web3 & Blockchain Summit", category: "Tech Conferences", stats: "Online & Offline", badgeLabel: "Hot", badgeColor: "bg-indigo-600", badgePulse: false, date: "Mar 24 • 9:00 AM", timestamp: 1774342800000, dateCode: "weekend", location: "Crypto Center, Miami", price: 150, priceLabel: "From", image: "https://images.unsplash.com/photo-1639762681485-074b7f4fc244?w=800&q=80", description: "Deep dive into the future of decentralized finance, smart contracts, and Web3 innovations with leading blockchain pioneers."
-  },
-  {
-    id: 9, title: "Broadway: The Phantom", category: "Art & Theater", stats: "Final Shows", badgeLabel: "Must See", badgeColor: "bg-purple-600", badgePulse: false, date: "Apr 10 • 8:00 PM", timestamp: 1775851200000, dateCode: "next_month", location: "Majestic Theatre, NY", price: 85, priceLabel: "From", image: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&q=80", description: "Don't miss the hauntingly beautiful final performances of the legendary Broadway musical."
-  },
-  {
-    id: 10, title: "Electronic Dance Carnival", category: "Music & Concerts", stats: "18+ Only", badgeLabel: "Sold Out Soon", badgeColor: "bg-rose-600", badgePulse: true, date: "May 05 • 10:00 PM", timestamp: 1778018400000, dateCode: "other", location: "Desert Arena, Vegas", price: 210, priceLabel: "From", image: "https://images.unsplash.com/photo-1470229722913-7c090be5f5be?w=800&q=80", description: "Three days of non-stop electronic dance music featuring top DJs, incredible stage designs, and immersive experiences."
-  },
-  {
-    id: 11, title: "React NEXT Developer Conf", category: "Tech Conferences", stats: "Dev Community", badgeLabel: "Early Bird", badgeColor: "bg-blue-500", badgePulse: false, date: "Jun 12 • 9:00 AM", timestamp: 1781294400000, dateCode: "other", location: "Convention Center, Seattle", price: 199, priceLabel: "From", image: "https://images.unsplash.com/photo-1540317580384-e5d43867caa6?w=800&q=80", description: "The ultimate gathering for React and Next.js developers. Learn about Server Components, state management, and modern UI."
-  },
-  {
-    id: 12, title: "Immersive Van Gogh Exibit", category: "Art & Theater", stats: "All Ages", badgeLabel: "Opening Week", badgeColor: "bg-yellow-600", badgePulse: false, date: "Mar 22 • 10:00 AM", timestamp: 1774202400000, dateCode: "weekend", location: "Art District, Chicago", price: 35, priceLabel: "From", image: "https://images.unsplash.com/photo-1561214115-f2f134cc4912?w=800&q=80", description: "Step directly into Van Gogh's masterpieces in this 360-degree digital art exhibition that brings his paintings to life."
+    id: 3,
+    title: "Midnight Food & Wine Expo",
+    type: "LIFESTYLE",
+    date: "Oct 20 • 6:00 PM",
+    location: "Waterfront Park, Seattle",
+    price: "$25",
+    badge: null,
+    image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=1000&auto=format&fit=crop",
+    attendees: [
+      "https://i.pravatar.cc/150?img=7",
+      "https://i.pravatar.cc/150?img=8",
+      "https://i.pravatar.cc/150?img=9"
+    ]
   }
 ];
 
+const CATEGORIES = [
+  { name: "Music", icon: "🎸", bg: "bg-rose-100", text: "text-rose-600" },
+  { name: "Tech", icon: "💻", bg: "bg-blue-100", text: "text-blue-600" },
+  { name: "Art", icon: "🎨", bg: "bg-purple-100", text: "text-purple-600" },
+  { name: "Food", icon: "🍔", bg: "bg-orange-100", text: "text-orange-600" },
+  { name: "Sports", icon: "⚽", bg: "bg-emerald-100", text: "text-emerald-600" },
+  { name: "Business", icon: "💼", bg: "bg-slate-100", text: "text-slate-600" },
+];
+
 export default function HomePage() {
-  const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [dateFilter, setDateFilter] = useState("Anytime");
-  const [locationQuery, setLocationQuery] = useState("");
-  
-  const [sortBy, setSortBy] = useState("Popularity");
-  const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 6;
-
-  const handleCategoryChange = (cat: string) => {
-    if (selectedCategories.includes(cat)) {
-      setSelectedCategories(selectedCategories.filter(c => c !== cat));
-    } else {
-      setSelectedCategories([...selectedCategories, cat]);
-    }
-    setCurrentPage(1);
-    setSelectedEventId(null);
-  };
-
-  const handleDateFilter = (filter: string, code: string) => {
-    setDateFilter(code);
-    setCurrentPage(1);
-    setSelectedEventId(null);
-  };
-
-  const filteredAndSortedEvents = useMemo(() => {
-    let result = [...MOCK_EVENTS];
-
-    if (searchQuery) {
-      result = result.filter(e => e.title.toLowerCase().includes(searchQuery.toLowerCase()));
-    }
-    if (selectedCategories.length > 0) {
-      result = result.filter(e => selectedCategories.includes(e.category));
-    }
-    if (locationQuery) {
-      result = result.filter(e => e.location.toLowerCase().includes(locationQuery.toLowerCase()));
-    }
-    if (dateFilter !== "Anytime") {
-      result = result.filter(e => e.dateCode === dateFilter);
-    }
-
-    if (sortBy === "Date") {
-      result.sort((a, b) => b.timestamp - a.timestamp);
-    } else if (sortBy === "Price") {
-      result.sort((a, b) => a.price - b.price);
-    }
-
-    return result;
-  }, [searchQuery, selectedCategories, locationQuery, dateFilter, sortBy]);
-
-  const totalPages = Math.ceil(filteredAndSortedEvents.length / ITEMS_PER_PAGE) || 1;
-  const paginatedEvents = filteredAndSortedEvents.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
-
   return (
     <UserLayout title="Home">
-      <section className="w-full flex justify-center bg-gray-50">
-        <div data-layer="Container" className="Container w-full max-w-[1280px] relative flex flex-col md:flex-row">
-          
-          {/* Sidebar Filters */}
-          <aside data-layer="Aside - SideNavBar (Filters)" className="w-full md:w-72 p-8 bg-gray-100 flex-shrink-0 flex flex-col justify-start items-start gap-8 border-r border-slate-200">
-            <div data-layer="Container" className="Container self-stretch flex flex-col justify-start items-start gap-1">
-              <div data-layer="Heading 2" className="Heading2 self-stretch flex flex-col justify-start items-start">
-                <h2 data-layer="Filters" className="Filters self-stretch text-zinc-900 text-xl font-bold font-['Inter'] leading-7">Filters</h2>
-              </div>
-              <p className="text-gray-700 text-sm font-normal">Narrow your search</p>
+      {/* 1. HERO SECTION */}
+      <section className="relative w-full min-h-[90vh] flex items-center justify-center pt-20 pb-32 px-6">
+        <div className="absolute inset-0 z-0">
+          <img 
+            src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1920&auto=format&fit=crop" 
+            alt="Hero Background" 
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-[#F9FAFB] to-transparent"></div>
+        </div>
+
+        <div className="max-w-5xl mx-auto text-center relative z-10 w-full mt-10">
+          <span className="inline-block py-1.5 px-4 rounded-full bg-white/20 backdrop-blur-md text-white border border-white/30 text-sm font-bold tracking-widest uppercase mb-6 shadow-xl">
+            🎉 Mở ra thế giới sự kiện
+          </span>
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white leading-[1.1] drop-shadow-2xl">
+            Trải Nghiệm <br className="hidden md:block"/> 
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">Không Giới Hạn</span>
+          </h1>
+          <p className="mt-6 text-xl text-gray-200 max-w-2xl mx-auto font-medium drop-shadow-md">
+            Tìm kiếm hàng ngàn sự kiện âm nhạc, hội thảo công nghệ và lễ hội ẩm thực đỉnh cao đang diễn ra quanh bạn.
+          </p>
+
+          {/* SEARCH BAR */}
+          <div className="mt-12 flex flex-col md:flex-row items-center bg-white/10 backdrop-blur-xl p-2 rounded-3xl md:rounded-[32px] shadow-2xl max-w-4xl mx-auto border border-white/20">
+            <div className="flex items-center flex-1 px-6 py-4 w-full border-b md:border-b-0 md:border-r border-white/20 text-white">
+              <Search className="w-6 h-6 mr-3 text-white/70" />
+              <input type="text" placeholder="Tìm tên sự kiện, nghệ sĩ..." className="w-full bg-transparent outline-none text-white placeholder:text-white/70 font-medium text-lg" />
             </div>
-            
-            <div className="self-stretch">
-              <div className="flex items-center gap-3 mb-2">
-                <Search className="w-4 h-5 text-gray-700" />
-                <span className="text-gray-700 text-base font-semibold">Search</span>
-              </div>
-              <div className="Input px-3 py-2 bg-zinc-200 rounded-2xl flex items-center overflow-hidden">
-                <input 
-                  type="text" 
-                  placeholder="Event title..." 
-                  className="w-full bg-transparent outline-none text-zinc-800 text-sm"
-                  value={searchQuery}
-                  onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); setSelectedEventId(null); }}
-                />
-              </div>
+            <div className="flex items-center flex-1 px-6 py-4 w-full text-white">
+              <MapPin className="w-6 h-6 mr-3 text-white/70" />
+              <input type="text" placeholder="Hồ Chí Minh" className="w-full bg-transparent outline-none text-white placeholder:text-white/70 font-medium text-lg" />
             </div>
-            
-            <div data-layer="Nav" className="Nav self-stretch flex flex-col justify-start items-start gap-6">
-              
-              <div data-layer="Category" className="Category self-stretch flex flex-col gap-4">
-                <div className="inline-flex items-center gap-3">
-                  <LayoutGrid className="w-5 h-5 text-sky-700" />
-                  <span className="text-sky-700 text-base font-semibold">Category</span>
-                </div>
-                <div className="flex flex-col gap-2">
-                  {["Music & Concerts", "Tech Conferences", "Art & Theater"].map(cat => (
-                    <label key={cat} className="Label pl-1.5 pr-4 py-2 bg-white rounded-2xl shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)] inline-flex items-center gap-2.5 cursor-pointer hover:bg-slate-50 transition-colors">
-                      <input 
-                        type="checkbox" 
-                        className="Input size-4 text-sky-700 rounded-sm"
-                        checked={selectedCategories.includes(cat)}
-                        onChange={() => handleCategoryChange(cat)}
-                      />
-                      <span className="text-zinc-900 text-sm font-medium">{cat}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
+            <Link href="/events" className="w-full md:w-auto p-2">
+              <button className="w-full md:w-auto bg-gradient-to-r from-indigo-600 to-violet-600 text-white px-10 py-4 rounded-2xl font-bold hover:scale-105 transition-all shadow-lg text-lg">
+                Tìm Kiếm Ngay
+              </button>
+            </Link>
+          </div>
+        </div>
+      </section>
 
-              <div data-layer="Date" className="Date self-stretch flex flex-col gap-4">
-                <div className="inline-flex items-center gap-3">
-                  <Calendar className="w-4 h-5 text-gray-700" />
-                  <span className="text-gray-700 text-base font-semibold">Date</span>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <button onClick={() => handleDateFilter("Anytime", "Anytime")} className={`p-2 rounded-2xl text-left transition-colors ${dateFilter === "Anytime" ? "bg-zinc-300 font-bold" : "bg-zinc-200 hover:bg-zinc-300"}`}>
-                    <span className="text-zinc-900 text-sm">Anytime</span>
-                  </button>
-                  <button onClick={() => handleDateFilter("This Weekend", "weekend")} className={`p-2 rounded-2xl text-left transition-colors ${dateFilter === "weekend" ? "bg-zinc-300 font-bold" : "bg-transparent hover:bg-zinc-200"}`}>
-                    <span className="text-zinc-900 text-sm">This Weekend</span>
-                  </button>
-                  <button onClick={() => handleDateFilter("Next Month", "next_month")} className={`p-2 rounded-2xl text-left transition-colors ${dateFilter === "next_month" ? "bg-zinc-300 font-bold" : "bg-transparent hover:bg-zinc-200"}`}>
-                    <span className="text-zinc-900 text-sm">Next Month</span>
-                  </button>
-                </div>
+      {/* 2. CATEGORIES SECTION */}
+      <section className="max-w-7xl mx-auto px-6 py-20 relative z-20 -mt-20">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          {CATEGORIES.map((cat) => (
+            <div key={cat.name} className="bg-white border border-gray-100 p-4 rounded-3xl flex items-center gap-4 hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer group shadow-sm">
+              <div className={`w-12 h-12 ${cat.bg} ${cat.text} rounded-full flex items-center justify-center text-xl group-hover:scale-110 transition-transform`}>
+                {cat.icon}
               </div>
-
-              <div data-layer="Location" className="Location self-stretch flex flex-col gap-4">
-                <div className="inline-flex items-center gap-3">
-                  <MapPin className="w-4 h-5 text-gray-700" />
-                  <span className="text-gray-700 text-base font-semibold">Location</span>
-                </div>
-                <div className="Input px-3 py-2 bg-zinc-200 rounded-2xl flex items-center overflow-hidden">
-                  <input 
-                    type="text" 
-                    placeholder="Enter city..." 
-                    className="w-full bg-transparent outline-none text-zinc-800 text-sm"
-                    value={locationQuery}
-                    onChange={(e) => { setLocationQuery(e.target.value); setCurrentPage(1); setSelectedEventId(null); }}
-                  />
-                </div>
-              </div>
-
+              <p className="font-bold text-gray-800">{cat.name}</p>
             </div>
-          </aside>
+          ))}
+        </div>
+      </section>
 
-          {/* Main Content Area */}
-          <main className="flex-1 p-8 lg:p-12 bg-slate-50 flex flex-col gap-12 w-full overflow-hidden">
-            
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-              <div className="flex flex-col gap-2">
-                <span className="text-violet-700 text-base font-bold uppercase tracking-[3.20px]">Trending Now</span>
-                <h1 className="text-zinc-900 text-4xl lg:text-5xl font-bold leading-[48px]">Explore Events</h1>
-                <p className="max-w-[500px] text-gray-700 text-lg lg:text-xl font-normal leading-8">Curated experiences from around the world, designed to inspire and connect.</p>
-              </div>
-              
-              <div className="p-2 bg-white rounded-3xl shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)] flex items-center gap-2 flex-wrap">
-                <div className="px-3">
-                  <span className="text-gray-700 text-sm font-semibold leading-5">Sort by:</span>
-                </div>
-                {["Popularity", "Date", "Price"].map(sortOp => (
-                  <button 
-                    key={sortOp}
-                    onClick={() => { setSortBy(sortOp); setSelectedEventId(null); setCurrentPage(1); }}
-                    className={`px-4 py-2 rounded-2xl flex items-center transition-colors ${sortBy === sortOp ? "bg-blue-100 text-sky-950 font-bold" : "hover:bg-zinc-100 text-zinc-900 font-medium"}`}
-                  >
-                    <span className="text-sm">{sortOp}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
+      {/* 3. FEATURED EVENTS SECTION */}
+      <section className="max-w-7xl mx-auto px-6 py-10 bg-[#F9FAFB]">
+        <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-4">
+          <div>
+            <span className="text-indigo-600 font-black text-sm uppercase tracking-widest bg-indigo-50 px-4 py-2 rounded-full inline-block mb-4">Mới Nhất</span>
+            <h2 className="text-4xl md:text-5xl font-black text-gray-900 leading-tight">Sự Kiện Nổi Bật</h2>
+          </div>
+          <Link href="/events">
+            <button className="text-indigo-600 font-bold hover:bg-indigo-50 px-6 py-3 rounded-full transition-all flex items-center gap-2 border border-indigo-100">
+              Xem tất cả sự kiện
+              <ArrowRight className="w-5 h-5" />
+            </button>
+          </Link>
+        </div>
 
-            {/* Smart Grid */}
-            <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 grid-flow-dense">
-              
-              {paginatedEvents.map(event => {
-                const isSelected = selectedEventId === event.id;
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {FEATURED_EVENTS.map((event) => (
+            <div key={event.id} className="group bg-white rounded-[32px] border border-gray-100 overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 relative flex flex-col">
+              <button className="absolute top-5 right-5 z-20 w-10 h-10 bg-white/30 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-red-500 hover:text-white transition-colors shadow-sm">
+                <Heart className="w-5 h-5" />
+              </button>
 
-                if (isSelected) {
-                  return (
-                    <div key={event.id} className="col-span-1 md:col-span-2 lg:col-span-2 bg-white rounded-3xl shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)] flex flex-col md:flex-row overflow-hidden relative border border-slate-200 animate-in fade-in zoom-in duration-300">
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); setSelectedEventId(null); }} 
-                        className="absolute top-4 right-4 z-10 w-10 h-10 bg-white/80 backdrop-blur-md text-zinc-900 rounded-full flex items-center justify-center hover:bg-white shadow transition-all"
-                      >
-                        <X size={20} />
-                      </button>
-                      
-                      <div className="w-full md:w-1/2 flex-shrink-0 relative min-h-[300px]">
-                        <img src={event.image} alt={event.title} className="w-full h-full object-cover absolute inset-0" />
-                      </div>
-                      
-                      <div className="w-full md:w-1/2 p-8 flex flex-col justify-center items-start">
-                        <div className="mb-4">
-                          <div className={`px-3 py-1 ${event.badgeColor} bg-opacity-20 rounded-full inline-flex`}>
-                            <span className="text-zinc-900 text-xs font-black uppercase tracking-wider">{event.badgeLabel}</span>
-                          </div>
-                        </div>
-                        <h3 className="text-zinc-900 text-3xl font-bold leading-9 mb-4">{event.title}</h3>
-                        <p className="text-gray-700 text-base font-normal leading-6 mb-8 max-w-lg">
-                          {event.description}
-                        </p>
-                        <div className="flex flex-col gap-4 mb-8">
-                          <div className="flex items-center gap-2">
-                            <Calendar className="w-4 h-5 text-gray-700" />
-                            <span className="text-gray-700 text-sm font-normal leading-5">{event.date}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <MapPin className="w-4 h-5 text-gray-700" />
-                            <span className="text-gray-700 text-sm font-normal leading-5">{event.location}</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-6 mt-auto">
-                          {/* Expanded Button: Gradient with white text */}
-                          <button className="px-8 py-3 bg-gradient-to-r from-sky-700 to-violet-700 text-white rounded-2xl shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)] text-base font-bold transition-transform hover:scale-105">View Event</button>
-                          <div className="flex items-baseline gap-1">
-                            <span className="text-zinc-900 text-2xl font-black">{event.price === 0 ? "Free" : `$${event.price}`}</span>
-                            <span className="text-gray-700 text-sm font-normal">{event.price === 0 ? "" : event.priceLabel === "From" ? "/ Ticket" : event.priceLabel}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                }
-
-                return (
-                  <div 
-                    key={event.id}
-                    onClick={() => setSelectedEventId(event.id)}
-                    className="col-span-1 bg-white rounded-3xl shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)] flex flex-col overflow-hidden hover:shadow-xl transition-shadow cursor-pointer border border-transparent hover:border-slate-100"
-                  >
-                    <div className="h-48 relative overflow-hidden">
-                      <img src={event.image} alt={event.title} className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
-                      <div className={`absolute top-4 right-4 ${event.badgeColor} px-3 py-1 rounded-full flex items-center justify-center gap-1.5`}>
-                        {event.badgePulse && <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />}
-                        <span className="text-white text-xs font-bold leading-4">{event.badgeLabel}</span>
-                      </div>
-                    </div>
-                    <div className="p-6 flex flex-col flex-1">
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-xs font-black uppercase tracking-wider text-sky-700">{event.category}</span>
-                        <span className="text-slate-300">•</span>
-                        <span className="text-gray-700 text-xs font-bold">{event.stats}</span>
-                      </div>
-                      <h3 className="text-zinc-900 text-xl font-bold leading-7 mb-4">{event.title}</h3>
-                      <div className="flex flex-col gap-2 mb-6 mt-auto">
-                        <span className="text-gray-700 text-sm flex items-center gap-2"><Calendar className="w-3.5 h-3.5" />{event.date}</span>
-                        <span className="text-gray-700 text-sm flex items-center gap-2"><MapPin className="w-3.5 h-3.5" />{event.location}</span>
-                      </div>
-                      <div className="pt-4 border-t border-slate-100 flex justify-between items-center">
-                        <div className="flex flex-col justify-start items-start">
-                          {event.price !== 0 && (
-                            <span className="text-gray-700 text-xs font-medium leading-4">From</span>
-                          )}
-                          <span className="text-zinc-900 text-xl font-bold leading-7">{event.price === 0 ? "Free" : `$${event.price}`}</span>
-                        </div>
-                        {/* Normal Button: White bg, blue border, blue text */}
-                        <button className="px-6 py-2.5 rounded-2xl text-base font-bold transition-all bg-white outline outline-2 outline-offset-[-2px] outline-sky-700 text-sky-700 hover:outline-none hover:bg-gradient-to-r hover:from-sky-700 hover:to-violet-700 hover:text-white">
-                          View Event
-                        </button>
-                      </div>
-                    </div>
+              <div className="relative h-60 overflow-hidden">
+                <img src={event.image} alt={event.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                {event.badge && (
+                  <div className="absolute top-5 left-5 bg-red-500/90 backdrop-blur-sm px-4 py-1.5 rounded-full text-xs font-black text-white shadow-lg">
+                    {event.badge}
                   </div>
-                );
-              })}
-              
-              {paginatedEvents.length === 0 && (
-                <div className="col-span-1 md:col-span-2 lg:col-span-3 py-16 flex flex-col items-center justify-center gap-4 text-gray-500">
-                  <Search size={48} className="text-gray-300" />
-                  <p className="text-lg">No events found matching your criteria.</p>
-                </div>
-              )}
-
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex justify-center items-center gap-4 pt-8 border-t border-slate-200 mt-4">
-                <button 
-                  onClick={() => { setCurrentPage(p => Math.max(1, p - 1)); setSelectedEventId(null); }}
-                  disabled={currentPage === 1}
-                  className="p-2 bg-white rounded-full shadow hover:bg-zinc-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <ChevronLeft className="w-6 h-6 text-zinc-900" />
-                </button>
-                <span className="text-zinc-900 font-medium">Page {currentPage} of {totalPages}</span>
-                <button 
-                  onClick={() => { setCurrentPage(p => Math.min(totalPages, p + 1)); setSelectedEventId(null); }}
-                  disabled={currentPage === totalPages}
-                  className="p-2 bg-white rounded-full shadow hover:bg-zinc-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <ChevronRight className="w-6 h-6 text-zinc-900" />
-                </button>
+                )}
               </div>
-            )}
-            
-          </main>
+
+              <div className="p-7 flex flex-col flex-1">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-xs font-black px-3 py-1.5 rounded-xl bg-indigo-50 text-indigo-600 uppercase tracking-wider">
+                    {event.type}
+                  </span>
+                  <span className="text-sm font-bold text-gray-500 flex items-center gap-1.5">
+                    <Calendar className="w-4 h-4 text-indigo-500" />
+                    {event.date}
+                  </span>
+                </div>
+                <h3 className="text-2xl font-black text-gray-900 mb-3 leading-tight group-hover:text-indigo-600 transition-colors">
+                  {event.title}
+                </h3>
+                <p className="text-base text-gray-500 flex items-center gap-2 mb-6">
+                  <MapPin className="w-5 h-5 text-gray-400" />
+                  {event.location}
+                </p>
+
+                <div className="mt-auto pt-6 border-t border-gray-100 flex justify-between items-center">
+                   <div className="flex -space-x-3">
+                     {event.attendees.map((avt, idx) => (
+                       <img key={idx} className="w-10 h-10 rounded-full border-2 border-white shadow-sm" src={avt} alt="Attendee" />
+                     ))}
+                     <div className="w-10 h-10 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-600 shadow-sm">
+                       +99
+                     </div>
+                   </div>
+                   <Link href={`/events/${event.id}`}>
+                      <button className="bg-gray-900 text-white px-6 py-3 rounded-2xl font-bold hover:bg-indigo-600 transition-colors text-sm shadow-md active:scale-95">
+                        Mua vé {event.price}
+                      </button>
+                   </Link>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 4. CALL TO ACTION */}
+      <section className="max-w-7xl mx-auto px-6 py-24">
+        <div className="bg-gradient-to-br from-indigo-900 via-indigo-800 to-purple-900 rounded-[40px] p-12 md:p-24 text-center text-white relative overflow-hidden shadow-2xl">
+          <div className="absolute top-0 left-0 w-full h-full opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+          <div className="relative z-10">
+            <h2 className="text-4xl md:text-6xl font-black mb-6 drop-shadow-lg">Bạn không muốn bỏ lỡ?</h2>
+            <p className="text-indigo-200 mb-10 text-xl max-w-2xl mx-auto">Nhận thông báo sớm nhất về các sự kiện giảm giá và vé early bird ngay trong tuần này.</p>
+            <div className="flex flex-col md:flex-row gap-4 max-w-xl mx-auto bg-white/10 p-2 rounded-full backdrop-blur-md border border-white/20">
+              <input type="email" placeholder="Nhập email của bạn..." className="bg-transparent border-none outline-none flex-1 px-6 py-4 text-white placeholder:text-indigo-200 text-lg" />
+              <button className="bg-white text-indigo-900 px-10 py-4 rounded-full font-black hover:bg-indigo-50 hover:scale-105 transition-all shadow-xl">
+                Đăng ký ngay
+              </button>
+            </div>
+          </div>
         </div>
       </section>
     </UserLayout>
