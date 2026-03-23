@@ -1,15 +1,18 @@
 import Head from "next/head";
 import Link from "next/link";
-import { useState } from "react";
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
 import {
+  APP_NAME,
   AUTH_CHECKBOX_CLASSNAME,
   AUTH_PASSWORD_TOGGLE_CLASSNAME,
   AUTH_PRIMARY_BUTTON_CLASSNAME,
   AUTH_SHELL_CLASSNAME,
   AUTH_TEXT_INPUT_CLASSNAME,
   AUTH_TEXT_LINK_CLASSNAME,
+  DEFAULT_API_BASE_URL,
 } from "@/features/auth/constants";
 import {
   AuthAlert,
@@ -27,22 +30,39 @@ import {
   LoginBrandMark,
 } from "@/features/auth/components/AuthIcons";
 import { AuthPageLayout } from "@/features/auth/components/AuthPageLayout";
+import { loginUser } from "@/features/auth/services/login.service";
+import type { LoginResponse } from "@/features/auth/types";
+import {
+  getApiErrorMessage,
+  getApiResultData,
+  getApiResultMessage,
+  getPostAuthRoute,
+  persistAuthTokens,
+} from "@/features/auth/utils";
+import { checkBackendHealth } from "@/features/httpClient/health.service";
 
 type LoginFormValues = {
-  identity: string;
+  email: string;
   password: string;
   rememberMe: boolean;
 };
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 const INITIAL_FORM_VALUES: LoginFormValues = {
-  identity: "",
+  email: "",
   password: "",
   rememberMe: false,
 };
 
 export default function LoginPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
-  const [submitMessage, setSubmitMessage] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
+  const [isBackendAvailable, setIsBackendAvailable] = useState<boolean | null>(
+    null,
+  );
   const {
     register,
     handleSubmit,
@@ -51,15 +71,71 @@ export default function LoginPage() {
     defaultValues: INITIAL_FORM_VALUES,
   });
 
-  const onSubmit = async () => {
-    setSubmitMessage("Login API will be connected when backend is ready.");
-    await Promise.resolve();
+  useEffect(() => {
+    let isMounted = true;
+
+    const verifyBackend = async () => {
+      try {
+        await checkBackendHealth();
+        if (isMounted) {
+          setIsBackendAvailable(true);
+        }
+      } catch {
+        if (isMounted) {
+          setIsBackendAvailable(false);
+        }
+      }
+    };
+
+    void verifyBackend();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const onSubmit = async (data: LoginFormValues) => {
+    setSubmitError(null);
+    setSubmitSuccess(null);
+
+    try {
+      const response = await loginUser({
+        email: data.email.trim(),
+        password: data.password,
+      });
+
+      const session = getApiResultData<LoginResponse>(response);
+      const responseMessage = getApiResultMessage(response);
+      const shouldRedirect = Boolean(session?.accessToken);
+
+      persistAuthTokens(session);
+      setSubmitSuccess(
+        responseMessage ||
+          (shouldRedirect
+            ? "Login successful. Redirecting..."
+            : "Login successful."),
+      );
+
+      if (shouldRedirect) {
+        const destination = getPostAuthRoute(session?.role);
+        window.setTimeout(() => {
+          void router.push(destination);
+        }, 800);
+      }
+    } catch (error) {
+      setSubmitError(
+        getApiErrorMessage(
+          error,
+          "Login failed. Please check your credentials.",
+        ),
+      );
+    }
   };
 
   return (
     <>
       <Head>
-        <title>Login | EventHub</title>
+        <title>Login | {APP_NAME}</title>
       </Head>
 
       <AuthPageLayout logo={<LoginBrandMark />} logoText="EventHub">
@@ -74,17 +150,35 @@ export default function LoginPage() {
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-5">
-            {submitMessage ? <AuthAlert message={submitMessage} /> : null}
+            {isBackendAvailable === false ? (
+              <AuthAlert
+                message={`Frontend cannot reach backend at ${DEFAULT_API_BASE_URL}.`}
+                tone="warning"
+              />
+            ) : null}
+            {submitError ? (
+              <AuthAlert message={submitError} tone="error" />
+            ) : null}
+            {submitSuccess ? (
+              <AuthAlert message={submitSuccess} tone="success" />
+            ) : null}
 
-            <AuthField label="Email Or Username" error={errors.identity?.message}>
-              <AuthInputShell hasError={Boolean(errors.identity)} borderClassName="border-slate-300 focus-within:border-blue-400">
+            <AuthField label="Email Address" error={errors.email?.message}>
+              <AuthInputShell
+                hasError={Boolean(errors.email)}
+                borderClassName="border-slate-300 focus-within:border-blue-400"
+              >
                 <IdentityIcon />
                 <input
-                  type="text"
+                  type="email"
                   placeholder="name@company.com"
                   className={AUTH_TEXT_INPUT_CLASSNAME}
-                  {...register("identity", {
-                    required: "Please enter your email or username",
+                  {...register("email", {
+                    required: "Please enter your email address",
+                    pattern: {
+                      value: EMAIL_PATTERN,
+                      message: "Please enter a valid email address",
+                    },
                   })}
                 />
               </AuthInputShell>
@@ -102,12 +196,15 @@ export default function LoginPage() {
                 </Link>
               }
             >
-              <AuthInputShell hasError={Boolean(errors.password)} borderClassName="border-slate-300 focus-within:border-blue-400">
+              <AuthInputShell
+                hasError={Boolean(errors.password)}
+                borderClassName="border-slate-300 focus-within:border-blue-400"
+              >
                 <LockIcon />
                 <input
                   type={showPassword ? "text" : "password"}
                   placeholder="........"
-                  className="ml-3 w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
+                  className={AUTH_TEXT_INPUT_CLASSNAME}
                   {...register("password", {
                     required: "Please enter your password",
                     minLength: {
@@ -136,7 +233,11 @@ export default function LoginPage() {
               <span>Remember me for 30 days</span>
             </label>
 
-            <button type="submit" disabled={isSubmitting} className={AUTH_PRIMARY_BUTTON_CLASSNAME}>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className={AUTH_PRIMARY_BUTTON_CLASSNAME}
+            >
               {isSubmitting ? "Logging In..." : "Log In"}
             </button>
           </form>
