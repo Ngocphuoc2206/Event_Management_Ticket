@@ -1,4 +1,5 @@
-﻿import Head from "next/head";
+﻿/* eslint-disable @next/next/no-img-element */
+import Head from "next/head";
 import { useMemo, useState } from "react";
 import {
   Compass,
@@ -74,7 +75,8 @@ const EVENT_CARDS: EventCardItem[] = [
     popularity: 2400,
     price: "$75",
     priceValue: 75,
-    image: "https://images.unsplash.com/photo-1540039155732-61ee01518f8e?w=900&q=80",
+    image:
+      "https://images.unsplash.com/photo-1540039155732-61ee01518f8e?w=900&q=80",
     badge: {
       text: "Selling Fast",
       className: "bg-red-500",
@@ -96,7 +98,8 @@ const EVENT_CARDS: EventCardItem[] = [
     popularity: 500,
     price: "$299",
     priceValue: 299,
-    image: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=900&q=80",
+    image:
+      "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=900&q=80",
     badge: {
       text: "New",
       className: "bg-violet-600",
@@ -117,7 +120,8 @@ const EVENT_CARDS: EventCardItem[] = [
     popularity: 900,
     price: "$15",
     priceValue: 15,
-    image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=900&q=80",
+    image:
+      "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=900&q=80",
     categoryClassName: "text-blue-600",
   },
   {
@@ -134,7 +138,8 @@ const EVENT_CARDS: EventCardItem[] = [
     popularity: 1100,
     price: "$120",
     priceValue: 120,
-    image: "https://images.unsplash.com/photo-1465847899084-d164df4dedc6?w=900&q=80",
+    image:
+      "https://images.unsplash.com/photo-1465847899084-d164df4dedc6?w=900&q=80",
     categoryClassName: "text-blue-600",
   },
   {
@@ -151,7 +156,8 @@ const EVENT_CARDS: EventCardItem[] = [
     popularity: 220,
     price: "$199",
     priceValue: 199,
-    image: "https://images.unsplash.com/photo-1639762681485-074b7f4fc244?w=900&q=80",
+    image:
+      "https://images.unsplash.com/photo-1639762681485-074b7f4fc244?w=900&q=80",
     badge: {
       text: "Hot",
       className: "bg-indigo-600",
@@ -172,7 +178,8 @@ const EVENT_CARDS: EventCardItem[] = [
     popularity: 700,
     price: "$25",
     priceValue: 25,
-    image: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=900&q=80",
+    image:
+      "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=900&q=80",
     categoryClassName: "text-blue-600",
   },
   {
@@ -189,7 +196,8 @@ const EVENT_CARDS: EventCardItem[] = [
     popularity: 320,
     price: "$39",
     priceValue: 39,
-    image: "https://images.unsplash.com/photo-1517048676732-d65bc937f952?w=900&q=80",
+    image:
+      "https://images.unsplash.com/photo-1517048676732-d65bc937f952?w=900&q=80",
     badge: {
       text: "Community",
       className: "bg-cyan-600",
@@ -210,7 +218,8 @@ const EVENT_CARDS: EventCardItem[] = [
     popularity: 850,
     price: "$68",
     priceValue: 68,
-    image: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=900&q=80",
+    image:
+      "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=900&q=80",
     badge: {
       text: "Limited",
       className: "bg-rose-600",
@@ -232,7 +241,8 @@ const EVENT_CARDS: EventCardItem[] = [
     popularity: 640,
     price: "$22",
     priceValue: 22,
-    image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=900&q=80",
+    image:
+      "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=900&q=80",
     categoryClassName: "text-blue-600",
   },
   {
@@ -249,7 +259,8 @@ const EVENT_CARDS: EventCardItem[] = [
     popularity: 1600,
     price: "$140",
     priceValue: 140,
-    image: "https://images.unsplash.com/photo-1507924538820-ede94a04019d?w=900&q=80",
+    image:
+      "https://images.unsplash.com/photo-1507924538820-ede94a04019d?w=900&q=80",
     badge: {
       text: "Premium",
       className: "bg-slate-800",
@@ -270,7 +281,8 @@ const EVENT_CARDS: EventCardItem[] = [
     popularity: 410,
     price: "$89",
     priceValue: 89,
-    image: "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=900&q=80",
+    image:
+      "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=900&q=80",
     categoryClassName: "text-violet-600",
   },
   {
@@ -287,7 +299,8 @@ const EVENT_CARDS: EventCardItem[] = [
     popularity: 980,
     price: "$18",
     priceValue: 18,
-    image: "https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?w=900&q=80",
+    image:
+      "https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?w=900&q=80",
     badge: {
       text: "Top Rated",
       className: "bg-emerald-600",
@@ -298,16 +311,25 @@ const EVENT_CARDS: EventCardItem[] = [
 
 const FEATURED_CARD = {
   titleLines: ["The Grand", "New Year's", "Prelude"],
-  descriptionLines: ["Experience the most exclusive", "countdown event of the year..."],
+  descriptionLines: [
+    "Experience the most exclusive",
+    "countdown event of the year...",
+  ],
   dateLines: ["Dec 31 •", "8:00 PM"],
   locationLines: ["Platinum", "Harbor,", "Dubai"],
   ctaLines: ["Book", "VIP", "Lounge"],
   price: "$550",
   passLines: ["Premium", "Pass"],
-  image: "https://images.unsplash.com/photo-1513151233558-d860c5398176?w=600&q=80",
+  image:
+    "https://images.unsplash.com/photo-1513151233558-d860c5398176?w=600&q=80",
 };
 
-const CATEGORY_OPTIONS = ["Music & Arts", "Technology", "Lifestyle", "Classical Music"];
+const CATEGORY_OPTIONS = [
+  "Music & Arts",
+  "Technology",
+  "Lifestyle",
+  "Classical Music",
+];
 const DATE_OPTIONS = ["any", "weekend", "next_month"] as const;
 const TIME_OPTIONS = ["any", "morning", "afternoon", "evening"] as const;
 const SORT_OPTIONS = ["popularity", "date", "price"] as const;
@@ -317,7 +339,9 @@ type TimeFilter = (typeof TIME_OPTIONS)[number];
 type SortBy = (typeof SORT_OPTIONS)[number];
 
 export default function HomePage() {
-  const [hoveredViewCardId, setHoveredViewCardId] = useState<number | null>(null);
+  const [hoveredViewCardId, setHoveredViewCardId] = useState<number | null>(
+    null,
+  );
   const [expandedCardId, setExpandedCardId] = useState<number | null>(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -342,11 +366,17 @@ export default function HomePage() {
         return false;
       }
 
-      if (selectedCategories.length > 0 && !selectedCategories.includes(event.category)) {
+      if (
+        selectedCategories.length > 0 &&
+        !selectedCategories.includes(event.category)
+      ) {
         return false;
       }
 
-      if (locationQuery.trim() && !location.includes(locationQuery.trim().toLowerCase())) {
+      if (
+        locationQuery.trim() &&
+        !location.includes(locationQuery.trim().toLowerCase())
+      ) {
         return false;
       }
 
@@ -359,8 +389,15 @@ export default function HomePage() {
       }
 
       if (dateFilter === "next_month") {
-        const nextMonthDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-        if (date.getMonth() !== nextMonthDate.getMonth() || date.getFullYear() !== nextMonthDate.getFullYear()) {
+        const nextMonthDate = new Date(
+          now.getFullYear(),
+          now.getMonth() + 1,
+          1,
+        );
+        if (
+          date.getMonth() !== nextMonthDate.getMonth() ||
+          date.getFullYear() !== nextMonthDate.getFullYear()
+        ) {
           return false;
         }
       }
@@ -390,9 +427,19 @@ export default function HomePage() {
     });
 
     return result;
-  }, [searchQuery, selectedCategories, dateFilter, timeFilter, locationQuery, sortBy]);
+  }, [
+    searchQuery,
+    selectedCategories,
+    dateFilter,
+    timeFilter,
+    locationQuery,
+    sortBy,
+  ]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredEvents.length / itemsPerPage));
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredEvents.length / itemsPerPage),
+  );
   const safePage = Math.min(currentPage, totalPages);
   const paginatedEvents = useMemo(() => {
     const start = (safePage - 1) * itemsPerPage;
@@ -401,23 +448,26 @@ export default function HomePage() {
 
   const handleCategoryToggle = (category: string) => {
     setSelectedCategories((prev) =>
-      prev.includes(category) ? prev.filter((item) => item !== category) : [...prev, category],
+      prev.includes(category)
+        ? prev.filter((item) => item !== category)
+        : [...prev, category],
     );
     setCurrentPage(1);
     setExpandedCardId(null);
   };
 
-export default function HomePage() {
   return (
     <>
       <Head>
         <title>Explore Events</title>
       </Head>
       <div className="min-h-screen bg-slate-50 text-slate-900">
-        <div className="mx-auto flex min-h-screen w-full max-w-[1536px] flex-col lg:flex-row">
+        <div className="mx-auto flex min-h-screen w-full max-w-384 flex-col lg:flex-row">
           <aside className="w-full border-b border-slate-200/60 bg-slate-50 px-6 py-6 lg:h-screen lg:w-64 lg:border-b-0 lg:border-r lg:px-6 lg:py-6">
             <div className="pb-8">
-              <h1 className="text-2xl font-black leading-8 text-slate-900">EventFlow</h1>
+              <h1 className="text-2xl font-black leading-8 text-slate-900">
+                EventFlow
+              </h1>
               <p className="mt-1 text-xs font-medium uppercase tracking-tight text-slate-500">
                 Premium Ticketing
               </p>
@@ -437,7 +487,11 @@ export default function HomePage() {
                     ].join(" ")}
                   >
                     <Icon className={item.active ? "h-5 w-5" : "h-4 w-4"} />
-                    <span className={item.active ? "font-semibold" : "font-normal"}>{item.label}</span>
+                    <span
+                      className={item.active ? "font-semibold" : "font-normal"}
+                    >
+                      {item.label}
+                    </span>
                   </button>
                 );
               })}
@@ -484,8 +538,12 @@ export default function HomePage() {
 
                 <div className="flex items-center gap-3">
                   <div className="text-right">
-                    <p className="text-sm font-semibold leading-5 text-slate-900">Alex Rivers</p>
-                    <p className="text-xs font-normal leading-4 text-slate-500">Pro Member</p>
+                    <p className="text-sm font-semibold leading-5 text-slate-900">
+                      Alex Rivers
+                    </p>
+                    <p className="text-xs font-normal leading-4 text-slate-500">
+                      Pro Member
+                    </p>
                   </div>
                   <img
                     className="h-10 w-10 rounded-full border-2 border-white object-cover shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]"
@@ -509,13 +567,19 @@ export default function HomePage() {
                 className={[
                   "fixed inset-y-0 left-0 z-40 w-[320px] overflow-y-auto border-r border-slate-200/50 bg-white p-6 shadow-xl transition-transform sm:p-8",
                   "xl:static xl:z-10 xl:h-[calc(100vh-64px)] xl:w-72 xl:shadow-none",
-                  isFilterOpen ? "translate-x-0" : "-translate-x-full xl:hidden",
+                  isFilterOpen
+                    ? "translate-x-0"
+                    : "-translate-x-full xl:hidden",
                 ].join(" ")}
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex flex-col gap-1">
-                    <h3 className="text-lg font-bold leading-7 text-slate-900">Filters</h3>
-                    <p className="text-xs font-medium leading-4 text-slate-500">Narrow your search results</p>
+                    <h3 className="text-lg font-bold leading-7 text-slate-900">
+                      Filters
+                    </h3>
+                    <p className="text-xs font-medium leading-4 text-slate-500">
+                      Narrow your search results
+                    </p>
                   </div>
                   <button
                     onClick={() => setIsFilterOpen(false)}
@@ -530,7 +594,9 @@ export default function HomePage() {
                   <div className="flex flex-col gap-4">
                     <div className="inline-flex items-center gap-2">
                       <LayoutGrid className="h-3.5 w-3.5 text-blue-600" />
-                      <span className="text-sm font-semibold leading-5 text-blue-600">Category</span>
+                      <span className="text-sm font-semibold leading-5 text-blue-600">
+                        Category
+                      </span>
                     </div>
                     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-1">
                       {CATEGORY_OPTIONS.map((category) => {
@@ -542,18 +608,30 @@ export default function HomePage() {
                             onClick={() => handleCategoryToggle(category)}
                             className={[
                               "inline-flex items-center gap-2.5 rounded-3xl px-2 py-2.5 text-left",
-                              isChecked ? "bg-slate-50 pr-16 outline outline-1 outline-slate-100" : "px-2.5",
+                              isChecked
+                                ? "bg-slate-50 pr-16 outline-1 outline-slate-100"
+                                : "px-2.5",
                             ].join(" ")}
                           >
                             <span
                               className={[
                                 "inline-flex h-4 w-4 items-center justify-center rounded-sm border",
-                                isChecked ? "border-transparent bg-blue-600" : "border-slate-300 bg-white",
+                                isChecked
+                                  ? "border-transparent bg-blue-600"
+                                  : "border-slate-300 bg-white",
                               ].join(" ")}
                             >
-                              {isChecked && <Check className="h-3 w-3 text-white" />}
+                              {isChecked && (
+                                <Check className="h-3 w-3 text-white" />
+                              )}
                             </span>
-                            <span className={isChecked ? "text-sm font-medium leading-5 text-slate-700" : "text-sm font-medium leading-5 text-slate-600"}>
+                            <span
+                              className={
+                                isChecked
+                                  ? "text-sm font-medium leading-5 text-slate-700"
+                                  : "text-sm font-medium leading-5 text-slate-600"
+                              }
+                            >
                               {category}
                             </span>
                           </button>
@@ -565,7 +643,9 @@ export default function HomePage() {
                   <div className="flex flex-col gap-4">
                     <div className="inline-flex items-center gap-2">
                       <CalendarRange className="h-3.5 w-3.5 text-slate-500" />
-                      <span className="text-sm font-semibold leading-5 text-slate-500">Date</span>
+                      <span className="text-sm font-semibold leading-5 text-slate-500">
+                        Date
+                      </span>
                     </div>
                     <div className="grid grid-cols-1 gap-1 sm:grid-cols-3 xl:grid-cols-1">
                       <button
@@ -576,7 +656,9 @@ export default function HomePage() {
                         }}
                         className={[
                           "inline-flex items-center rounded-2xl px-3 py-2 text-sm leading-5",
-                          dateFilter === "any" ? "bg-blue-50 font-bold text-blue-600" : "font-medium text-slate-600",
+                          dateFilter === "any"
+                            ? "bg-blue-50 font-bold text-blue-600"
+                            : "font-medium text-slate-600",
                         ].join(" ")}
                       >
                         Anytime
@@ -589,7 +671,9 @@ export default function HomePage() {
                         }}
                         className={[
                           "inline-flex items-center rounded-2xl px-3 py-2 text-sm leading-5",
-                          dateFilter === "weekend" ? "bg-blue-50 font-bold text-blue-600" : "font-medium text-slate-600",
+                          dateFilter === "weekend"
+                            ? "bg-blue-50 font-bold text-blue-600"
+                            : "font-medium text-slate-600",
                         ].join(" ")}
                       >
                         This Weekend
@@ -602,7 +686,9 @@ export default function HomePage() {
                         }}
                         className={[
                           "inline-flex items-center rounded-2xl px-3 py-2 text-sm leading-5",
-                          dateFilter === "next_month" ? "bg-blue-50 font-bold text-blue-600" : "font-medium text-slate-600",
+                          dateFilter === "next_month"
+                            ? "bg-blue-50 font-bold text-blue-600"
+                            : "font-medium text-slate-600",
                         ].join(" ")}
                       >
                         Next Month
@@ -613,7 +699,9 @@ export default function HomePage() {
                   <div className="flex flex-col gap-4">
                     <div className="inline-flex items-center gap-2">
                       <CalendarDays className="h-3.5 w-3.5 text-slate-500" />
-                      <span className="text-sm font-semibold leading-5 text-slate-500">Time</span>
+                      <span className="text-sm font-semibold leading-5 text-slate-500">
+                        Time
+                      </span>
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-4 xl:grid-cols-2">
                       {TIME_OPTIONS.map((option) => (
@@ -626,7 +714,9 @@ export default function HomePage() {
                           }}
                           className={[
                             "rounded-2xl px-3 py-2 font-semibold capitalize",
-                            timeFilter === option ? "bg-blue-50 text-blue-600" : "bg-slate-50 text-slate-500",
+                            timeFilter === option
+                              ? "bg-blue-50 text-blue-600"
+                              : "bg-slate-50 text-slate-500",
                           ].join(" ")}
                         >
                           {option === "any" ? "Any" : option}
@@ -638,7 +728,9 @@ export default function HomePage() {
                   <div className="flex flex-col gap-3">
                     <div className="inline-flex items-center gap-2">
                       <MapPin className="h-3.5 w-3.5 text-slate-500" />
-                      <span className="text-sm font-semibold leading-5 text-slate-500">Location</span>
+                      <span className="text-sm font-semibold leading-5 text-slate-500">
+                        Location
+                      </span>
                     </div>
                     <input
                       value={locationQuery}
@@ -655,10 +747,12 @@ export default function HomePage() {
                   <div className="relative h-20">
                     <div className="inline-flex items-center gap-2">
                       <BadgeDollarSign className="h-3.5 w-3.5 text-slate-500" />
-                      <span className="text-sm font-semibold leading-5 text-slate-500">Price Range</span>
+                      <span className="text-sm font-semibold leading-5 text-slate-500">
+                        Price Range
+                      </span>
                     </div>
                     <div className="absolute left-0 top-11 h-1.5 w-full max-w-56 rounded-full bg-slate-200" />
-                    <div className="absolute left-0 top-[58px] inline-flex w-full max-w-56 items-start justify-between text-[10px] font-bold uppercase leading-4 tracking-wide text-slate-400">
+                    <div className="absolute left-0 top-14.5 inline-flex w-full max-w-56 items-start justify-between text-[10px] font-bold uppercase leading-4 tracking-wide text-slate-400">
                       <span>$0</span>
                       <span>$500+</span>
                     </div>
@@ -667,7 +761,9 @@ export default function HomePage() {
                   <div className="flex flex-col gap-4">
                     <div className="inline-flex items-center gap-2">
                       <Radio className="h-3.5 w-3.5 text-slate-500" />
-                      <span className="text-sm font-semibold leading-5 text-slate-500">Status</span>
+                      <span className="text-sm font-semibold leading-5 text-slate-500">
+                        Status
+                      </span>
                     </div>
                     <div className="inline-flex w-full items-start rounded-3xl bg-slate-100 p-1">
                       <button className="flex-1 rounded-2xl bg-white py-1.5 text-center text-xs font-bold leading-4 text-blue-600 shadow-sm">
@@ -684,8 +780,12 @@ export default function HomePage() {
               <div className="flex-1 overflow-y-auto p-6 sm:p-8 lg:p-12">
                 <section className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
                   <div className="space-y-2">
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">Trending Worldwide</p>
-                    <h2 className="text-4xl font-black leading-10 text-slate-900">Explore Events</h2>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">
+                      Trending Worldwide
+                    </p>
+                    <h2 className="text-4xl font-black leading-10 text-slate-900">
+                      Explore Events
+                    </h2>
                     <p className="max-w-xl text-lg leading-7 text-slate-500">
                       Discover curated experiences designed to
                       <br className="hidden sm:block" />
@@ -700,43 +800,49 @@ export default function HomePage() {
                         "inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-xs font-bold transition",
                         isFilterOpen
                           ? "bg-slate-900 text-white"
-                          : "bg-white text-slate-600 outline outline-1 outline-slate-200/70 hover:bg-slate-50",
+                          : "bg-white text-slate-600 outline outline-slate-200/70 hover:bg-slate-50",
                       ].join(" ")}
                     >
                       <SlidersHorizontal className="h-3.5 w-3.5" />
-                      <span className="hidden sm:inline">{isFilterOpen ? "Hide Filters" : "Show Filters"}</span>
+                      <span className="hidden sm:inline">
+                        {isFilterOpen ? "Hide Filters" : "Show Filters"}
+                      </span>
                     </button>
 
                     <div className="inline-flex items-center gap-2 rounded-3xl bg-white p-1.5 outline outline-1 outline-slate-200/50">
-                    <button
-                      onClick={() => setSortBy("popularity")}
-                      className={[
-                        "rounded-2xl px-4 py-2 text-xs font-bold",
-                        sortBy === "popularity"
-                          ? "bg-blue-600 text-white shadow-[0px_4px_6px_-1px_rgba(59,130,246,0.20)]"
-                          : "text-slate-500",
-                      ].join(" ")}
-                    >
-                      Popularity
-                    </button>
-                    <button
-                      onClick={() => setSortBy("date")}
-                      className={[
-                        "rounded-2xl px-4 py-2 text-xs font-bold",
-                        sortBy === "date" ? "bg-blue-600 text-white" : "text-slate-500",
-                      ].join(" ")}
-                    >
-                      Date
-                    </button>
-                    <button
-                      onClick={() => setSortBy("price")}
-                      className={[
-                        "rounded-2xl px-4 py-2 text-xs font-bold",
-                        sortBy === "price" ? "bg-blue-600 text-white" : "text-slate-500",
-                      ].join(" ")}
-                    >
-                      Price
-                    </button>
+                      <button
+                        onClick={() => setSortBy("popularity")}
+                        className={[
+                          "rounded-2xl px-4 py-2 text-xs font-bold",
+                          sortBy === "popularity"
+                            ? "bg-blue-600 text-white shadow-[0px_4px_6px_-1px_rgba(59,130,246,0.20)]"
+                            : "text-slate-500",
+                        ].join(" ")}
+                      >
+                        Popularity
+                      </button>
+                      <button
+                        onClick={() => setSortBy("date")}
+                        className={[
+                          "rounded-2xl px-4 py-2 text-xs font-bold",
+                          sortBy === "date"
+                            ? "bg-blue-600 text-white"
+                            : "text-slate-500",
+                        ].join(" ")}
+                      >
+                        Date
+                      </button>
+                      <button
+                        onClick={() => setSortBy("price")}
+                        className={[
+                          "rounded-2xl px-4 py-2 text-xs font-bold",
+                          sortBy === "price"
+                            ? "bg-blue-600 text-white"
+                            : "text-slate-500",
+                        ].join(" ")}
+                      >
+                        Price
+                      </button>
                     </div>
                   </div>
                 </section>
@@ -744,7 +850,9 @@ export default function HomePage() {
                 <section
                   className={[
                     "mt-12 grid w-full grid-cols-1 gap-6 md:grid-cols-2",
-                    isFilterOpen ? "xl:grid-cols-2 2xl:grid-cols-3" : "xl:grid-cols-3 2xl:grid-cols-4",
+                    isFilterOpen
+                      ? "xl:grid-cols-2 2xl:grid-cols-3"
+                      : "xl:grid-cols-3 2xl:grid-cols-4",
                   ].join(" ")}
                 >
                   {paginatedEvents.map((event) => {
@@ -755,7 +863,7 @@ export default function HomePage() {
                       return (
                         <article
                           key={event.id}
-                          className="relative inline-flex h-[606px] w-full overflow-hidden rounded-2xl bg-white shadow-[0px_2px_10px_-2px_rgba(0,0,0,0.02),0px_4px_20px_-2px_rgba(37,99,235,0.05)] outline outline-1 outline-slate-200/50 md:col-span-2 xl:col-span-2"
+                          className="relative inline-flex h-151.5 w-full overflow-hidden rounded-2xl bg-white shadow-[0px_2px_10px_-2px_rgba(0,0,0,0.02),0px_4px_20px_-2px_rgba(37,99,235,0.05)] outline outline-1 outline-slate-200/50 md:col-span-2 xl:col-span-2"
                         >
                           <button
                             onClick={() => {
@@ -767,7 +875,11 @@ export default function HomePage() {
                           </button>
 
                           <div className="relative w-36">
-                            <img src={FEATURED_CARD.image} alt="New Year" className="h-full w-full object-cover" />
+                            <img
+                              src={FEATURED_CARD.image}
+                              alt="New Year"
+                              className="h-full w-full object-cover"
+                            />
                             <div className="absolute inset-0 bg-gradient-to-r from-slate-900/40 to-transparent" />
                           </div>
 
@@ -831,7 +943,9 @@ export default function HomePage() {
                               </button>
 
                               <div>
-                                <p className="text-2xl font-black leading-8 text-slate-900">{FEATURED_CARD.price}</p>
+                                <p className="text-2xl font-black leading-8 text-slate-900">
+                                  {FEATURED_CARD.price}
+                                </p>
                                 <p className="text-[10px] font-bold uppercase leading-4 tracking-wide text-slate-400">
                                   {FEATURED_CARD.passLines.map((line) => (
                                     <span key={line} className="block">
@@ -852,20 +966,38 @@ export default function HomePage() {
                         className="w-full overflow-hidden rounded-2xl bg-white shadow-[0px_2px_10px_-2px_rgba(0,0,0,0.02),0px_4px_20px_-2px_rgba(37,99,235,0.05)] outline outline-1 outline-slate-200/50"
                       >
                         <div className="relative h-60 overflow-hidden">
-                          <img src={event.image} alt={event.titleLines.join(" ")} className="h-full w-full object-cover" />
+                          <img
+                            src={event.image}
+                            alt={event.titleLines.join(" ")}
+                            className="h-full w-full object-cover"
+                          />
                           {event.badge && (
                             <div className="absolute right-4 top-4">
-                              <div className={`${event.badge.className} inline-flex items-center gap-1.5 rounded-2xl px-2.5 py-1`}>
-                                {event.badge.withDot && <span className="h-1.5 w-1.5 rounded-full bg-white" />}
-                                <span className="text-[10px] font-black uppercase tracking-wide text-white">{event.badge.text}</span>
+                              <div
+                                className={`${event.badge.className} inline-flex items-center gap-1.5 rounded-2xl px-2.5 py-1`}
+                              >
+                                {event.badge.withDot && (
+                                  <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                                )}
+                                <span className="text-[10px] font-black uppercase tracking-wide text-white">
+                                  {event.badge.text}
+                                </span>
                               </div>
                             </div>
                           )}
                         </div>
 
-                        <div className={event.id === 3 ? "px-6 pb-14 pt-6" : "px-6 pb-11 pt-6"}>
+                        <div
+                          className={
+                            event.id === 3
+                              ? "px-6 pb-14 pt-6"
+                              : "px-6 pb-11 pt-6"
+                          }
+                        >
                           <div className="flex items-center justify-between pb-3">
-                            <p className={`${event.categoryClassName} text-[10px] font-black uppercase leading-4 tracking-wide`}>
+                            <p
+                              className={`${event.categoryClassName} text-[10px] font-black uppercase leading-4 tracking-wide`}
+                            >
                               {event.categoryLines.map((line) => (
                                 <span key={line} className="block">
                                   {line}
@@ -908,12 +1040,18 @@ export default function HomePage() {
 
                           <div className="flex items-center justify-between border-t border-slate-100 pt-5">
                             <div>
-                              <p className="text-[10px] font-bold uppercase leading-4 tracking-wide text-slate-400">Tickets from</p>
-                              <p className="text-xl font-black leading-7 text-slate-900">{event.price}</p>
+                              <p className="text-[10px] font-bold uppercase leading-4 tracking-wide text-slate-400">
+                                Tickets from
+                              </p>
+                              <p className="text-xl font-black leading-7 text-slate-900">
+                                {event.price}
+                              </p>
                             </div>
 
                             <button
-                              onMouseEnter={() => setHoveredViewCardId(event.id)}
+                              onMouseEnter={() =>
+                                setHoveredViewCardId(event.id)
+                              }
                               onMouseLeave={() => setHoveredViewCardId(null)}
                               onClick={() => {
                                 setExpandedCardId(event.id);
@@ -926,7 +1064,10 @@ export default function HomePage() {
                                   : "text-slate-600 outline outline-2 outline-slate-200",
                               ].join(" ")}
                             >
-                              {(isHoveringView ? ["Get", "Tickets"] : ["View", "Event"]).map((line) => (
+                              {(isHoveringView
+                                ? ["Get", "Tickets"]
+                                : ["View", "Event"]
+                              ).map((line) => (
                                 <span key={line} className="block">
                                   {line}
                                 </span>
@@ -941,15 +1082,21 @@ export default function HomePage() {
 
                 <div className="mt-8 inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-2">
                   <button
-                    onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.max(1, prev - 1))
+                    }
                     className="rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-600 disabled:opacity-40"
                     disabled={safePage === 1}
                   >
                     Prev
                   </button>
-                  <span className="text-xs font-semibold text-slate-500">Page {safePage} / {totalPages}</span>
+                  <span className="text-xs font-semibold text-slate-500">
+                    Page {safePage} / {totalPages}
+                  </span>
                   <button
-                    onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                    }
                     className="rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-600 disabled:opacity-40"
                     disabled={safePage === totalPages}
                   >
@@ -960,7 +1107,9 @@ export default function HomePage() {
                 <footer className="mt-16 w-full border-t border-slate-200/50 pt-12">
                   <div className="grid w-full grid-cols-1 gap-10 pb-12 md:grid-cols-2 xl:grid-cols-4">
                     <div className="space-y-6">
-                      <p className="text-2xl font-black leading-8 text-blue-600">EventFlow</p>
+                      <p className="text-2xl font-black leading-8 text-blue-600">
+                        EventFlow
+                      </p>
                       <p className="text-sm font-normal leading-6 text-slate-500">
                         <span className="block">The global</span>
                         <span className="block">platform for</span>
@@ -973,25 +1122,43 @@ export default function HomePage() {
                     </div>
 
                     <div className="space-y-6">
-                      <p className="text-[10px] font-bold uppercase leading-4 tracking-wide text-slate-900">Company</p>
+                      <p className="text-[10px] font-bold uppercase leading-4 tracking-wide text-slate-900">
+                        Company
+                      </p>
                       <div className="space-y-3">
-                        <p className="py-[1.5px] text-sm font-normal leading-5 text-slate-500">About Us</p>
-                        <p className="py-[1.5px] text-sm font-normal leading-5 text-slate-500">Careers</p>
-                        <p className="py-[1.5px] text-sm font-normal leading-5 text-slate-500">Press</p>
+                        <p className="py-[1.5px] text-sm font-normal leading-5 text-slate-500">
+                          About Us
+                        </p>
+                        <p className="py-[1.5px] text-sm font-normal leading-5 text-slate-500">
+                          Careers
+                        </p>
+                        <p className="py-[1.5px] text-sm font-normal leading-5 text-slate-500">
+                          Press
+                        </p>
                       </div>
                     </div>
 
                     <div className="space-y-6">
-                      <p className="text-[10px] font-bold uppercase leading-4 tracking-wide text-slate-900">Support</p>
+                      <p className="text-[10px] font-bold uppercase leading-4 tracking-wide text-slate-900">
+                        Support
+                      </p>
                       <div className="space-y-3">
-                        <p className="py-[1.5px] text-sm font-normal leading-5 text-slate-500">Help Center</p>
-                        <p className="py-[1.5px] text-sm font-normal leading-5 text-slate-500">Privacy</p>
-                        <p className="py-[1.5px] text-sm font-normal leading-5 text-slate-500">Terms</p>
+                        <p className="py-[1.5px] text-sm font-normal leading-5 text-slate-500">
+                          Help Center
+                        </p>
+                        <p className="py-[1.5px] text-sm font-normal leading-5 text-slate-500">
+                          Privacy
+                        </p>
+                        <p className="py-[1.5px] text-sm font-normal leading-5 text-slate-500">
+                          Terms
+                        </p>
                       </div>
                     </div>
 
                     <div className="space-y-6">
-                      <p className="text-[10px] font-bold uppercase leading-4 tracking-wide text-slate-900">Connect</p>
+                      <p className="text-[10px] font-bold uppercase leading-4 tracking-wide text-slate-900">
+                        Connect
+                      </p>
                       <div className="inline-flex items-start gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-3xl bg-slate-100">
                           <div className="h-3.5 w-3.5 rounded-sm bg-slate-500" />
@@ -1008,8 +1175,12 @@ export default function HomePage() {
                       © 2024 EventFlow Inc. All rights reserved.
                     </p>
                     <div className="inline-flex items-start gap-8">
-                      <p className="text-[10px] font-bold uppercase leading-4 tracking-wide text-slate-400">Global Access</p>
-                      <p className="text-[10px] font-bold uppercase leading-4 tracking-wide text-slate-400">Safe &amp; Secure</p>
+                      <p className="text-[10px] font-bold uppercase leading-4 tracking-wide text-slate-400">
+                        Global Access
+                      </p>
+                      <p className="text-[10px] font-bold uppercase leading-4 tracking-wide text-slate-400">
+                        Safe &amp; Secure
+                      </p>
                     </div>
                   </div>
                 </footer>
