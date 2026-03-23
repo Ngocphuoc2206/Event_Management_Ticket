@@ -16,8 +16,10 @@ export const AUTH_REDIRECT_ROUTES: Record<UserRole, string> = {
   CUSTOMER: "/customer",
 };
 
-export const LOGIN_ENDPOINT = process.env.NEXT_PUBLIC_LOGIN_ENDPOINT || "/auth/login";
-export const REGISTER_ENDPOINT = process.env.NEXT_PUBLIC_REGISTER_ENDPOINT || "/auth/register";
+export const LOGIN_ENDPOINT =
+  process.env.NEXT_PUBLIC_LOGIN_ENDPOINT || "/auth/login";
+export const REGISTER_ENDPOINT =
+  process.env.NEXT_PUBLIC_REGISTER_ENDPOINT || "/auth/register";
 export const BACKEND_HEALTH_ENDPOINT = "/api/health";
 
 export const AUTH_FOOTER_LINKS = [
@@ -40,11 +42,14 @@ export const AUTH_PRIMARY_BUTTON_CLASSNAME =
 export const AUTH_CHECKBOX_CLASSNAME =
   "h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500";
 
-export const AUTH_PASSWORD_TOGGLE_CLASSNAME = "ml-3 transition hover:text-slate-700";
+export const AUTH_PASSWORD_TOGGLE_CLASSNAME =
+  "ml-3 transition hover:text-slate-700";
 
-export const AUTH_TEXT_LINK_CLASSNAME = "font-semibold text-blue-700 transition hover:text-violet-600";
+export const AUTH_TEXT_LINK_CLASSNAME =
+  "font-semibold text-blue-700 transition hover:text-violet-600";
 
-export const AUTH_SECONDARY_LINK_CLASSNAME = "font-medium text-blue-700 transition hover:text-violet-600";
+export const AUTH_SECONDARY_LINK_CLASSNAME =
+  "font-medium text-blue-700 transition hover:text-violet-600";
 
 export const AUTH_DIVIDER_TEXT_CLASSNAME =
   "text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400";
