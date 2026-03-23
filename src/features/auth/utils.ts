@@ -3,6 +3,8 @@ import { isAxiosError } from "axios";
 import { AUTH_REDIRECT_ROUTES, AUTH_STORAGE_KEYS } from "@/features/auth/constants";
 import type { ApiResponse, ApiResult, AuthPayload, UserRole } from "@/features/auth/types";
 
+const AUTH_PERSISTED_KEYS = Object.values(AUTH_STORAGE_KEYS);
+
 export function isApiResponse<T>(response: ApiResult<T>): response is ApiResponse<T> {
   return typeof response === "object" && response !== null && !Array.isArray(response);
 }
@@ -62,6 +64,22 @@ export function persistAuthTokens(payload?: AuthPayload) {
   }
 }
 
+export function clearPersistedAuth() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  AUTH_PERSISTED_KEYS.forEach((key) => {
+    localStorage.removeItem(key);
+    expireCookie(key);
+  });
+}
+
 export function getPostAuthRoute(role?: UserRole) {
   return role ? AUTH_REDIRECT_ROUTES[role] : "/";
+}
+
+function expireCookie(name: string) {
+  document.cookie = `${name}=; Max-Age=0; path=/`;
+  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
 }

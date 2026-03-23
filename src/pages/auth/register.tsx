@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useDispatch } from "react-redux";
 
 import {
   APP_NAME,
@@ -11,6 +12,7 @@ import {
   AUTH_PRIMARY_BUTTON_CLASSNAME,
   AUTH_SECONDARY_LINK_CLASSNAME,
   AUTH_SHELL_CLASSNAME,
+  AUTH_TEXT_LINK_CLASSNAME,
   AUTH_TEXT_INPUT_CLASSNAME,
   AUTH_TEXT_LINK_CLASSNAME,
   DEFAULT_API_BASE_URL,
@@ -43,6 +45,7 @@ import {
   persistAuthTokens,
 } from "@/features/auth/utils";
 import { checkBackendHealth } from "@/features/httpClient/health.service";
+import { setUser } from "@/stores/slices/user/user.slice";
 
 type RegisterFormValues = {
   fullName: string;
@@ -67,6 +70,7 @@ const INITIAL_FORM_VALUES: RegisterFormValues = {
 
 export default function RegisterPage() {
   const router = useRouter();
+  const dispatch = useDispatch();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -121,9 +125,19 @@ export default function RegisterPage() {
 
       const registeredUser = getApiResultData<RegisterResponse>(response);
       const responseMessage = getApiResultMessage(response);
-      const shouldRedirect = Boolean(registeredUser?.accessToken);
+      const shouldRedirect = Boolean(registeredUser);
 
       persistAuthTokens(registeredUser);
+      if (registeredUser) {
+        dispatch(
+          setUser({
+            id: registeredUser.id ?? null,
+            fullName: registeredUser.fullName ?? null,
+            role: registeredUser.role ?? null,
+            isLoggedIn: true,
+          }),
+        );
+      }
       setSubmitSuccess(
         responseMessage ||
           (shouldRedirect

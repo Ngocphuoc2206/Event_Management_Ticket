@@ -18,11 +18,15 @@ export type ApiResult<T> = T | ApiResponse<T>;
 
 export type UserRole = "CUSTOMER" | "ORGANIZER" | "ADMIN";
 
-export type AuthPayload = {
+export type UserResponse = {
   id?: string;
   fullName?: string;
   email?: string;
   phone?: string;
+  password?: string;
+};
+
+export type AuthPayload = UserResponse & {
   role?: UserRole;
   accessToken?: string;
   refreshToken?: string;
