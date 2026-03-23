@@ -1,13 +1,14 @@
 package com.envenHub.backend.config;
 
-import com.envenHub.backend.Security.JwtAuthenticationFilter;
+import com.envenHub.backend.constant.RoleName;
+import com.envenHub.backend.security.JwtAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -27,11 +28,6 @@ public class SecurityConfig {
             "/auth/refresh"
     };
 
-    // Authenticated endpoints
-    public static final String[] PRIVATE_ENDPOINTS = {
-
-    };
-
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -43,21 +39,29 @@ public class SecurityConfig {
                 // Turn off CSRF
                 .csrf(AbstractHttpConfigurer::disable)
 
-                .cors(cors -> {})
-
-                .authorizeHttpRequests(auth -> auth
-                                //API public
-                                .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
-
-                                // API authenticated
-                                .requestMatchers(PRIVATE_ENDPOINTS).authenticated()
-                                .anyRequest().authenticated()
-                )
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .cors(Customizer.withDefaults())
 
                 // HTTP Basic
                 .httpBasic(AbstractHttpConfigurer::disable)
-                .formLogin(AbstractHttpConfigurer::disable);
+                .formLogin(AbstractHttpConfigurer::disable)
+
+                .authorizeHttpRequests(auth -> auth
+                        //API public
+                        .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
+
+                        //Admin routes
+                        .requestMatchers("/api/admin/**").hasRole(RoleName.ADMIN)
+
+                        //Organizer routes
+                        .requestMatchers("/api/organizer/**").hasAnyRole(RoleName.ORGANIZER)
+
+                        //Customer routes
+                        .requestMatchers("/api/customer/**").hasAnyRole(RoleName.CUSTOMER)
+
+                        //logout
+                        .requestMatchers("/api/logout").authenticated()
+                )
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
