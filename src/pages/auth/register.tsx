@@ -1,5 +1,6 @@
 import Head from "next/head";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
@@ -59,6 +60,7 @@ const INITIAL_FORM_VALUES: RegisterFormValues = {
 
 export default function RegisterPage() {
   const { register: registerAccount } = useAuth();
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -87,6 +89,12 @@ export default function RegisterPage() {
       });
       setSubmitSuccess(result.message);
       reset(INITIAL_FORM_VALUES);
+
+      if (result.shouldRedirect && result.redirectTo) {
+        window.setTimeout(() => {
+          void router.push(result.redirectTo);
+        }, 1200);
+      }
     } catch (error) {
       setSubmitError(
         getApiErrorMessage(error, "Registration failed. Please try again."),

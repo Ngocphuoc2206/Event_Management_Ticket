@@ -1,5 +1,6 @@
 import Head from "next/head";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
@@ -49,6 +50,7 @@ const INITIAL_FORM_VALUES: LoginFormValues = {
 
 export default function LoginPage() {
   const { login } = useAuth();
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
@@ -71,6 +73,12 @@ export default function LoginPage() {
         password: data.password,
       });
       setSubmitSuccess(result.message);
+
+      if (result.shouldRedirect && result.redirectTo) {
+        window.setTimeout(() => {
+          void router.push(result.redirectTo);
+        }, 800);
+      }
     } catch (error) {
       setSubmitError(
         getApiErrorMessage(

@@ -1,5 +1,3 @@
-import { useRouter } from "next/router";
-
 import { loginUser } from "@/features/auth/services/login.service";
 import { logoutUser } from "@/features/auth/services/logout.service";
 import { registerUser } from "@/features/auth/services/register.service";
@@ -33,38 +31,28 @@ type LogoutActionResult = {
 };
 
 type RedirectOptions = {
+  redirectTo?: string;
   redirect?: boolean;
-  redirectDelayMs?: number;
 };
 
-function wait(ms: number) {
-  return new Promise((resolve) => {
-    window.setTimeout(resolve, ms);
-  });
-}
-
 export function useAuth() {
-  const router = useRouter();
-
   const login = async (
     payload: LoginPayload,
-    options?: RedirectOptions,
+    options?: Pick<RedirectOptions, "redirectTo">,
   ): Promise<AuthActionResult> => {
     const response = await loginUser(payload);
     const authPayload = getApiResultData<LoginResponse>(response);
     const session = createAuthSession(authPayload);
     const shouldRedirect = Boolean(session?.accessToken);
-    const redirectTo = shouldRedirect ? getPostAuthRoute(session?.role ?? undefined) : null;
+    const redirectTo =
+      shouldRedirect
+        ? options?.redirectTo ?? getPostAuthRoute(session?.role ?? undefined)
+        : null;
     const message =
       getApiResultMessage(response) ||
       (shouldRedirect ? "Login successful. Redirecting..." : "Login successful.");
 
     persistResolvedAuthSession(session);
-
-    if (shouldRedirect && options?.redirect !== false && redirectTo) {
-      await wait(options?.redirectDelayMs ?? 800);
-      await router.push(redirectTo);
-    }
 
     return {
       message,
@@ -76,13 +64,16 @@ export function useAuth() {
 
   const register = async (
     payload: RegisterPayload,
-    options?: RedirectOptions,
+    options?: Pick<RedirectOptions, "redirectTo">,
   ): Promise<AuthActionResult> => {
     const response = await registerUser(payload);
     const authPayload = getApiResultData<RegisterResponse>(response);
     const session = createAuthSession(authPayload, { fallbackRole: "CUSTOMER" });
     const shouldRedirect = Boolean(session?.accessToken);
-    const redirectTo = shouldRedirect ? getPostAuthRoute(session?.role ?? undefined) : null;
+    const redirectTo =
+      shouldRedirect
+        ? options?.redirectTo ?? getPostAuthRoute(session?.role ?? undefined)
+        : null;
     const message =
       getApiResultMessage(response) ||
       (shouldRedirect
@@ -90,11 +81,6 @@ export function useAuth() {
         : "Account created successfully.");
 
     persistResolvedAuthSession(session);
-
-    if (shouldRedirect && options?.redirect !== false && redirectTo) {
-      await wait(options?.redirectDelayMs ?? 1200);
-      await router.push(redirectTo);
-    }
 
     return {
       message,
@@ -106,23 +92,20 @@ export function useAuth() {
 
   const logout = async (
     payload?: LogoutPayload,
-    options?: { redirectTo?: string; redirect?: boolean },
+    options?: { redirectTo?: string },
   ): Promise<LogoutActionResult> => {
-    try {
-      const response = await logoutUser(payload);
-      const message = getApiResultMessage(response) || "Log out successfully.";
+    const redirectTo = options?.redirectTo ?? "/auth/login";
 
-      return {
-        message,
-        redirectTo: options?.redirectTo ?? "/auth/login",
-      };
-    } finally {
-      clearAuthSession();
+    clearAuthSession();
 
-      if (options?.redirect !== false) {
-        await router.push(options?.redirectTo ?? "/auth/login");
-      }
-    }
+    void logoutUser(payload)
+      .then((response) => getApiResultMessage(response))
+      .catch(() => null);
+
+    return {
+      message: "Log out successfully.",
+      redirectTo,
+    };
   };
 
   return {
