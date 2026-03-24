@@ -1,9 +1,27 @@
-import UserLayout from "@/components/templates/UserLayout/UserLayout";
+import Head from "next/head";
+
+import {
+  OrganizerDashboardContent,
+  OrganizerDashboardSidebar,
+  organizerNavigationItems,
+  organizerRecentOrders,
+  organizerProfile,
+  organizerStatCards,
+} from "@/features/organizer";
 
 export default function OrganizerDashboardPage() {
   return (
-    <UserLayout title="Organizer Dashboard">
-      <div className="mx-auto max-w-7xl px-6 py-10">Organizer Dashboard</div>
-    </UserLayout>
+    <>
+      <Head>
+        <title>Organizer Dashboard | EventHub</title>
+      </Head>
+
+      <main className="min-h-screen w-full bg-[#eef2f8] text-slate-900">
+        <div className="flex min-h-screen w-full flex-col lg:flex-row">
+          <OrganizerDashboardSidebar navigationItems={organizerNavigationItems} profile={organizerProfile} />
+          <OrganizerDashboardContent statCards={organizerStatCards} recentOrders={organizerRecentOrders} />
+        </div>
+      </main>
+    </>
   );
 }
