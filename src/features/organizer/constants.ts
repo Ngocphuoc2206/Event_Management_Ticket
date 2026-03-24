@@ -9,7 +9,7 @@ import type {
 
 export const organizerNavigationItems = [
   { label: "Dashboard", href: "/organizer", icon: "dashboard", active: true },
-  { label: "Events", href: "#events", icon: "events" },
+  { label: "Events", href: "/organizer/events", icon: "events" },
   { label: "Create Event", href: "#create-event", icon: "calendar" },
   { label: "Tickets", href: "#tickets", icon: "ticket" },
   { label: "Attendees", href: "#attendees", icon: "attendees" },
@@ -17,6 +17,13 @@ export const organizerNavigationItems = [
   { label: "Reports", href: "#reports", icon: "reports" },
   { label: "Settings", href: "#settings", icon: "settings" },
 ] satisfies OrganizerNavItem[];
+
+export function getOrganizerNavigationItems(activeLabel: OrganizerNavItem["label"]) {
+  return organizerNavigationItems.map((item) => ({
+    ...item,
+    active: item.label === activeLabel,
+  }));
+}
 
 export const organizerProfile = {
   name: "Giang Đẹp Zai Ahihi",

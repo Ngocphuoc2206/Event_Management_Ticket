@@ -2,6 +2,7 @@ import Image from "next/image";
 import { UserCircle2 } from "lucide-react";
 
 import { OrganizerDashboardIcon } from "./OrganizerDashboardIcons";
+import { OrganizerMetaFooter } from "../shared/OrganizerMetaFooter";
 import type { OrganizerOrderRow, OrganizerStatCard } from "../types";
 
 type OrganizerDashboardContentProps = {
@@ -281,6 +282,8 @@ export function OrganizerDashboardContent({ statCards, recentOrders }: Organizer
             </table>
           </div>
         </section>
+
+        <OrganizerMetaFooter />
       </div>
     </section>
   );
