@@ -13,7 +13,6 @@ import {
   AUTH_SHELL_CLASSNAME,
   AUTH_TEXT_LINK_CLASSNAME,
   AUTH_TEXT_INPUT_CLASSNAME,
-  AUTH_TEXT_LINK_CLASSNAME,
   DEFAULT_API_BASE_URL,
 } from "@/features/auth/constants";
 import {
