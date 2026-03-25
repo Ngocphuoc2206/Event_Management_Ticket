@@ -1,7 +1,7 @@
 import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
 
@@ -34,17 +34,9 @@ import {
   UserIcon,
 } from "@/features/auth/components/AuthIcons";
 import { AuthPageLayout } from "@/features/auth/components/AuthPageLayout";
-import { registerUser } from "@/features/auth/services/register.service";
-import type { RegisterResponse } from "@/features/auth/types";
-import {
-  getApiErrorMessage,
-  getApiResultData,
-  getApiResultMessage,
-  getPostAuthRoute,
-  persistAuthTokens,
-} from "@/features/auth/utils";
-import { checkBackendHealth } from "@/features/httpClient/health.service";
-import { setUser } from "@/stores/slices/user/user.slice";
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useBackendHealth } from "@/features/auth/hooks/useBackendHealth";
+import { getApiErrorMessage } from "@/features/auth/utils";
 
 type RegisterFormValues = {
   fullName: string;
@@ -68,15 +60,14 @@ const INITIAL_FORM_VALUES: RegisterFormValues = {
 };
 
 export default function RegisterPage() {
+  const { register: registerAccount } = useAuth();
   const router = useRouter();
   const dispatch = useDispatch();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
-  const [isBackendAvailable, setIsBackendAvailable] = useState<boolean | null>(
-    null,
-  );
+  const isBackendAvailable = useBackendHealth();
   const {
     register,
     handleSubmit,
@@ -87,68 +78,23 @@ export default function RegisterPage() {
     defaultValues: INITIAL_FORM_VALUES,
   });
 
-  useEffect(() => {
-    let isMounted = true;
-
-    const verifyBackend = async () => {
-      try {
-        await checkBackendHealth();
-        if (isMounted) {
-          setIsBackendAvailable(true);
-        }
-      } catch {
-        if (isMounted) {
-          setIsBackendAvailable(false);
-        }
-      }
-    };
-
-    void verifyBackend();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
   const onSubmit = async (data: RegisterFormValues) => {
     setSubmitError(null);
     setSubmitSuccess(null);
 
     try {
-      const response = await registerUser({
+      const result = await registerAccount({
         fullName: data.fullName.trim(),
         email: data.email.trim(),
         phone: data.phone.trim(),
         password: data.password,
       });
-
-      const registeredUser = getApiResultData<RegisterResponse>(response);
-      const responseMessage = getApiResultMessage(response);
-      const shouldRedirect = Boolean(registeredUser);
-
-      persistAuthTokens(registeredUser);
-      if (registeredUser) {
-        dispatch(
-          setUser({
-            id: registeredUser.id ?? null,
-            fullName: registeredUser.fullName ?? null,
-            role: registeredUser.role ?? null,
-            isLoggedIn: true,
-          }),
-        );
-      }
-      setSubmitSuccess(
-        responseMessage ||
-          (shouldRedirect
-            ? "Account created successfully. Redirecting..."
-            : "Account created successfully."),
-      );
+      setSubmitSuccess(result.message);
       reset(INITIAL_FORM_VALUES);
 
-      if (shouldRedirect) {
-        const destination = getPostAuthRoute(registeredUser?.role);
+      if (result.shouldRedirect && result.redirectTo) {
         window.setTimeout(() => {
-          void router.push(destination);
+          void router.push(result.redirectTo);
         }, 1200);
       }
     } catch (error) {
