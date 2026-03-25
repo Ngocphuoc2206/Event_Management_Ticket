@@ -41,11 +41,14 @@ export const AUTH_PRIMARY_BUTTON_CLASSNAME =
 export const AUTH_CHECKBOX_CLASSNAME =
   "h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500";
 
-export const AUTH_PASSWORD_TOGGLE_CLASSNAME = "ml-3 transition hover:text-slate-700";
+export const AUTH_PASSWORD_TOGGLE_CLASSNAME =
+  "ml-3 transition hover:text-slate-700";
 
-export const AUTH_TEXT_LINK_CLASSNAME = "font-semibold text-blue-700 transition hover:text-violet-600";
+export const AUTH_TEXT_LINK_CLASSNAME =
+  "font-semibold text-blue-700 transition hover:text-violet-600";
 
-export const AUTH_SECONDARY_LINK_CLASSNAME = "font-medium text-blue-700 transition hover:text-violet-600";
+export const AUTH_SECONDARY_LINK_CLASSNAME =
+  "font-medium text-blue-700 transition hover:text-violet-600";
 
 export const AUTH_DIVIDER_TEXT_CLASSNAME =
   "text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400";

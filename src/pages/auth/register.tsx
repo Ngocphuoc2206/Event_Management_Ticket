@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useDispatch } from "react-redux";
 
 import {
   APP_NAME,
@@ -11,8 +12,8 @@ import {
   AUTH_PRIMARY_BUTTON_CLASSNAME,
   AUTH_SECONDARY_LINK_CLASSNAME,
   AUTH_SHELL_CLASSNAME,
-  AUTH_TEXT_INPUT_CLASSNAME,
   AUTH_TEXT_LINK_CLASSNAME,
+  AUTH_TEXT_INPUT_CLASSNAME,
   DEFAULT_API_BASE_URL,
 } from "@/features/auth/constants";
 import {
@@ -61,6 +62,7 @@ const INITIAL_FORM_VALUES: RegisterFormValues = {
 export default function RegisterPage() {
   const { register: registerAccount } = useAuth();
   const router = useRouter();
+  const dispatch = useDispatch();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -105,7 +107,7 @@ export default function RegisterPage() {
   return (
     <>
       <Head>
-        <title>Register | {APP_NAME}</title>
+        <title>{`Register | ${APP_NAME}`}</title>
       </Head>
 
       <AuthPageLayout

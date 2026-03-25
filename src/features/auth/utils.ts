@@ -9,6 +9,8 @@ import type {
   UserRole,
 } from "@/features/auth/types";
 
+const AUTH_PERSISTED_KEYS = Object.values(AUTH_STORAGE_KEYS);
+
 export function isApiResponse<T>(response: ApiResult<T>): response is ApiResponse<T> {
   return typeof response === "object" && response !== null && !Array.isArray(response);
 }
@@ -169,6 +171,17 @@ export function persistResolvedAuthSession(session?: AuthSession | null) {
   if (session.role) {
     localStorage.setItem(AUTH_STORAGE_KEYS.userRole, session.role);
   }
+}
+
+export function clearPersistedAuth() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  AUTH_PERSISTED_KEYS.forEach((key) => {
+    localStorage.removeItem(key);
+    expireCookie(key);
+  });
 }
 
 export function getPostAuthRoute(role?: UserRole) {
