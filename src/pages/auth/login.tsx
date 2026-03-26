@@ -76,9 +76,11 @@ export default function LoginPage() {
       });
       setSubmitSuccess(result.message);
 
-      if (result.shouldRedirect && result.redirectTo) {
+      const redirectTo = result.redirectTo;
+
+      if (result.shouldRedirect && redirectTo) {
         window.setTimeout(() => {
-          void router.push(result.redirectTo);
+          void router.push(redirectTo);
         }, 800);
       }
     } catch (error) {

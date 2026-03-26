@@ -49,8 +49,8 @@ export default function UserHeader() {
             <div className="w-10 h-10 rounded-full border-2 border-indigo-100 overflow-hidden hover:border-indigo-500 transition-colors">
               <img src="https://i.pravatar.cc/150?u=alex" alt="User" className="w-full h-full object-cover" />
             </div>
+          </Link>
           </div>
-        </div>
         <div data-layer="Container" className="Container flex justify-start items-center gap-8">
           <div data-layer="Container" className="Container flex justify-start items-center gap-6">
             <Link href="/explore" data-layer="Link" className="Link inline-flex flex-col justify-start items-start">

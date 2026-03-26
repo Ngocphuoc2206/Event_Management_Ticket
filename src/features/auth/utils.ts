@@ -11,6 +11,14 @@ import type {
 
 const AUTH_PERSISTED_KEYS = Object.values(AUTH_STORAGE_KEYS);
 
+function expireCookie(name: string) {
+  if (typeof document === "undefined") {
+    return;
+  }
+
+  document.cookie = `${name}=; Max-Age=0; path=/;`;
+}
+
 export function isApiResponse<T>(response: ApiResult<T>): response is ApiResponse<T> {
   return typeof response === "object" && response !== null && !Array.isArray(response);
 }
@@ -34,6 +42,14 @@ export function getApiResultMessage<T>(response: ApiResult<T>): string | undefin
 export function getApiErrorMessage<T>(error: unknown, fallback: string): string {
   if (!isAxiosError<ApiResponse<T> | string>(error)) {
     return fallback;
+  }
+
+  if (error.code === "ECONNABORTED") {
+    return "Request timed out. Backend did not respond in time.";
+  }
+
+  if (!error.response) {
+    return "Cannot reach backend service. Please check the server and try again.";
   }
 
   const responseData = error.response?.data;
