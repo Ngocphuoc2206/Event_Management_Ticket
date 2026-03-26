@@ -51,7 +51,7 @@ export const customerRecentOrders = [
 ] satisfies CustomerOrderRow[];
 
 export const customerProfile = {
-  name: "Alex Johnson",
+  name: "ng hài huớk",
   membership: "Pro Member",
   avatarSrc: "/images/avt.jpg",
 } satisfies CustomerProfile;

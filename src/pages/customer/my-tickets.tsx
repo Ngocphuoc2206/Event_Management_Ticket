@@ -5,7 +5,7 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
 import { useAuth } from "@/features/auth/hooks/useAuth";
-import { CustomerDashboardIcon, CustomerDashboardSidebar, customerProfile } from "@/features/customer";
+import { CustomerDashboardIcon, CustomerDashboardSidebar, customerProfile, customerRecentOrders } from "@/features/customer";
 import type { CustomerNavItem } from "@/features/customer";
 
 type TicketTab = "upcoming" | "past";
@@ -97,6 +97,36 @@ const STATUS_STYLES: Record<TicketStatus, string> = {
   Completed: "bg-slate-800/85 text-white",
   Cancelled: "bg-rose-100 text-rose-700",
 };
+
+function parseCurrencyAmount(amount: string) {
+  const normalizedAmount = Number.parseFloat(amount.replace(/[^0-9.]/g, ""));
+  return Number.isFinite(normalizedAmount) ? normalizedAmount : 0;
+}
+
+function formatCurrencyAmount(amount: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+}
+
+function getSavedValueClass(value: string) {
+  if (value.length >= 12) {
+    return "text-[2.7rem]";
+  }
+
+  if (value.length >= 10) {
+    return "text-[3.2rem]";
+  }
+
+  if (value.length >= 8) {
+    return "text-[3.7rem]";
+  }
+
+  return "text-[4.2rem]";
+}
 
 function getQrSrc(ticket: TicketRecord) {
   const payload = `EventHub|${ticket.code}|${ticket.title}|${ticket.date}|${ticket.time}|${ticket.type}`;
@@ -225,6 +255,11 @@ export default function CustomerMyTicketsPage() {
   const [selectedQrTicket, setSelectedQrTicket] = useState<TicketRecord | null>(null);
   const { logout } = useAuth();
   const router = useRouter();
+  const totalValueSaved = formatCurrencyAmount(
+    customerRecentOrders
+      .filter((order) => order.status === "Completed")
+      .reduce((sum, order) => sum + parseCurrencyAmount(order.amount), 0),
+  );
 
   useEffect(() => {
     if (!selectedQrTicket) {
@@ -299,7 +334,7 @@ export default function CustomerMyTicketsPage() {
               ))}
             </section>
 
-            <section className="mt-9 grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_260px]">
+            <section className="mt-9 grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
               <article className="relative overflow-hidden rounded-[24px] bg-gradient-to-r from-blue-700 to-violet-600 px-7 py-7 text-white shadow-[0_20px_44px_rgba(76,92,193,0.24)]">
                 <div className="absolute right-6 top-1/2 hidden h-32 w-32 -translate-y-1/2 rounded-full border-4 border-slate-900/15 xl:block" />
                 <div className="absolute right-14 top-1/2 hidden h-14 w-14 -translate-y-1/2 text-slate-900/15 xl:block">
@@ -319,11 +354,14 @@ export default function CustomerMyTicketsPage() {
                 </button>
               </article>
 
-              <article className="rounded-[24px] bg-slate-100/80 px-6 py-7 shadow-[0_16px_38px_rgba(148,163,184,0.14)] ring-1 ring-slate-200/70">
+              <article className="rounded-[24px] bg-slate-100/80 px-8 py-8 shadow-[0_16px_38px_rgba(148,163,184,0.14)] ring-1 ring-slate-200/70">
                 <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-slate-500">Total Value Saved</div>
-                <div className="mt-4 text-[3.2rem] font-bold leading-none tracking-tight text-slate-900">$240</div>
-                <div className="text-[3.2rem] font-bold leading-none tracking-tight text-slate-900">.50</div>
-                <Link href="/customer" className="mt-4 inline-flex items-center text-sm font-semibold text-blue-700 hover:text-blue-800">
+                <div
+                  className={`mt-5 whitespace-nowrap font-bold leading-none tracking-[-0.06em] tabular-nums text-slate-900 ${getSavedValueClass(totalValueSaved)}`}
+                >
+                  {totalValueSaved}
+                </div>
+                <Link href="/customer" className="mt-5 inline-flex items-center text-base font-semibold text-blue-700 hover:text-blue-800">
                   Loyalty Program
                   <span className="ml-2">-&gt;</span>
                 </Link>
