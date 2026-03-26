@@ -14,6 +14,7 @@ public enum ErrorCode {
     INCORRECT_PASSWORD (1007, "Incorrect password!"),
     INVALID_REFRESH_TOKEN (1008, "Invalid Refresh Token"),
     USER_NOT_FOUND (1009, "User not found"),
+    USER_NOT_AUTHENTICATED(1010, "User not authenticated"),
     INTERNAL_ERROR (9999, "Internal Error!")
     ;
     private final int code;

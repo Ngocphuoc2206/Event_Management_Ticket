@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -14,6 +15,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
+@EnableMethodSecurity
 public class SecurityConfig {
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -28,8 +30,16 @@ public class SecurityConfig {
     };
 
     // Authenticated endpoints
-    public static final String[] PRIVATE_ENDPOINTS = {
+    public static final String[] ADMIN_ENDPOINTS = {
+            "/auth/admin/**",
+    };
 
+    public static final String[] ORGANIZER_ENDPOINTS = {
+            "/organizer/"
+    };
+
+    public static final String[] PRIVATE_ENDPOINTS = {
+            "/users/me"
     };
 
     @Bean
@@ -50,6 +60,8 @@ public class SecurityConfig {
                                 .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
 
                                 // API authenticated
+                                .requestMatchers(ORGANIZER_ENDPOINTS).hasRole("ORGANIZER")
+                                .requestMatchers(ADMIN_ENDPOINTS).hasRole("ADMIN")
                                 .requestMatchers(PRIVATE_ENDPOINTS).authenticated()
                                 .anyRequest().authenticated()
                 )
