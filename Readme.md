@@ -1,19 +1,52 @@
-# Build docker and deployment backend
-## 1. Start cmd
-## 2. Run the command: 
+# 🐳 Run Backend with Docker
 
-``
-docker compose up --build
-``
+## 📦 Prerequisites
 
-### To stop docker-compose
-Run the command: 
-``
+- Docker installed
+- Docker Compose installed
+
+---
+
+## 🚀 Start application
+
+```bash
+docker compose up
+```
+
+---
+
+## ▶️ Run in background
+
+```bash
+docker compose up -d
+```
+
+---
+
+## 🛑 Stop application
+```bash
 docker compose down
-``
+```
 
-### To delete cache docker
-Run the command: 
-``
-docker compose down -v 
-``
+---
+
+## 🔄 Rebuild after code changes
+```bash
+docker compose up --build
+```
+
+---
+
+## 📜 View logs
+```bash
+docker compose logs -f
+```
+
+---
+
+## 🌐 Access application
+```bash
+http://localhost:8080
+```
+
+---
