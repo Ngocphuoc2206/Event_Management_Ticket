@@ -16,6 +16,8 @@ public class UserResponse {
     private String email;
     private String phone;
     private String role;
+    private String status;
+
 
     public UserResponse(User user) {
         this.id = user.getId();
@@ -23,5 +25,6 @@ public class UserResponse {
         this.email = user.getEmail();
         this.phone = user.getPhone();
         this.role = user.getRole();
+        this.status = user.getStatus();
     }
 }
