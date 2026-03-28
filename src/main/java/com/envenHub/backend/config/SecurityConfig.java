@@ -1,18 +1,24 @@
 package com.envenHub.backend.config;
 
-import com.envenHub.backend.Security.JwtAuthenticationFilter;
+import com.envenHub.backend.constant.RoleName;
+import com.envenHub.backend.security.JwtAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 @Configuration
 @EnableMethodSecurity
@@ -23,7 +29,6 @@ public class SecurityConfig {
     // PermitAll endpoints;
     public static final String[] PUBLIC_ENDPOINTS = {
             "/api/health",
-            "/api/logout",
             "/auth/register",
             "/auth/login",
             "/auth/refresh"
@@ -41,21 +46,48 @@ public class SecurityConfig {
                 // Turn off CSRF
                 .csrf(AbstractHttpConfigurer::disable)
 
-                .cors(cors -> {})
+                .cors(Customizer.withDefaults())
+
+                // HTTP Basic
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .formLogin(AbstractHttpConfigurer::disable)
 
                 .authorizeHttpRequests(auth -> auth
-                                //API public
-                                .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
+                        //API public
+                        .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
 
                                 // API authenticated
                                 .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                        //Admin routes
+                        .requestMatchers("/api/admin/**").hasRole(RoleName.ADMIN)
 
-                // HTTP Basic
-                .httpBasic(AbstractHttpConfigurer::disable)
-                .formLogin(AbstractHttpConfigurer::disable);
+                        //Organizer routes
+                        .requestMatchers("/api/organizer/**").hasAnyRole(RoleName.ORGANIZER)
+
+                        //Customer routes
+                        .requestMatchers("/api/customer/**").hasAnyRole(RoleName.CUSTOMER)
+
+                        //logout
+                        .requestMatchers("/api/logout").authenticated()
+                        .anyRequest().authenticated()
+                )
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource(){
+        CorsConfiguration corsConfiguration = new CorsConfiguration();
+        corsConfiguration.setAllowedOrigins(List.of("http://localhost:3000"));
+        corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        corsConfiguration.setAllowedHeaders(List.of("*"));
+        corsConfiguration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", corsConfiguration);
+        return source;
     }
 }

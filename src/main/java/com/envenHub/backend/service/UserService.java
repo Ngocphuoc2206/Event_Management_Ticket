@@ -1,6 +1,7 @@
 package com.envenHub.backend.service;
 
 import com.envenHub.backend.common.ErrorCode;
+import com.envenHub.backend.constant.RoleName;
 import com.envenHub.backend.dto.request.LoginRequest;
 import com.envenHub.backend.dto.request.RegisterRequest;
 import com.envenHub.backend.dto.request.UpdateProfileRequest;
@@ -44,8 +45,8 @@ public class UserService {
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
-        //Set role for user
-        user.setRole("CUSTOMER");
+        // Set default role for new user
+        user.setRole(RoleName.CUSTOMER);
 
         return userRepository.save(user);
     }
