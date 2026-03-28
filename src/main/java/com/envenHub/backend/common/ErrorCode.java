@@ -18,7 +18,10 @@ public enum ErrorCode {
     INVALID_PASSWORD(1008, "Password must be at least 8 characters"),
     INVALID_REFRESH_TOKEN (1009, "Invalid Refresh Token"),
     USER_NOT_FOUND (1010, "User not found"),
-    INTERNAL_ERROR (9999, "Internal Error!")
+    EVENT_NOT_FOUND(1011, "Event not found"),
+    INTERNAL_ERROR (9999, "Internal Error!"),
+    INVALID_PAGINATION(1012, "Invalid pagination parameter"),
+    INVALID_SORT_FIELD(1013, "Invalid sort field")
     ;
     private final int code;
 

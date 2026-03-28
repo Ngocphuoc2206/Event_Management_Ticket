@@ -56,6 +56,9 @@ public class SecurityConfig {
                         //API public
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
 
+                        //Event
+                        .requestMatchers(HttpMethod.GET, "/api/events", "/api/events/**").permitAll()
+
                                 // API authenticated
                                 .anyRequest().authenticated()
                 )
