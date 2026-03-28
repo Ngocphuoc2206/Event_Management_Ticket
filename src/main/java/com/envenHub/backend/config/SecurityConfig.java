@@ -59,10 +59,6 @@ public class SecurityConfig {
                         //Event
                         .requestMatchers(HttpMethod.GET, "/api/events", "/api/events/**").permitAll()
 
-                                // API authenticated
-                                .anyRequest().authenticated()
-                )
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                         //Admin routes
                         .requestMatchers("/api/admin/**").hasRole(RoleName.ADMIN)
 
