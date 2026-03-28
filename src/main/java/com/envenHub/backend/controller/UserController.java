@@ -4,6 +4,8 @@ import com.envenHub.backend.common.ApiResponse;
 import com.envenHub.backend.common.ErrorCode;
 import com.envenHub.backend.dto.request.LoginRequest;
 import com.envenHub.backend.dto.request.RegisterRequest;
+import com.envenHub.backend.dto.request.UpdateProfileRequest;
+import com.envenHub.backend.dto.request.UpdateStatusRequest;
 import com.envenHub.backend.dto.response.LogoutResponse;
 import com.envenHub.backend.dto.response.TokenResponse;
 import com.envenHub.backend.dto.response.UserResponse;
@@ -18,11 +20,13 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.Ref;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -39,6 +43,27 @@ public class UserController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @GetMapping("/users/me")
+    public ApiResponse<UserResponse> getUserProfile(Authentication authentication) {
+        UserResponse user = userService.getCurrentUser(authentication);
+
+        ApiResponse<UserResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setResults(user);
+        return apiResponse;
+    }
+
+    @PutMapping("/users/me")
+    public ApiResponse<UserResponse> updateUserProfile(
+            Authentication authentication,
+            @RequestBody UpdateProfileRequest request
+    ) {
+        UserResponse user = userService.updateProfile(authentication, request);
+
+        ApiResponse<UserResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setResults(user);
+        return apiResponse;
+    }
 
     @PostMapping("/register")
     public ApiResponse<UserResponse> register(@RequestBody RegisterRequest request) {
@@ -173,4 +198,7 @@ public class UserController {
 
         return apiResponse;
     }
+
+
+
 }

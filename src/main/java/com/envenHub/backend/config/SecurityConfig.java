@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -20,6 +21,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.List;
 
 @Configuration
+@EnableMethodSecurity
 public class SecurityConfig {
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -31,6 +33,7 @@ public class SecurityConfig {
             "/auth/login",
             "/auth/refresh"
     };
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -53,6 +56,10 @@ public class SecurityConfig {
                         //API public
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
 
+                                // API authenticated
+                                .anyRequest().authenticated()
+                )
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                         //Admin routes
                         .requestMatchers("/api/admin/**").hasRole(RoleName.ADMIN)
 

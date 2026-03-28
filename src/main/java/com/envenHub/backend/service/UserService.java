@@ -4,15 +4,20 @@ import com.envenHub.backend.common.ErrorCode;
 import com.envenHub.backend.constant.RoleName;
 import com.envenHub.backend.dto.request.LoginRequest;
 import com.envenHub.backend.dto.request.RegisterRequest;
+import com.envenHub.backend.dto.request.UpdateProfileRequest;
+import com.envenHub.backend.dto.request.UpdateStatusRequest;
 import com.envenHub.backend.dto.response.UserResponse;
 import com.envenHub.backend.exception.AppException;
 import com.envenHub.backend.entity.User;
 import com.envenHub.backend.mapper.UserMapper;
 import com.envenHub.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class UserService {
@@ -56,5 +61,61 @@ public class UserService {
 
         //Map user
         return userMapper.toUserResponse(logUser);
+    }
+
+    public UserResponse getCurrentUser(Authentication authentication) {
+        if(authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.USER_NOT_AUTHENTICATED);
+        }
+
+        String userId = authentication.getName();
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        return userMapper.toUserResponse(user);
+    }
+
+    public UserResponse updateProfile(Authentication authentication, UpdateProfileRequest request) {
+        if(authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.USER_NOT_AUTHENTICATED);
+        }
+
+        String userId = authentication.getName();
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        user.setPhone(request.getPhone());
+        user.setFullName(request.getFullName());
+
+        userRepository.save(user);
+
+        return userMapper.toUserResponse(user);
+    }
+
+    // Admin service
+    public List<UserResponse> getAllUsers() {
+        List<User> user = userRepository.findAll();
+
+        return userMapper.toUserResponseList(user);
+    }
+
+    public UserResponse getUserById(String id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        return userMapper.toUserResponse(user);
+    }
+
+    public UserResponse updateUserStatus(String id, UpdateStatusRequest request) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        user.setStatus(request.getStatus());
+
+        userRepository.save(user);
+
+        return userMapper.toUserResponse(user);
     }
 }
