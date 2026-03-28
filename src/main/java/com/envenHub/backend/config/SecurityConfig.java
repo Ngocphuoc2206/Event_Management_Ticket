@@ -53,6 +53,9 @@ public class SecurityConfig {
                         //API public
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
 
+                        //Event
+                        .requestMatchers(HttpMethod.GET, "/api/events", "/api/events/**").permitAll()
+
                         //Admin routes
                         .requestMatchers("/api/admin/**").hasRole(RoleName.ADMIN)
 
