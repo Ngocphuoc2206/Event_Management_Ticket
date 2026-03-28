@@ -29,18 +29,6 @@ public class SecurityConfig {
             "/auth/refresh"
     };
 
-    // Authenticated endpoints
-    public static final String[] ADMIN_ENDPOINTS = {
-            "/auth/admin/**",
-    };
-
-    public static final String[] ORGANIZER_ENDPOINTS = {
-            "/organizer/"
-    };
-
-    public static final String[] PRIVATE_ENDPOINTS = {
-            "/users/me"
-    };
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -60,9 +48,6 @@ public class SecurityConfig {
                                 .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
 
                                 // API authenticated
-                                .requestMatchers(ORGANIZER_ENDPOINTS).hasRole("ORGANIZER")
-                                .requestMatchers(ADMIN_ENDPOINTS).hasRole("ADMIN")
-                                .requestMatchers(PRIVATE_ENDPOINTS).authenticated()
                                 .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

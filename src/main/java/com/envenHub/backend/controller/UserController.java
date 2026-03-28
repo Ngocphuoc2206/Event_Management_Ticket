@@ -200,37 +200,5 @@ public class UserController {
     }
 
 
-    // Admin api -------------------------------------------------------------------
-    @GetMapping("/admin/users")
-    public ApiResponse<List<UserResponse>> getAllUsers() {
-        List<UserResponse> user = userService.getAllUsers();
 
-        ApiResponse<List<UserResponse>> apiResponse = new ApiResponse<>();
-        apiResponse.setResults(user);
-
-        return apiResponse;
-    }
-
-    @GetMapping("/admin/users/{id}")
-    public ApiResponse<UserResponse> getUserById(@PathVariable String id) {
-        UserResponse user = userService.getUserById(id);
-
-        ApiResponse<UserResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setResults(user);
-
-        return apiResponse;
-    }
-
-    @PatchMapping("/admin/users/{id}/status")
-    public ApiResponse<UserResponse> updateUserStatus(
-            @PathVariable String id,
-            @RequestBody UpdateStatusRequest request
-            ) {
-        UserResponse user = userService.updateUserStatus(id, request);
-
-        ApiResponse<UserResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setResults(user);
-
-        return apiResponse;
-    }
 }
