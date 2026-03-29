@@ -2,14 +2,12 @@ package com.envenHub.backend.controller;
 
 import com.envenHub.backend.common.ApiResponse;
 import com.envenHub.backend.dto.request.UpdateStatusRequest;
+import com.envenHub.backend.dto.response.PagedResponse;
 import com.envenHub.backend.dto.response.UserResponse;
 import com.envenHub.backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/admin")
@@ -19,13 +17,15 @@ public class AdminController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/users")
-    public ApiResponse<List<UserResponse>> getAllUsers() {
-        List<UserResponse> user = userService.getAllUsers();
+    public ApiResponse<PagedResponse<UserResponse>> getAllUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        PagedResponse<UserResponse> users = userService.getAllUsers(page, size);
 
-        ApiResponse<List<UserResponse>> apiResponse = new ApiResponse<>();
-        apiResponse.setResults(user);
-
-        return apiResponse;
+        return ApiResponse.<PagedResponse<UserResponse>>builder()
+                .results(users)
+                .build();
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -33,10 +33,9 @@ public class AdminController {
     public ApiResponse<UserResponse> getUserById(@PathVariable String id) {
         UserResponse user = userService.getUserById(id);
 
-        ApiResponse<UserResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setResults(user);
-
-        return apiResponse;
+        return ApiResponse.<UserResponse>builder()
+                .results(user)
+                .build();
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -47,9 +46,8 @@ public class AdminController {
     ) {
         UserResponse user = userService.updateUserStatus(id, request);
 
-        ApiResponse<UserResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setResults(user);
-
-        return apiResponse;
+        return ApiResponse.<UserResponse>builder()
+                .results(user)
+                .build();
     }
 }
