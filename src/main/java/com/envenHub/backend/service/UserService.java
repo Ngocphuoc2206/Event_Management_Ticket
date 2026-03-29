@@ -6,12 +6,16 @@ import com.envenHub.backend.dto.request.LoginRequest;
 import com.envenHub.backend.dto.request.RegisterRequest;
 import com.envenHub.backend.dto.request.UpdateProfileRequest;
 import com.envenHub.backend.dto.request.UpdateStatusRequest;
+import com.envenHub.backend.dto.response.PagedResponse;
 import com.envenHub.backend.dto.response.UserResponse;
 import com.envenHub.backend.exception.AppException;
 import com.envenHub.backend.entity.User;
 import com.envenHub.backend.mapper.UserMapper;
 import com.envenHub.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -95,10 +99,21 @@ public class UserService {
     }
 
     // Admin service
-    public List<UserResponse> getAllUsers() {
-        List<User> user = userRepository.findAll();
+    public PagedResponse<UserResponse> getAllUsers(int page, int size) {
+        Pageable pageable = PageRequest.of(page,size);
 
-        return userMapper.toUserResponseList(user);
+        Page<User> pageResult = userRepository.findAll(pageable);
+
+        List<UserResponse> users = userMapper.toUserResponseList(pageResult.getContent());
+
+        return PagedResponse.<UserResponse>builder()
+                .items(users)
+                .page(pageResult.getNumber())
+                .size(pageResult.getSize())
+                .totalItems(pageResult.getTotalElements())
+                .totalPages(pageResult.getTotalPages())
+                .hasNext(pageResult.hasNext())
+                .build();
     }
 
     public UserResponse getUserById(String id) {
