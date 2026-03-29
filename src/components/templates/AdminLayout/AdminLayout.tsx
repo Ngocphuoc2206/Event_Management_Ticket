@@ -1,3 +1,4 @@
+// src/components/templates/AdminLayout/AdminLayout.tsx
 import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -34,7 +35,7 @@ export default function AdminLayout({ children, title }: { children: React.React
             <Zap size={22} fill="white" />
           </div>
           <div>
-            <span className="text-xl font-black text-slate-900 tracking-tighter block">TICKETLY</span>
+            <span className="text-xl font-black text-slate-900 tracking-tighter block uppercase">EventHub</span>
             <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">Admin Panel</span>
           </div>
         </div>
