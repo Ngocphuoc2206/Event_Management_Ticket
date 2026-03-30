@@ -13,7 +13,7 @@ export const organizerNavigationItems = [
   { label: "Create Event", href: "/organizer/create-event", icon: "calendar" },
   { label: "Tickets", href: "/organizer/tickets", icon: "ticket" },
   { label: "Attendees", href: "/organizer/attendees", icon: "attendees" },
-  { label: "Analytics", href: "#analytics", icon: "analytics" },
+  { label: "Analytics", href: "/organizer/analytics", icon: "analytics" },
   { label: "Reports", href: "#reports", icon: "reports" },
   { label: "Settings", href: "#settings", icon: "settings" },
 ] satisfies OrganizerNavItem[];
