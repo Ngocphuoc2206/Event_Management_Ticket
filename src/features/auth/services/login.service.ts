@@ -3,7 +3,11 @@ import type { ApiResult, LoginPayload, LoginResponse } from "@/features/auth/typ
 import axiosClient from "@/features/httpClient/axiosClient";
 
 export async function loginUser(payload: LoginPayload) {
-  const response = await axiosClient.post<ApiResult<LoginResponse>>(LOGIN_ENDPOINT, payload);
+  const response = await axiosClient.post<ApiResult<LoginResponse>>(LOGIN_ENDPOINT, payload, {
+    headers: {
+      "X-Skip-Auth": "true",
+    },
+  });
 
   return response.data;
 }

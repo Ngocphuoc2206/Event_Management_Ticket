@@ -1,7 +1,13 @@
 import { isAxiosError } from "axios";
 
 import { AUTH_REDIRECT_ROUTES, AUTH_STORAGE_KEYS } from "@/features/auth/constants";
-import type { ApiResponse, ApiResult, AuthPayload, UserRole } from "@/features/auth/types";
+import type {
+  ApiResponse,
+  ApiResult,
+  AuthPayload,
+  AuthSession,
+  UserRole,
+} from "@/features/auth/types";
 
 const AUTH_PERSISTED_KEYS = Object.values(AUTH_STORAGE_KEYS);
 
@@ -46,21 +52,124 @@ export function getApiErrorMessage<T>(error: unknown, fallback: string): string 
   return fallback;
 }
 
-export function persistAuthTokens(payload?: AuthPayload) {
-  if (typeof window === "undefined" || !payload) {
+function normalizeRole(role?: string | null): UserRole | undefined {
+  if (role === "CUSTOMER" || role === "ORGANIZER" || role === "ADMIN") {
+    return role;
+  }
+
+  return undefined;
+}
+
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    if (typeof window === "undefined") {
+      return null;
+    }
+
+    const [, payload] = token.split(".");
+    if (!payload) {
+      return null;
+    }
+
+    const normalizedPayload = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const paddedPayload = normalizedPayload.padEnd(
+      normalizedPayload.length + ((4 - (normalizedPayload.length % 4)) % 4),
+      "=",
+    );
+
+    return JSON.parse(window.atob(paddedPayload)) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+export function resolveAuthPayload(
+  payload?: AuthPayload,
+  options?: { fallbackRole?: UserRole },
+): AuthPayload | undefined {
+  if (!payload) {
+    return undefined;
+  }
+
+  const resolvedPayload: AuthPayload = { ...payload };
+
+  if (payload.accessToken) {
+    const claims = decodeJwtPayload(payload.accessToken);
+    const subject = claims?.sub;
+    const role = claims?.role;
+
+    if (!resolvedPayload.id && typeof subject === "string") {
+      resolvedPayload.id = subject;
+    }
+
+    if (!resolvedPayload.role && typeof role === "string") {
+      resolvedPayload.role = normalizeRole(role);
+    }
+  }
+
+  if (!resolvedPayload.role && options?.fallbackRole) {
+    resolvedPayload.role = options.fallbackRole;
+  }
+
+  return resolvedPayload;
+}
+
+export function createAuthSession(
+  payload?: AuthPayload,
+  options?: { fallbackRole?: UserRole },
+): AuthSession | null {
+  const resolvedPayload = resolveAuthPayload(payload, options);
+
+  if (!resolvedPayload) {
+    return null;
+  }
+
+  return {
+    id: resolvedPayload.id ?? null,
+    fullName: resolvedPayload.fullName ?? null,
+    email: resolvedPayload.email ?? null,
+    phone: resolvedPayload.phone ?? null,
+    role: resolvedPayload.role ?? null,
+    accessToken: resolvedPayload.accessToken ?? null,
+    refreshToken: resolvedPayload.refreshToken ?? null,
+  };
+}
+
+export function persistAuthSession(payload?: AuthPayload) {
+  if (typeof window === "undefined") {
     return;
   }
 
-  if (payload.accessToken) {
-    localStorage.setItem(AUTH_STORAGE_KEYS.accessToken, payload.accessToken);
+  const session = createAuthSession(payload);
+
+  if (!session?.accessToken) {
+    return;
   }
 
-  if (payload.refreshToken) {
-    localStorage.setItem(AUTH_STORAGE_KEYS.refreshToken, payload.refreshToken);
+  localStorage.setItem(AUTH_STORAGE_KEYS.accessToken, session.accessToken);
+
+  if (session.refreshToken) {
+    localStorage.setItem(AUTH_STORAGE_KEYS.refreshToken, session.refreshToken);
   }
 
-  if (payload.role) {
-    localStorage.setItem(AUTH_STORAGE_KEYS.userRole, payload.role);
+  if (session.role) {
+    localStorage.setItem(AUTH_STORAGE_KEYS.userRole, session.role);
+  }
+}
+
+export function persistResolvedAuthSession(session?: AuthSession | null) {
+  if (typeof window === "undefined" || !session?.accessToken) {
+    return;
+  }
+
+  localStorage.setItem(AUTH_STORAGE_KEYS.accessToken, session.accessToken);
+
+  if (session.refreshToken) {
+    localStorage.setItem(AUTH_STORAGE_KEYS.refreshToken, session.refreshToken);
+  }
+
+  if (session.role) {
+    localStorage.setItem(AUTH_STORAGE_KEYS.userRole, session.role);
   }
 }
 
@@ -79,7 +188,20 @@ export function getPostAuthRoute(role?: UserRole) {
   return role ? AUTH_REDIRECT_ROUTES[role] : "/";
 }
 
-function expireCookie(name: string) {
-  document.cookie = `${name}=; Max-Age=0; path=/`;
-  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+export function clearAuthSession() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  localStorage.removeItem(AUTH_STORAGE_KEYS.accessToken);
+  localStorage.removeItem(AUTH_STORAGE_KEYS.refreshToken);
+  localStorage.removeItem(AUTH_STORAGE_KEYS.userRole);
+}
+
+export function getStoredAccessToken() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  return localStorage.getItem(AUTH_STORAGE_KEYS.accessToken);
 }

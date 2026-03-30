@@ -1,7 +1,7 @@
 import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
 
@@ -13,7 +13,10 @@ import {
   AUTH_SHELL_CLASSNAME,
   AUTH_TEXT_LINK_CLASSNAME,
   AUTH_TEXT_INPUT_CLASSNAME,
+<<<<<<< HEAD
   // Đã xóa dòng AUTH_TEXT_LINK_CLASSNAME bị trùng ở đây
+=======
+>>>>>>> develop
   DEFAULT_API_BASE_URL,
 } from "@/features/auth/constants";
 import {
@@ -32,17 +35,9 @@ import {
   LoginBrandMark,
 } from "@/features/auth/components/AuthIcons";
 import { AuthPageLayout } from "@/features/auth/components/AuthPageLayout";
-import { loginUser } from "@/features/auth/services/login.service";
-import type { LoginResponse } from "@/features/auth/types";
-import {
-  getApiErrorMessage,
-  getApiResultData,
-  getApiResultMessage,
-  getPostAuthRoute,
-  persistAuthTokens,
-} from "@/features/auth/utils";
-import { checkBackendHealth } from "@/features/httpClient/health.service";
-import { setUser } from "@/stores/slices/user/user.slice";
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useBackendHealth } from "@/features/auth/hooks/useBackendHealth";
+import { getApiErrorMessage } from "@/features/auth/utils";
 
 type LoginFormValues = {
   email: string;
@@ -59,14 +54,13 @@ const INITIAL_FORM_VALUES: LoginFormValues = {
 };
 
 export default function LoginPage() {
+  const { login } = useAuth();
   const router = useRouter();
   const dispatch = useDispatch();
   const [showPassword, setShowPassword] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
-  const [isBackendAvailable, setIsBackendAvailable] = useState<boolean | null>(
-    null,
-  );
+  const isBackendAvailable = useBackendHealth();
   const {
     register,
     handleSubmit,
@@ -75,65 +69,20 @@ export default function LoginPage() {
     defaultValues: INITIAL_FORM_VALUES,
   });
 
-  useEffect(() => {
-    let isMounted = true;
-
-    const verifyBackend = async () => {
-      try {
-        await checkBackendHealth();
-        if (isMounted) {
-          setIsBackendAvailable(true);
-        }
-      } catch {
-        if (isMounted) {
-          setIsBackendAvailable(false);
-        }
-      }
-    };
-
-    void verifyBackend();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
   const onSubmit = async (data: LoginFormValues) => {
     setSubmitError(null);
     setSubmitSuccess(null);
 
     try {
-      const response = await loginUser({
+      const result = await login({
         email: data.email.trim(),
         password: data.password,
       });
+      setSubmitSuccess(result.message);
 
-      const session = getApiResultData<LoginResponse>(response);
-      const responseMessage = getApiResultMessage(response);
-      const shouldRedirect = Boolean(session);
-
-      persistAuthTokens(session);
-      if (session) {
-        dispatch(
-          setUser({
-            id: session.id ?? null,
-            fullName: session.fullName ?? null,
-            role: session.role ?? null,
-            isLoggedIn: true,
-          }),
-        );
-      }
-      setSubmitSuccess(
-        responseMessage ||
-          (shouldRedirect
-            ? "Login successful. Redirecting..."
-            : "Login successful."),
-      );
-
-      if (shouldRedirect) {
-        const destination = getPostAuthRoute(session?.role);
+      if (result.shouldRedirect && result.redirectTo) {
         window.setTimeout(() => {
-          void router.replace(destination);
+          void router.push(result.redirectTo);
         }, 800);
       }
     } catch (error) {
