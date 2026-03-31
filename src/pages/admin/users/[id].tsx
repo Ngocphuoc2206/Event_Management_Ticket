@@ -269,4 +269,4 @@ export default function UserDetailPage() {
       </div>
     </AdminLayout>
   );
-}
+} 
