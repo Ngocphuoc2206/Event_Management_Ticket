@@ -5,6 +5,7 @@ import com.envenHub.backend.dto.response.EventDetailResponse;
 import com.envenHub.backend.dto.response.EventListResponse;
 import com.envenHub.backend.dto.response.PagedResponse;
 import com.envenHub.backend.entity.Event;
+import com.envenHub.backend.enums.EventStatus;
 import com.envenHub.backend.exception.AppException;
 import com.envenHub.backend.filter.EventSpecification;
 import com.envenHub.backend.mapper.EventMapper;
@@ -71,5 +72,50 @@ public class EventService {
         ).orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
 
         return eventMapper.toDetailResponse(event);
+    }
+
+    public PagedResponse<EventListResponse> getPendingEvents(int page, int size){
+        //Phân trang
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Event> result = eventRepository.findByStatus(EventStatus.PENDING, pageable);
+
+        List<EventListResponse> items = result.getContent().stream().map(eventMapper::toListResponse).toList();
+
+        return PagedResponse.<EventListResponse>builder()
+                .items(items)
+                .page(result.getNumber())
+                .size(result.getSize())
+                .totalItems(result.getTotalElements())
+                .totalPages(result.getTotalPages())
+                .hasNext(result.hasNext())
+                .build();
+    }
+
+    public void approveEvent(String id){
+        Event event = eventRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+
+        if (event.getStatus() != EventStatus.PENDING){
+            throw new AppException(ErrorCode.INVALID_EVENT_STATE);
+        }
+
+        event.setStatus(EventStatus.APPROVED);
+        event.setRejectReason(null);
+
+        eventRepository.save(event);
+    }
+
+    public void rejectEvent(String id, String reason) {
+        Event event = eventRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+
+        if (event.getStatus() != EventStatus.PENDING) {
+            throw new AppException(ErrorCode.INVALID_EVENT_STATE);
+        }
+
+        event.setStatus(EventStatus.REJECTED);
+        event.setRejectReason(reason);
+
+        eventRepository.save(event);
     }
 }

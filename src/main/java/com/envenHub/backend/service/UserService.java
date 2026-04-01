@@ -8,6 +8,7 @@ import com.envenHub.backend.dto.request.UpdateProfileRequest;
 import com.envenHub.backend.dto.request.UpdateStatusRequest;
 import com.envenHub.backend.dto.response.PagedResponse;
 import com.envenHub.backend.dto.response.UserResponse;
+import com.envenHub.backend.enums.UserStatus;
 import com.envenHub.backend.exception.AppException;
 import com.envenHub.backend.entity.User;
 import com.envenHub.backend.mapper.UserMapper;
@@ -51,6 +52,7 @@ public class UserService {
 
         // Set default role for new user
         user.setRole(RoleName.CUSTOMER);
+        user.setStatus(UserStatus.ACTIVE);
 
         return userRepository.save(user);
     }
@@ -127,8 +129,7 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        user.setStatus(request.getStatus());
-
+        user.setStatus(UserStatus.valueOf(request.getStatus()));
         userRepository.save(user);
 
         return userMapper.toUserResponse(user);

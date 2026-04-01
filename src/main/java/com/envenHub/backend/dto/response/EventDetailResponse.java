@@ -1,5 +1,6 @@
 package com.envenHub.backend.dto.response;
 
+import com.envenHub.backend.enums.EventStatus;
 import lombok.Builder;
 import lombok.Data;
 
@@ -24,4 +25,6 @@ public class EventDetailResponse {
     private BigDecimal minPrice;
     private Integer totalTickets;
     private Integer availableTickets;
+    private EventStatus status;
+    private String rejectReason;
 }
