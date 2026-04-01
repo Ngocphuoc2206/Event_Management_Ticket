@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 
 import { BrandIcon, CustomerDashboardIcon } from "./CustomerDashboardIcons";
@@ -16,6 +15,13 @@ type CustomerDashboardSidebarProps = {
 };
 
 export function CustomerDashboardSidebar({ navigationItems, profile, onLogout }: CustomerDashboardSidebarProps) {
+  const initials = profile.name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
+
   return (
     <aside className="flex w-full flex-col border-b border-white/80 bg-[#f6f8fc] px-5 py-6 shadow-[inset_-1px_0_0_rgba(226,232,240,0.8)] xl:sticky xl:top-0 xl:h-screen xl:w-[280px] xl:shrink-0 xl:overflow-y-auto xl:border-b-0 xl:border-r">
       <div className="flex items-start gap-3">
@@ -60,7 +66,12 @@ export function CustomerDashboardSidebar({ navigationItems, profile, onLogout }:
 
         <div className="mt-5 flex items-center gap-3 rounded-[22px] bg-slate-200/70 px-4 py-3">
           <div className="relative h-11 w-11 overflow-hidden rounded-full bg-slate-100">
-            <Image src={profile.avatarSrc} alt={`${profile.name} avatar`} fill sizes="44px" className="object-cover" />
+            {profile.avatarSrc ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={profile.avatarSrc} alt={`${profile.name} avatar`} className="h-full w-full object-cover" />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-sm font-bold text-slate-500">{initials || "U"}</div>
+            )}
           </div>
           <div>
             <div className="text-sm font-semibold text-slate-800">{profile.name}</div>

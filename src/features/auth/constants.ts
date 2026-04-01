@@ -23,6 +23,9 @@ export const REGISTER_ENDPOINT =
 export const LOGOUT_ENDPOINT =
   process.env.NEXT_PUBLIC_LOGOUT_ENDPOINT || "/api/auth/logout";
 export const BACKEND_HEALTH_ENDPOINT = "/api/health";
+export const USER_PROFILE_ENDPOINT = process.env.NEXT_PUBLIC_USER_PROFILE_ENDPOINT || "/users";
+export const CHANGE_PASSWORD_ENDPOINT =
+  process.env.NEXT_PUBLIC_CHANGE_PASSWORD_ENDPOINT || "/users/{id}/change-password";
 
 export const AUTH_FOOTER_LINKS = [
   { href: "/terms", label: "Terms of Service" },

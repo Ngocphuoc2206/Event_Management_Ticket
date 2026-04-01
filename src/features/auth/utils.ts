@@ -129,6 +129,7 @@ export function createAuthSession(
     fullName: resolvedPayload.fullName ?? null,
     email: resolvedPayload.email ?? null,
     phone: resolvedPayload.phone ?? null,
+    avatar: resolvedPayload.avatar ?? null,
     role: resolvedPayload.role ?? null,
     accessToken: resolvedPayload.accessToken ?? null,
     refreshToken: resolvedPayload.refreshToken ?? null,
