@@ -29,9 +29,9 @@ public class SecurityConfig {
     // PermitAll endpoints;
     public static final String[] PUBLIC_ENDPOINTS = {
             "/api/health",
-            "/auth/register",
-            "/auth/login",
-            "/auth/refresh"
+            "/api/auth/register",
+            "/api/auth/login",
+            "/api/auth/refresh"
     };
 
 
