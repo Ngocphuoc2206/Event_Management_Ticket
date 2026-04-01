@@ -1,5 +1,10 @@
 package com.envenHub.backend.enums;
 
 public enum EventStatus {
-    DRAFT, PUBLISHED, CANCELLED
+    DRAFT,
+    PENDING_APPROVAL,
+    APPROVED,
+    PUBLISHED,
+    REJECTED,
+    CANCELLED
 }

@@ -35,4 +35,5 @@ public class EventController {
                 .results(eventService.getPublicEventDetail(id))
                 .build();
     }
+
 }

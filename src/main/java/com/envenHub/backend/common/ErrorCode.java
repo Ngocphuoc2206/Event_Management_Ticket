@@ -19,6 +19,8 @@ public enum ErrorCode {
     EVENT_NOT_FOUND(1012, "Event not found"),
     INVALID_PAGINATION(1013, "Invalid pagination parameter"),
     INVALID_SORT_FIELD(1014, "Invalid sort field"),
+    EVENT_CANNOT_BE_UPDATED(1015, "Event cannot be update!"),
+    INVALID_EVENT_STATE(1016, "Invalid event state"),
     INTERNAL_ERROR (9999, "Internal Error!"),
     ;
     private final int code;
