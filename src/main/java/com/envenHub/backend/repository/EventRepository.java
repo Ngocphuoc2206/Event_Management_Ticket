@@ -8,7 +8,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface EventRepository extends JpaRepository<Event, String>, JpaSpecificationExecutor<Event> {
     Page<Event> findByStatus(EventStatus status, Pageable pageable);
+    Optional<Event> findByIdAndOrganizerId(String eventId, String userId);
 }
