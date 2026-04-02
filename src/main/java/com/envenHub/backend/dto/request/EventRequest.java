@@ -1,18 +1,17 @@
-package com.envenHub.backend.dto.response;
+package com.envenHub.backend.dto.request;
 
 import com.envenHub.backend.enums.EventStatus;
+import com.envenHub.backend.enums.EventVisibility;
+import jakarta.persistence.Column;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import lombok.Builder;
 import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
-@Builder
-public class EventDetailResponse {
-    private String id;
+public class EventRequest {
     private String title;
     private String shortDescription;
     private String description;
@@ -23,11 +22,11 @@ public class EventDetailResponse {
     private String bannerUrl;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
-    private String organizerName;
-    private String organizerId;
+
+    private EventVisibility visibility;
+
     private BigDecimal minPrice;
     private Integer totalTickets;
-    private Integer availableTickets;
-    private EventStatus status;
-    private String rejectReason;
+
+    private Boolean featured;
 }

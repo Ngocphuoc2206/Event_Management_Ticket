@@ -40,4 +40,27 @@ public class EventSpecification {
                         : cb.like(cb.lower(root.get("city")), "%" + city.toLowerCase() + "%")
                 ));
     }
+
+    public static Specification<Event> hasStatus(String status) {
+        return (root, query, cb) -> {
+            if (status == null || status.isBlank()) {
+                return null;
+            }
+            try {
+                EventStatus eventStatus = EventStatus.valueOf(status.toUpperCase());
+                return cb.equal(root.get("status"), eventStatus);
+            } catch (IllegalArgumentException e) {
+                return null;
+            }
+        };
+    }
+
+    // Organizer
+    public static Specification<Event> belongsToOrganizer(String organizerId) {
+        return (root, query, cb) ->
+                organizerId == null ? null :
+                        cb.equal(root.get("organizerId"), organizerId);
+    }
+
+
 }
