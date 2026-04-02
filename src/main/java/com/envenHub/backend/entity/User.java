@@ -1,5 +1,6 @@
 package com.envenHub.backend.entity;
 
+import com.envenHub.backend.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,5 +31,6 @@ public class User {
 
     private String role;
 
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private UserStatus status;
 }

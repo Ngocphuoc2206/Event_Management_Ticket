@@ -37,7 +37,7 @@ public class Event {
     private LocalDateTime endTime;
 
     @Enumerated(EnumType.STRING)
-    private EventStatus status; //DRAFT, PUBLISHED, CANCELLED
+    private EventStatus status; //DRAFT, PUBLISHED, CANCELLED, APPROVED, REJECTED, PENDING
 
     @Enumerated(EnumType.STRING)
     private EventVisibility visibility; //PUBLIC, PRIVATE
@@ -49,4 +49,7 @@ public class Event {
     private Integer totalTickets;
     private Integer availableTickets;
     private Boolean featured;
+
+    @Column(columnDefinition = "TEXT")
+    private String rejectReason;
 }

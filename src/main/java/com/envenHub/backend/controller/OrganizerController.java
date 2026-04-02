@@ -78,4 +78,11 @@ public class OrganizerController {
                 .results(event)
                 .build();
     }
+
+    @GetMapping("/events/{id}")
+    public ApiResponse<EventDetailResponse> getOrganizerEventDetail(@PathVariable String id) {
+        return ApiResponse.<EventDetailResponse>builder()
+                .results(eventService.getPublicEventDetail(id))
+                .build();
+    }
 }

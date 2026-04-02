@@ -28,6 +28,6 @@ public class EventDetailResponse {
     private BigDecimal minPrice;
     private Integer totalTickets;
     private Integer availableTickets;
-
     private EventStatus status;
+    private String rejectReason;
 }

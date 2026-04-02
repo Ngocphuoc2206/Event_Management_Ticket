@@ -1,6 +1,7 @@
 package com.envenHub.backend.dto.response;
 
 import com.envenHub.backend.entity.User;
+import com.envenHub.backend.enums.UserStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,7 +17,7 @@ public class UserResponse {
     private String email;
     private String phone;
     private String role;
-    private String status;
+    private UserStatus status;
 
 
     public UserResponse(User user) {

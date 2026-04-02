@@ -146,6 +146,12 @@ public class EventService {
         List<EventListResponse> items = result.getContent().stream()
                 .map(eventMapper::toListResponse)
                 .toList();
+    public PagedResponse<EventListResponse> getPendingEvents(int page, int size){
+        //Phân trang
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Event> result = eventRepository.findByStatus(EventStatus.PENDING, pageable);
+
+        List<EventListResponse> items = result.getContent().stream().map(eventMapper::toListResponse).toList();
 
         return PagedResponse.<EventListResponse>builder()
                 .items(items)
@@ -181,5 +187,31 @@ public class EventService {
         eventRepository.save(event);
 
         return eventMapper.toDetailResponse(event);
+    public void approveEvent(String id){
+        Event event = eventRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+
+        if (event.getStatus() != EventStatus.PENDING){
+            throw new AppException(ErrorCode.INVALID_EVENT_STATE);
+        }
+
+        event.setStatus(EventStatus.APPROVED);
+        event.setRejectReason(null);
+
+        eventRepository.save(event);
+    }
+
+    public void rejectEvent(String id, String reason) {
+        Event event = eventRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+
+        if (event.getStatus() != EventStatus.PENDING) {
+            throw new AppException(ErrorCode.INVALID_EVENT_STATE);
+        }
+
+        event.setStatus(EventStatus.REJECTED);
+        event.setRejectReason(reason);
+
+        eventRepository.save(event);
     }
 }
