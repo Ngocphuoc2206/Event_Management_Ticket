@@ -2,7 +2,6 @@ package com.envenHub.backend.entity;
 
 import com.envenHub.backend.enums.EventStatus;
 import com.envenHub.backend.enums.EventVisibility;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,7 +24,7 @@ public class Event {
 
     private String title;
     @Column(length = 500)
-    private String shortDescription;
+    private String shortDescriptions;
     @Column(columnDefinition = "TEXT")
     private String description;
     private String category;
@@ -43,8 +42,6 @@ public class Event {
     private EventVisibility visibility; //PUBLIC, PRIVATE
 
     private String organizerName;
-    private String organizerId;
-
     private BigDecimal minPrice;
     private Integer totalTickets;
     private Integer availableTickets;
