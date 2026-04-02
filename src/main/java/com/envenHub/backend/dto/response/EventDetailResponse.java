@@ -1,8 +1,6 @@
 package com.envenHub.backend.dto.response;
 
 import com.envenHub.backend.enums.EventStatus;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import lombok.Builder;
 import lombok.Data;
 
@@ -24,7 +22,6 @@ public class EventDetailResponse {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private String organizerName;
-    private String organizerId;
     private BigDecimal minPrice;
     private Integer totalTickets;
     private Integer availableTickets;
