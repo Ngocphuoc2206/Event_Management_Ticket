@@ -11,7 +11,7 @@ export const organizerNavigationItems = [
   { label: "Dashboard", href: "/organizer", icon: "dashboard", active: true },
   { label: "Events", href: "/organizer/events", icon: "events" },
   { label: "Create Event", href: "/organizer/create-event", icon: "calendar" },
-  { label: "Tickets", href: "#tickets", icon: "ticket" },
+  { label: "Tickets", href: "/organizer/tickets", icon: "ticket" },
   { label: "Attendees", href: "#attendees", icon: "attendees" },
   { label: "Analytics", href: "#analytics", icon: "analytics" },
   { label: "Reports", href: "#reports", icon: "reports" },
