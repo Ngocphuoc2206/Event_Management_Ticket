@@ -6,12 +6,15 @@ import com.envenHub.backend.dto.response.EventListResponse;
 import com.envenHub.backend.dto.response.PagedResponse;
 import com.envenHub.backend.service.EventService;
 import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/events")
 @RequiredArgsConstructor
 public class EventController {
+    private static final Logger log = LogManager.getLogger(EventController.class);
     private final EventService eventService;
 
     @GetMapping
@@ -24,6 +27,7 @@ public class EventController {
             @RequestParam(defaultValue = "startTime") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir
     ){
+        log.info("Getting events....");
         return ApiResponse.<PagedResponse<EventListResponse>>builder()
                 .results(eventService.getPublicEvents(search, category, city, page, size, sortBy, sortDir))
                 .build();

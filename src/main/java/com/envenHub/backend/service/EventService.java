@@ -77,7 +77,6 @@ public class EventService {
                 Specification.where(EventSpecification.isPublishedAndPublic())
                         .and((root, query, cb) -> cb.equal(root.get("id"), id))
         ).orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
-
         return eventMapper.toDetailResponse(event);
     }
 
@@ -105,7 +104,7 @@ public class EventService {
         UserResponse user = userService.getCurrentUser(authentication);
 
         Event event = eventMapper.toEvent(request);
-        event.setStatus(EventStatus.DRAFT);
+        event.setStatus(EventStatus.PENDING);
         event.setOrganizerName(user.getFullName());
         event.setOrganizerId(user.getId());
 
@@ -122,8 +121,8 @@ public class EventService {
         Event event = eventRepository.findByIdAndOrganizerId(eventId, user.getId())
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
 
-        // === Updates are only allowed while in DRAFTING mode. ===
-        if (event.getStatus() != EventStatus.DRAFT) {
+        // === Updates are only allowed while in PUBLISHED mode. ===
+        if (event.getStatus() == EventStatus.PUBLISHED) {
             throw new AppException(ErrorCode.EVENT_CANNOT_BE_UPDATED);
         }
 

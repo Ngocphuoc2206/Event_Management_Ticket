@@ -63,7 +63,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**").hasRole(RoleName.ADMIN)
 
                         //Organizer routes
-                        .requestMatchers("/api/organizer/**").hasAnyRole(RoleName.ORGANIZER)
+//                        .requestMatchers("/api/organizer/**").hasAnyRole(RoleName.ORGANIZER)
 
                         //Customer routes
                         .requestMatchers("/api/customer/**").hasAnyRole(RoleName.CUSTOMER)
