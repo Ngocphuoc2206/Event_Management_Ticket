@@ -13,10 +13,6 @@ import {
   AUTH_SHELL_CLASSNAME,
   AUTH_TEXT_LINK_CLASSNAME,
   AUTH_TEXT_INPUT_CLASSNAME,
-<<<<<<< HEAD
-  // Đã xóa dòng AUTH_TEXT_LINK_CLASSNAME bị trùng ở đây
-=======
->>>>>>> ee9ddc7d4bd49550813e6c06980322521a390fc7
   DEFAULT_API_BASE_URL,
 } from "@/features/auth/constants";
 import {
