@@ -42,6 +42,8 @@ public class Event {
     private EventVisibility visibility; //PUBLIC, PRIVATE
 
     private String organizerName;
+    private String organizerId;
+
     private BigDecimal minPrice;
     private Integer totalTickets;
     private Integer availableTickets;

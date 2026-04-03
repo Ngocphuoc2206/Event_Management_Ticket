@@ -31,3 +31,8 @@ build/
 
 ### VS Code ###
 .vscode/
+
+Backend/
+node_modules/
+.next/
+next-env.d.ts
