@@ -8,7 +8,6 @@ import type {
 
 export const customerNavigationItems = [
   { label: "Dashboard", href: "/customer", icon: "grid", active: true },
-  { label: "My Tickets", href: "#tickets", icon: "ticket" },
   { label: "Order History", href: "#orders", icon: "history" },
   { label: "Notifications", href: "#notifications", icon: "bell" },
   { label: "Profile Settings", href: "#settings", icon: "settings" },

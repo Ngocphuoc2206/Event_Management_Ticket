@@ -41,14 +41,45 @@ type TrendingCard = {
   large?: boolean;
   tag?: string;
 };
+const HERO_IMAGE = "/images/home/hero-city-event.jpg";
 
 const CATEGORY_ITEMS: CategoryItem[] = [
-  { title: "Music", icon: Music, iconWrapClass: "bg-blue-100", iconClass: "text-sky-700" },
-  { title: "Business", icon: Briefcase, iconWrapClass: "bg-purple-200", iconClass: "text-violet-700" },
-  { title: "Technology", icon: Cpu, iconWrapClass: "bg-red-100", iconClass: "text-rose-700" },
-  { title: "Workshop", icon: Wrench, iconWrapClass: "bg-blue-100", iconClass: "text-sky-700" },
-  { title: "Festival", icon: PartyPopper, iconWrapClass: "bg-purple-200", iconClass: "text-violet-700" },
-  { title: "Education", icon: GraduationCap, iconWrapClass: "bg-red-100", iconClass: "text-rose-700" },
+  {
+    title: "Music",
+    icon: Music,
+    iconWrapClass: "bg-blue-100",
+    iconClass: "text-sky-700",
+  },
+  {
+    title: "Business",
+    icon: Briefcase,
+    iconWrapClass: "bg-purple-200",
+    iconClass: "text-violet-700",
+  },
+  {
+    title: "Technology",
+    icon: Cpu,
+    iconWrapClass: "bg-red-100",
+    iconClass: "text-rose-700",
+  },
+  {
+    title: "Workshop",
+    icon: Wrench,
+    iconWrapClass: "bg-blue-100",
+    iconClass: "text-sky-700",
+  },
+  {
+    title: "Festival",
+    icon: PartyPopper,
+    iconWrapClass: "bg-purple-200",
+    iconClass: "text-violet-700",
+  },
+  {
+    title: "Education",
+    icon: GraduationCap,
+    iconWrapClass: "bg-red-100",
+    iconClass: "text-rose-700",
+  },
 ];
 
 const FEATURED_EVENTS: FeaturedEvent[] = [
@@ -59,7 +90,7 @@ const FEATURED_EVENTS: FeaturedEvent[] = [
     title: "Neon Nights: Underground Techno",
     location: "Warehouse 42, Los Angeles",
     price: "$45.00",
-    image: "https://placehold.co/640x420?text=Neon+Nights",
+    image: "/images/home/featured-concert.jpg",
     badge: "SELLING FAST",
   },
   {
@@ -69,7 +100,7 @@ const FEATURED_EVENTS: FeaturedEvent[] = [
     title: "Future Tech Summit 2024",
     location: "Convention Center, SF",
     price: "$199.00",
-    image: "https://placehold.co/640x420?text=Future+Tech+Summit",
+    image: "/images/home/featured-conference.jpg",
   },
   {
     category: "Lifestyle",
@@ -78,7 +109,7 @@ const FEATURED_EVENTS: FeaturedEvent[] = [
     title: "Global Food & Wine Expo",
     location: "Waterfront Park, Seattle",
     price: "$25.00",
-    image: "https://placehold.co/640x420?text=Food+%26+Wine+Expo",
+    image: "/images/home/featured-food-market.jpg",
   },
 ];
 
@@ -86,22 +117,22 @@ const TRENDING_CARDS: TrendingCard[] = [
   {
     title: "Summer Solstice Music Festival",
     subtitle: "3 Days, 50 Artists, 1 Unforgettable Experience.",
-    image: "https://placehold.co/900x900?text=Summer+Solstice",
+    image: "/images/home/trending-festival-crowd.jpg",
     large: true,
     tag: "Festival",
   },
   {
     title: "Innovation Summit 2024",
     subtitle: "Join world leaders in tech and design.",
-    image: "https://placehold.co/900x450?text=Innovation+Summit",
+    image: "/images/home/trending-innovation-stage.jpg",
   },
   {
     title: "Classical Reimagined",
-    image: "https://placehold.co/450x450?text=Classical+Reimagined",
+    image: "/images/home/trending-classical-hall.jpg",
   },
   {
     title: "Midnight Food Tour",
-    image: "https://placehold.co/450x450?text=Midnight+Food+Tour",
+    image: "/images/home/trending-street-food.jpg",
   },
 ];
 
@@ -167,9 +198,9 @@ export default function HomePage() {
         <main className="mx-auto w-full max-w-[1280px]">
           <section className="relative overflow-hidden px-4 pt-10 pb-16 sm:px-6 sm:pt-12 sm:pb-20 lg:px-6 lg:pb-24">
             <img
-              src="https://placehold.co/1280x520/0f172a/94a3b8?text=EventHub+Hero+Mockup"
+              src={HERO_IMAGE}
               alt="Hero background"
-              className="pointer-events-none absolute top-0 left-0 h-[360px] w-full rounded-b-3xl object-cover opacity-20 sm:h-[420px] lg:h-[498px]"
+              className="pointer-events-none absolute top-0 left-0 h-[360px] w-full rounded-b-3xl object-cover opacity-45 sm:h-[420px] lg:h-[498px]"
             />
 
             <div className="relative z-10 flex max-w-[768px] flex-col gap-6 sm:gap-8">
@@ -224,7 +255,7 @@ export default function HomePage() {
                   return (
                     <article
                       key={item.title}
-                      className="flex flex-col items-center gap-4 rounded-3xl bg-white p-8 outline outline-1 -outline-offset-1 outline-black/0"
+                      className="flex flex-col items-center gap-4 rounded-3xl bg-white p-5 outline outline-1 -outline-offset-1 outline-black/0"
                     >
                       <div className={`flex h-12 w-12 items-center justify-center rounded-full ${item.iconWrapClass}`}>
                         <Icon className={`h-5 w-5 ${item.iconClass}`} />
