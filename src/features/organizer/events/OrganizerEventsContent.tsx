@@ -1,4 +1,5 @@
 import { LayoutGrid, List, MoreHorizontal, Pencil, UserCircle2, View } from "lucide-react";
+import Link from "next/link";
 
 import { OrganizerDashboardIcon } from "../dashboard/OrganizerDashboardIcons";
 import { OrganizerMetaFooter } from "../shared/OrganizerMetaFooter";
@@ -6,6 +7,7 @@ import { OrganizerMetaFooter } from "../shared/OrganizerMetaFooter";
 type PortfolioStatus = "Live" | "Draft" | "Completed";
 
 type PortfolioItem = {
+  id: string;
   name: string;
   venue: string;
   status: PortfolioStatus;
@@ -18,6 +20,7 @@ type PortfolioItem = {
 
 const PORTFOLIO_ITEMS: PortfolioItem[] = [
   {
+    id: "neon-nights-festival",
     name: "Neon Nights Festival",
     venue: "Downtown Arena",
     status: "Live",
@@ -28,6 +31,7 @@ const PORTFOLIO_ITEMS: PortfolioItem[] = [
     tone: "live",
   },
   {
+    id: "tech-summit-2024",
     name: "Tech Summit 2024",
     venue: "Global Convention Center",
     status: "Draft",
@@ -38,6 +42,7 @@ const PORTFOLIO_ITEMS: PortfolioItem[] = [
     tone: "draft",
   },
   {
+    id: "summer-food-expo",
     name: "Summer Food Expo",
     venue: "Waterfront Park",
     status: "Live",
@@ -48,6 +53,7 @@ const PORTFOLIO_ITEMS: PortfolioItem[] = [
     tone: "live",
   },
   {
+    id: "acoustic-soul-session",
     name: "Acoustic Soul Session",
     venue: "The Jazz Lounge",
     status: "Completed",
@@ -277,9 +283,13 @@ export function OrganizerEventsContent() {
                           <button type="button" className="rounded-2xl p-2 text-gray-700 transition hover:bg-gray-100" aria-label="View">
                             <View className="h-4 w-4" />
                           </button>
-                          <button type="button" className="rounded-2xl p-2 text-gray-700 transition hover:bg-gray-100" aria-label="Edit">
+                          <Link
+                            href={`/organizer/events/edit/${item.id}`}
+                            className="rounded-2xl p-2 text-gray-700 transition hover:bg-gray-100"
+                            aria-label="Edit"
+                          >
                             <Pencil className="h-4 w-4" />
-                          </button>
+                          </Link>
                           <button type="button" className="rounded-2xl p-2 text-gray-700 transition hover:bg-gray-100" aria-label="More">
                             <MoreHorizontal className="h-4 w-4" />
                           </button>

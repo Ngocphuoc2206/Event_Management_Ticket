@@ -11,6 +11,14 @@ import type {
 
 const AUTH_PERSISTED_KEYS = Object.values(AUTH_STORAGE_KEYS);
 
+function expireCookie(name: string) {
+  if (typeof document === "undefined") {
+    return;
+  }
+
+  document.cookie = `${name}=; Max-Age=0; path=/; SameSite=Lax`;
+}
+
 export function isApiResponse<T>(response: ApiResult<T>): response is ApiResponse<T> {
   return typeof response === "object" && response !== null && !Array.isArray(response);
 }

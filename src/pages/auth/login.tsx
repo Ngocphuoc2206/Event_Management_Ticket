@@ -76,7 +76,11 @@ export default function LoginPage() {
       });
       setSubmitSuccess(result.message);
 
-      if (result.shouldRedirect && result.redirectTo) {
+      if (
+        result.shouldRedirect
+        && typeof result.redirectTo === "string"
+        && result.redirectTo.length > 0
+      ) {
         window.setTimeout(() => {
           void router.push(result.redirectTo);
         }, 800);
