@@ -1,84 +1,231 @@
-import { LayoutGrid, List, MoreHorizontal, Pencil, UserCircle2, View } from "lucide-react";
+import { AlertCircle, CheckCircle2, UserCircle2 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { OrganizerDashboardIcon } from "../dashboard/OrganizerDashboardIcons";
-import { OrganizerMetaFooter } from "../shared/OrganizerMetaFooter";
+import {
+  getApiErrorMessage,
+  getApiResultData,
+  isApiResponse,
+} from "@/features/auth/utils";
+import type { ApiResult } from "@/features/auth/types";
+import {
+  getOrganizerEvents,
+  submitOrganizerEventForApproval,
+} from "@/features/organizer/events/services/create-event.service";
+import type {
+  OrganizerEvent,
+  OrganizerEventsPageData,
+} from "@/features/organizer/events/types";
+import { OrganizerDashboardIcon } from "@/features/organizer/dashboard/OrganizerDashboardIcons";
+import { OrganizerMetaFooter } from "@/features/organizer/shared/OrganizerMetaFooter";
 
-type PortfolioStatus = "Live" | "Draft" | "Completed";
-
-type PortfolioItem = {
-  id: string;
-  name: string;
-  venue: string;
-  status: PortfolioStatus;
-  sold: number;
-  capacity: number;
-  revenue: string;
-  date: string;
-  tone: "live" | "draft" | "completed";
+type ToastState = {
+  tone: "success" | "error";
+  message: string;
 };
 
-const PORTFOLIO_ITEMS: PortfolioItem[] = [
-  {
-    id: "neon-nights-festival",
-    name: "Neon Nights Festival",
-    venue: "Downtown Arena",
-    status: "Live",
-    sold: 4650,
-    capacity: 5000,
-    revenue: "$139,500.00",
-    date: "Oct 24, 2024",
-    tone: "live",
-  },
-  {
-    id: "tech-summit-2024",
-    name: "Tech Summit 2024",
-    venue: "Global Convention Center",
-    status: "Draft",
-    sold: 0,
-    capacity: 2500,
-    revenue: "$0.00",
-    date: "Nov 12, 2024",
-    tone: "draft",
-  },
-  {
-    id: "summer-food-expo",
-    name: "Summer Food Expo",
-    venue: "Waterfront Park",
-    status: "Live",
-    sold: 1210,
-    capacity: 3000,
-    revenue: "$54,450.00",
-    date: "Aug 15, 2024",
-    tone: "live",
-  },
-  {
-    id: "acoustic-soul-session",
-    name: "Acoustic Soul Session",
-    venue: "The Jazz Lounge",
-    status: "Completed",
-    sold: 250,
-    capacity: 250,
-    revenue: "$18,750.00",
-    date: "Jul 02, 2024",
-    tone: "completed",
-  },
-];
-
-const STATUS_STYLE: Record<PortfolioStatus, string> = {
-  Live: "bg-green-100 text-green-700",
-  Draft: "bg-zinc-200 text-gray-700",
-  Completed: "bg-gray-100 text-gray-700",
+type NormalizedEventsData = {
+  items: OrganizerEvent[];
+  hasNext: boolean;
 };
+
+const DEFAULT_PAGE_SIZE = 10;
+
+const STATUS_STYLE: Record<string, string> = {
+  DRAFT: "bg-zinc-200 text-gray-700",
+  PENDING_APPROVAL: "bg-amber-100 text-amber-700",
+  APPROVED: "bg-emerald-100 text-emerald-700",
+  PUBLISHED: "bg-green-100 text-green-700",
+  REJECTED: "bg-rose-100 text-rose-700",
+  CANCELLED: "bg-slate-200 text-slate-700",
+};
+
+function normalizeEventsPayload(payload: unknown): NormalizedEventsData {
+  if (Array.isArray(payload)) {
+    return {
+      items: payload as OrganizerEvent[],
+      hasNext: false,
+    };
+  }
+
+  if (!payload || typeof payload !== "object") {
+    return {
+      items: [],
+      hasNext: false,
+    };
+  }
+
+  const objectPayload = payload as Partial<OrganizerEventsPageData> & {
+    events?: OrganizerEvent[];
+    content?: OrganizerEvent[];
+    data?: OrganizerEvent[];
+    results?: OrganizerEvent[];
+    hasMore?: boolean;
+  };
+
+  const itemsCandidate =
+    objectPayload.items ??
+    objectPayload.events ??
+    objectPayload.content ??
+    objectPayload.data ??
+    objectPayload.results;
+
+  return {
+    items: Array.isArray(itemsCandidate) ? itemsCandidate : [],
+    hasNext: Boolean(objectPayload.hasNext ?? objectPayload.hasMore),
+  };
+}
+
+function formatDate(dateInput?: string) {
+  if (!dateInput) {
+    return "-";
+  }
+
+  const date = new Date(dateInput);
+  if (Number.isNaN(date.getTime())) {
+    return dateInput;
+  }
+
+  return date.toLocaleString("en-GB", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function formatPrice(price?: number) {
+  if (typeof price !== "number" || Number.isNaN(price)) {
+    return "-";
+  }
+
+  return price.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+  });
+}
 
 export function OrganizerEventsContent() {
+  const [events, setEvents] = useState<OrganizerEvent[]>([]);
+  const [page, setPage] = useState(1);
+  const [hasNext, setHasNext] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmittingById, setIsSubmittingById] = useState<Record<string, boolean>>({});
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [toast, setToast] = useState<ToastState | null>(null);
+
+  const showToast = useCallback((nextToast: ToastState) => {
+    setToast(nextToast);
+    window.setTimeout(() => {
+      setToast(null);
+    }, 2500);
+  }, []);
+
+  const loadEvents = useCallback(async (nextPage: number) => {
+    setIsLoading(true);
+    setErrorMessage(null);
+
+    try {
+      const apiResult = await getOrganizerEvents({ page: nextPage, size: DEFAULT_PAGE_SIZE });
+      const data = getApiResultData(apiResult as ApiResult<unknown>);
+      const normalized = normalizeEventsPayload(data);
+
+      setEvents(normalized.items);
+      setHasNext(normalized.hasNext);
+    } catch (error) {
+      setErrorMessage(
+        getApiErrorMessage(error, "Không thể tải danh sách sự kiện. Vui lòng thử lại."),
+      );
+      setEvents([]);
+      setHasNext(false);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadEvents(page);
+  }, [loadEvents, page]);
+
+  const totalDraftEvents = useMemo(
+    () => events.filter((event) => (event.status ?? "DRAFT").toUpperCase() === "DRAFT").length,
+    [events],
+  );
+
+  const handleSubmitForApproval = async (event: OrganizerEvent) => {
+    const eventId = event.id;
+    if (!eventId) {
+      showToast({ tone: "error", message: "Sự kiện không hợp lệ để gửi duyệt." });
+      return;
+    }
+
+    setIsSubmittingById((prev) => ({ ...prev, [eventId]: true }));
+
+    try {
+      const apiResult = await submitOrganizerEventForApproval(eventId);
+
+      if (isApiResponse(apiResult) && typeof apiResult.code === "number" && apiResult.code !== 0) {
+        throw new Error(apiResult.message || "Gửi duyệt thất bại.");
+      }
+
+      setEvents((prev) =>
+        prev.map((item) =>
+          item.id === eventId
+            ? {
+                ...item,
+                status: "PENDING_APPROVAL",
+              }
+            : item,
+        ),
+      );
+
+      showToast({
+        tone: "success",
+        message: "Đã gửi yêu cầu phê duyệt thành công",
+      });
+    } catch (error) {
+      const fallback = "Không thể gửi duyệt sự kiện. Vui lòng thử lại.";
+      const message =
+        error instanceof Error && error.message
+          ? error.message
+          : getApiErrorMessage(error, fallback);
+
+      showToast({ tone: "error", message });
+    } finally {
+      setIsSubmittingById((prev) => ({ ...prev, [eventId]: false }));
+    }
+  };
+
   return (
-    <section className="flex-1">
+    <section className="relative flex-1">
+      {toast && (
+        <div className="fixed right-6 top-6 z-50">
+          <div
+            className={`inline-flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold shadow-lg ${
+              toast.tone === "success"
+                ? "bg-emerald-600 text-white"
+                : "bg-rose-600 text-white"
+            }`}
+          >
+            {toast.tone === "success" ? (
+              <CheckCircle2 className="h-4 w-4" />
+            ) : (
+              <AlertCircle className="h-4 w-4" />
+            )}
+            {toast.message}
+          </div>
+        </div>
+      )}
+
       <header className="flex h-20 items-center justify-between border-b border-slate-300/10 bg-slate-50/80 px-5 backdrop-blur-[6px] sm:px-8 lg:px-10 xl:px-10">
         <div className="flex-1 max-w-[576px]">
           <div className="relative">
             <div className="inline-flex h-11 w-full items-start justify-center overflow-hidden rounded-2xl bg-gray-100 py-3.5 pl-12 pr-4">
-              <div className="flex-1 overflow-hidden text-sm font-normal text-gray-500">Search events, orders, or attendees...</div>
+              <div className="flex-1 overflow-hidden text-sm font-normal text-gray-500">
+                Search events, orders, or attendees...
+              </div>
             </div>
             <div className="absolute left-4 top-[10px] flex h-6 items-center">
               <OrganizerDashboardIcon type="search" className="h-4 w-4 text-gray-700" />
@@ -96,13 +243,13 @@ export function OrganizerEventsContent() {
             <span className="absolute left-6 top-2 h-2 w-2 rounded-full border-2 border-slate-50 bg-rose-700" />
           </button>
 
-          <button
-            type="button"
+          <Link
+            href="/organizer/create-event"
             className="inline-flex h-10 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-sky-700 to-violet-700 px-6 text-sm font-semibold text-white shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)] transition hover:brightness-105"
           >
             <span className="text-sm leading-none">+</span>
             <span>Create New Event</span>
-          </button>
+          </Link>
 
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-200 text-gray-700">
             <UserCircle2 className="h-5 w-5" />
@@ -113,207 +260,164 @@ export function OrganizerEventsContent() {
       <div className="space-y-8 px-5 py-8 sm:px-8 lg:px-10">
         <section className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
           <div className="max-w-[672px] space-y-4">
-            <h1 className="text-4xl font-bold leading-[48px] text-zinc-900 sm:text-5xl">Events Management</h1>
+            <h1 className="text-4xl font-bold leading-[48px] text-zinc-900 sm:text-5xl">
+              Events Management
+            </h1>
             <p className="text-lg font-light leading-7 text-gray-700">
-              Track and manage your created events, their sales performance, and
-              <br className="hidden sm:block" />
-              status in real-time.
+              Theo doi va quan ly cac su kien da tao, trang thai va tien do duyet theo thoi gian thuc.
             </p>
           </div>
 
-          <div className="inline-flex w-fit items-center gap-4 rounded-2xl bg-gray-100 p-1">
-            <button
-              type="button"
-              className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-2 text-sm font-medium text-zinc-900 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]"
-            >
-              All
-            </button>
-            <button type="button" className="inline-flex items-center justify-center rounded-2xl px-5 py-2 text-sm font-medium text-gray-700">
-              Live
-            </button>
-            <button type="button" className="inline-flex items-center justify-center rounded-2xl px-5 py-2 text-sm font-medium text-gray-700">
-              Draft
-            </button>
-            <button type="button" className="inline-flex items-center justify-center rounded-2xl px-5 py-2 text-sm font-medium text-gray-700">
-              Past
-            </button>
+          <div className="inline-flex items-center gap-3 rounded-2xl bg-white px-5 py-3 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
+            <span className="text-sm text-gray-700">Draft:</span>
+            <span className="text-base font-bold text-zinc-900">{totalDraftEvents}</span>
+            <span className="text-sm text-gray-700">Page:</span>
+            <span className="text-base font-bold text-zinc-900">{page}</span>
           </div>
-        </section>
-
-        <section className="grid gap-5 xl:grid-cols-3">
-          <article className="relative h-52 rounded-3xl bg-white p-8 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
-            <div className="flex items-start justify-between">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100">
-                <OrganizerDashboardIcon type="ticket" className="h-5 w-5 text-sky-700" />
-              </div>
-              <p className="text-xs font-bold uppercase tracking-wider text-sky-700">Tickets Sold</p>
-            </div>
-
-            <div className="mt-10 flex items-baseline gap-2">
-              <p className="text-4xl font-bold leading-10 text-zinc-900">12,482</p>
-              <p className="text-sm font-medium leading-5 text-green-600">+12%</p>
-            </div>
-
-            <p className="mt-4 text-sm font-normal leading-5 text-gray-700">Total across 8 active events</p>
-          </article>
-
-          <article className="relative h-52 rounded-3xl bg-white p-8 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
-            <div className="flex items-start justify-between">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-200">
-                <OrganizerDashboardIcon type="analytics" className="h-5 w-5 text-violet-700" />
-              </div>
-              <p className="text-xs font-bold uppercase tracking-wider text-violet-700">Total Revenue</p>
-            </div>
-
-            <div className="mt-10 flex items-baseline gap-2">
-              <p className="text-4xl font-bold leading-10 text-zinc-900">$248,390</p>
-              <p className="text-sm font-medium leading-5 text-green-600">+8.4%</p>
-            </div>
-
-            <p className="mt-4 text-sm font-normal leading-5 text-gray-700">Net earnings this month</p>
-          </article>
-
-          <article className="relative flex min-h-52 flex-col justify-between overflow-hidden rounded-3xl bg-gradient-to-br from-sky-700 to-violet-700 p-8 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
-            <div className="absolute bottom-4 right-5 opacity-10 text-white">
-              <OrganizerDashboardIcon type="events" className="h-16 w-16" />
-            </div>
-
-            <div className="space-y-2">
-              <p className="text-xs font-bold uppercase tracking-wider text-white/80">Quick Insight</p>
-              <h3 className="text-2xl font-semibold leading-8 text-white">
-                Neon Nights is
-                <br />
-                92% sold out
-              </h3>
-            </div>
-
-            <div className="pt-4">
-              <button
-                type="button"
-                className="inline-flex items-center justify-center rounded-2xl bg-white/20 px-4 py-2 text-sm font-medium text-white backdrop-blur-[2px]"
-              >
-                Boost Sales
-              </button>
-            </div>
-          </article>
         </section>
 
         <section className="overflow-hidden rounded-3xl bg-white shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
           <div className="flex items-center justify-between border-b border-gray-100 p-6">
-            <h2 className="text-xl font-bold leading-7 text-zinc-900">Current Portfolio</h2>
-            <div className="flex items-center gap-2">
-              <button type="button" className="rounded-2xl p-2 text-gray-700 transition hover:bg-gray-100" aria-label="Grid view">
-                <LayoutGrid className="h-4 w-4" />
-              </button>
-              <button type="button" className="rounded-2xl p-2 text-gray-700 transition hover:bg-gray-100" aria-label="List view">
-                <List className="h-4 w-4" />
-              </button>
-            </div>
+            <h2 className="text-xl font-bold leading-7 text-zinc-900">Event List</h2>
+            <button
+              type="button"
+              onClick={() => void loadEvents(page)}
+              className="inline-flex items-center rounded-xl bg-gray-100 px-4 py-2 text-xs font-semibold text-gray-700 transition hover:bg-gray-200"
+            >
+              Refresh
+            </button>
           </div>
 
+          {errorMessage ? (
+            <div className="p-6 text-sm font-medium text-rose-700">{errorMessage}</div>
+          ) : null}
+
           <div className="overflow-x-auto">
-            <table className="min-w-[980px] w-full">
+            <table className="min-w-[1040px] w-full">
               <thead className="bg-gray-100/50">
                 <tr>
-                  <th className="px-8 py-7 text-left text-xs font-bold uppercase tracking-wider text-gray-700">Event Name</th>
-                  <th className="px-6 py-7 text-left text-xs font-bold uppercase tracking-wider text-gray-700">Status</th>
-                  <th className="px-6 py-5 text-left text-xs font-bold uppercase tracking-wider text-gray-700">Tickets Sold</th>
-                  <th className="px-6 py-7 text-left text-xs font-bold uppercase tracking-wider text-gray-700">Revenue</th>
-                  <th className="px-6 py-7 text-left text-xs font-bold uppercase tracking-wider text-gray-700">Date</th>
-                  <th className="px-8 py-7 text-right text-xs font-bold uppercase tracking-wider text-gray-700">Actions</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700">
+                    Banner
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700">
+                    Ten su kien
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700">
+                    Ngay bat dau
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700">
+                    Gia ve
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700">
+                    Trang thai
+                  </th>
+                  <th className="px-6 py-4 text-right text-xs font-bold uppercase tracking-wider text-gray-700">
+                    Thao tac
+                  </th>
                 </tr>
               </thead>
 
               <tbody>
-                {PORTFOLIO_ITEMS.map((item, index) => {
-                  const percent = item.capacity === 0 ? 0 : Math.round((item.sold / item.capacity) * 100);
-                  const rowMuted = item.tone === "completed";
-                  return (
-                    <tr key={item.name} className={`${index !== 0 ? "border-t border-gray-100" : ""}`}>
-                      <td className="px-8 py-6">
-                        <div className="flex items-center gap-4">
-                          <div
-                            className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100 ${
-                              rowMuted ? "opacity-60" : ""
-                            }`}
-                          >
-                            <OrganizerDashboardIcon
-                              type="events"
-                              className={`h-5 w-5 ${rowMuted ? "text-gray-500" : "text-sky-700"}`}
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-10 text-center text-sm font-medium text-gray-700">
+                      Dang tai danh sach su kien...
+                    </td>
+                  </tr>
+                ) : events.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-10 text-center text-sm font-medium text-gray-700">
+                      Chua co su kien nao.
+                    </td>
+                  </tr>
+                ) : (
+                  events.map((item) => {
+                    const eventId = item.id ?? "";
+                    const status = (item.status ?? "DRAFT").toUpperCase();
+                    const statusClassName = STATUS_STYLE[status] || "bg-slate-200 text-slate-700";
+                    const isDraft = status === "DRAFT";
+                    const isSubmitting = Boolean(eventId && isSubmittingById[eventId]);
+
+                    return (
+                      <tr key={eventId || item.title} className="border-t border-gray-100">
+                        <td className="px-6 py-4">
+                          {item.bannerUrl ? (
+                            <Image
+                              src={item.bannerUrl}
+                              alt={item.title}
+                              width={96}
+                              height={56}
+                              className="h-14 w-24 rounded-lg object-cover"
                             />
+                          ) : (
+                            <div className="h-14 w-24 rounded-lg bg-gradient-to-br from-sky-200 to-violet-200" />
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="max-w-[280px]">
+                            <p className="truncate text-sm font-bold text-zinc-900">{item.title}</p>
+                            <p className="truncate text-xs text-gray-700">{item.category}</p>
                           </div>
-
-                          <div>
-                            <p className={`text-base font-bold ${rowMuted ? "text-gray-700" : "text-zinc-900"}`}>{item.name}</p>
-                            <p className="mt-1 text-xs text-gray-700">{item.venue}</p>
-                          </div>
-                        </div>
-                      </td>
-
-                      <td className="px-6 py-6">
-                        <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${STATUS_STYLE[item.status]}`}>
-                          {item.status === "Live" ? <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-green-600" /> : null}
-                          {item.status}
-                        </span>
-                      </td>
-
-                      <td className="px-6 py-6">
-                        <div className="w-36 space-y-2">
-                          <div className="flex items-start justify-between gap-2 text-sm">
-                            <span className={`font-medium ${rowMuted ? "text-gray-700" : "text-zinc-900"}`}>
-                              {item.sold.toLocaleString()} / {item.capacity.toLocaleString()}
-                            </span>
-                            <span className="text-xs text-gray-700">{percent}%</span>
-                          </div>
-                          <div className="h-1.5 overflow-hidden rounded-full bg-gray-200">
-                            <div
-                              className={`h-full rounded-full ${rowMuted ? "bg-gray-700" : "bg-gradient-to-r from-sky-700 to-violet-700"}`}
-                              style={{ width: `${percent}%` }}
-                            />
-                          </div>
-                        </div>
-                      </td>
-
-                      <td className={`px-6 py-6 text-base font-semibold ${rowMuted ? "text-gray-700" : "text-zinc-900"}`}>{item.revenue}</td>
-
-                      <td className={`px-6 py-6 text-sm ${rowMuted ? "text-gray-700" : "text-zinc-900"}`}>{item.date}</td>
-
-                      <td className="px-8 py-6">
-                        <div className="flex justify-end gap-2">
-                          <button type="button" className="rounded-2xl p-2 text-gray-700 transition hover:bg-gray-100" aria-label="View">
-                            <View className="h-4 w-4" />
-                          </button>
-                          <Link
-                            href={`/organizer/events/edit/${item.id}`}
-                            className="rounded-2xl p-2 text-gray-700 transition hover:bg-gray-100"
-                            aria-label="Edit"
+                        </td>
+                        <td className="px-6 py-4 text-sm text-zinc-900">{formatDate(item.startTime)}</td>
+                        <td className="px-6 py-4 text-sm font-semibold text-zinc-900">
+                          {formatPrice(item.minPrice)}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${statusClassName}`}
                           >
-                            <Pencil className="h-4 w-4" />
-                          </Link>
-                          <button type="button" className="rounded-2xl p-2 text-gray-700 transition hover:bg-gray-100" aria-label="More">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
+                            {status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex justify-end gap-2">
+                            <Link
+                              href={`/organizer/events/edit/${eventId}`}
+                              className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-gray-700 transition hover:bg-slate-200"
+                            >
+                              Sua
+                            </Link>
+                            <Link
+                              href={`/event/${eventId}`}
+                              className="rounded-xl bg-blue-100 px-3 py-2 text-xs font-semibold text-sky-700 transition hover:bg-blue-200"
+                            >
+                              Xem chi tiet
+                            </Link>
+                            <button
+                              type="button"
+                              onClick={() => void handleSubmitForApproval(item)}
+                              disabled={!isDraft || isSubmitting || !eventId}
+                              className="rounded-xl bg-amber-100 px-3 py-2 text-xs font-semibold text-amber-700 transition hover:bg-amber-200 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              {isSubmitting ? "Dang gui..." : "Gui duyet"}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
 
           <div className="inline-flex w-full items-center justify-between border-t border-gray-100 bg-gray-100/30 px-8 py-4">
-            <p className="text-xs font-medium text-gray-700">Showing 4 of 24 events</p>
+            <p className="text-xs font-medium text-gray-700">Hien thi {events.length} su kien - Trang {page}</p>
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                className="inline-flex items-center justify-center rounded-2xl px-4 py-2 text-center text-xs font-semibold text-gray-700 outline outline-1 outline-offset-[-1px] outline-slate-300"
+                disabled={isLoading || page === 1}
+                onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                className="inline-flex items-center justify-center rounded-2xl px-4 py-2 text-center text-xs font-semibold text-gray-700 outline outline-1 outline-offset-[-1px] outline-slate-300 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Previous
               </button>
               <button
                 type="button"
-                className="inline-flex items-center justify-center rounded-2xl px-4 py-2 text-center text-xs font-semibold text-gray-700 outline outline-1 outline-offset-[-1px] outline-slate-300"
+                disabled={isLoading || !hasNext}
+                onClick={() => setPage((prev) => prev + 1)}
+                className="inline-flex items-center justify-center rounded-2xl px-4 py-2 text-center text-xs font-semibold text-gray-700 outline outline-1 outline-offset-[-1px] outline-slate-300 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Next
               </button>
