@@ -10,7 +10,6 @@ import type {
 export const organizerNavigationItems = [
   { label: "Dashboard", href: "/organizer", icon: "dashboard", active: true },
   { label: "Events", href: "/organizer/events", icon: "events" },
-  { label: "Create Event", href: "/organizer/create-event", icon: "calendar" },
   { label: "Tickets", href: "/organizer/tickets", icon: "ticket" },
   { label: "Attendees", href: "/organizer/attendees", icon: "attendees" },
   { label: "Analytics", href: "/organizer/analytics", icon: "analytics" },

@@ -97,6 +97,7 @@ function getTicketBadge(ticketType: TicketType) {
 export function OrganizerAttendeesContent() {
   const [searchValue, setSearchValue] = useState("");
   const [ticketTypeFilter, setTicketTypeFilter] = useState<TicketTypeFilter>("All Ticket Types");
+  const [openActionsForId, setOpenActionsForId] = useState<string | null>(null);
 
   const filteredAttendees = useMemo(() => {
     const normalizedSearch = searchValue.trim().toLowerCase();
@@ -248,10 +249,51 @@ export function OrganizerAttendeesContent() {
                         )}
                       </td>
                       <td className="px-6 py-5 font-mono text-sm text-gray-500">#{attendee.orderId}</td>
-                      <td className="px-6 py-5">
-                        <button type="button" aria-label={`More actions for ${attendee.name}`} className="rounded-full p-2 text-gray-500 transition hover:bg-gray-100">
+                      <td className="relative px-6 py-5">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setOpenActionsForId((prev) => (prev === attendee.id ? null : attendee.id))
+                          }
+                          aria-haspopup="menu"
+                          aria-expanded={openActionsForId === attendee.id}
+                          aria-label={`More actions for ${attendee.name}`}
+                          className="rounded-full p-2 text-gray-500 transition hover:bg-gray-100"
+                        >
                           <MoreVertical className="h-4 w-4" />
                         </button>
+
+                        {openActionsForId === attendee.id ? (
+                          <div
+                            role="menu"
+                            className="absolute right-6 top-14 z-10 min-w-40 overflow-hidden rounded-xl border border-gray-100 bg-white shadow-lg"
+                          >
+                            <button
+                              type="button"
+                              role="menuitem"
+                              onClick={() => setOpenActionsForId(null)}
+                              className="block w-full px-4 py-2 text-left text-sm text-gray-700 transition hover:bg-gray-100"
+                            >
+                              View details
+                            </button>
+                            <button
+                              type="button"
+                              role="menuitem"
+                              onClick={() => setOpenActionsForId(null)}
+                              className="block w-full px-4 py-2 text-left text-sm text-gray-700 transition hover:bg-gray-100"
+                            >
+                              Resend ticket
+                            </button>
+                            <button
+                              type="button"
+                              role="menuitem"
+                              onClick={() => setOpenActionsForId(null)}
+                              className="block w-full px-4 py-2 text-left text-sm text-rose-600 transition hover:bg-rose-50"
+                            >
+                              Remove attendee
+                            </button>
+                          </div>
+                        ) : null}
                       </td>
                     </tr>
                   );
