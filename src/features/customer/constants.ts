@@ -9,9 +9,9 @@ import type {
 export const customerNavigationItems = [
   { label: "Dashboard", href: "/customer", icon: "grid", active: true },
   { label: "My Tickets", href: "/customer/my-tickets", icon: "ticket" },
-  { label: "Order History", href: "#orders", icon: "history" },
-  { label: "Notifications", href: "#notifications", icon: "bell" },
-  { label: "Profile Settings", href: "#settings", icon: "settings" },
+  { label: "Order History", href: "/customer/order-history", icon: "history" },
+  { label: "Notifications", href: "/customer/notifications", icon: "bell" },
+  { label: "Profile Settings", href: "/customer/profile-settings", icon: "settings" },
 ] satisfies CustomerNavItem[];
 
 export const customerStatCards = [

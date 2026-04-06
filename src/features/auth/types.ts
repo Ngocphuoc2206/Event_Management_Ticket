@@ -23,6 +23,8 @@ export type UserResponse = {
   fullName?: string;
   email?: string;
   phone?: string;
+  avatar?: string;
+  bio?: string;
   password?: string;
 };
 
@@ -37,6 +39,7 @@ export type AuthSession = {
   fullName: string | null;
   email: string | null;
   phone: string | null;
+  avatar: string | null;
   role: UserRole | null;
   accessToken: string | null;
   refreshToken: string | null;
@@ -55,4 +58,18 @@ export type LogoutPayload = Partial<LoginPayload>;
 
 export type LogoutResponse = {
   message?: string;
+};
+
+export type UserProfileResponse = UserResponse;
+
+export type UpdateProfilePayload = {
+  fullName: string;
+  phone: string;
+  bio?: string | null;
+  avatar?: string | null;
+};
+
+export type ChangePasswordPayload = {
+  currentPassword: string;
+  newPassword: string;
 };
