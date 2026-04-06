@@ -1,4 +1,4 @@
-import Head from "next/head";
+import Head from "next/head";Collapse commentComment on line L1Ngocphuoc2206 commented on Apr 3, 2026 Ngocphuoc2206on Apr 3, 2026OwnerMore actionsSao xóa file này ?ReactWrite a replyResolve comment
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useState } from "react";
@@ -13,10 +13,6 @@ import {
   AUTH_SHELL_CLASSNAME,
   AUTH_TEXT_LINK_CLASSNAME,
   AUTH_TEXT_INPUT_CLASSNAME,
-<<<<<<< HEAD
-  // Đã xóa dòng AUTH_TEXT_LINK_CLASSNAME bị trùng ở đây
-=======
->>>>>>> develop
   DEFAULT_API_BASE_URL,
 } from "@/features/auth/constants";
 import {
