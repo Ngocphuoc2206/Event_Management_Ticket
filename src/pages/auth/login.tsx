@@ -13,6 +13,10 @@ import {
   AUTH_SHELL_CLASSNAME,
   AUTH_TEXT_LINK_CLASSNAME,
   AUTH_TEXT_INPUT_CLASSNAME,
+<<<<<<< HEAD
+  // Đã xóa dòng AUTH_TEXT_LINK_CLASSNAME bị trùng ở đây
+=======
+>>>>>>> develop
   DEFAULT_API_BASE_URL,
 } from "@/features/auth/constants";
 import {
@@ -76,7 +80,11 @@ export default function LoginPage() {
       });
       setSubmitSuccess(result.message);
 
-      if (result.shouldRedirect && result.redirectTo) {
+      if (
+        result.shouldRedirect
+        && typeof result.redirectTo === "string"
+        && result.redirectTo.length > 0
+      ) {
         window.setTimeout(() => {
           void router.push(result.redirectTo);
         }, 800);
