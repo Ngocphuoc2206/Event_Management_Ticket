@@ -1,26 +1,26 @@
 import Head from "next/head";
 
 import {
-  OrganizerCreateEventStepTwoContent,
   OrganizerDashboardSidebar,
+  OrganizerTicketsContent,
   getOrganizerNavigationItems,
   organizerProfile,
 } from "@/features/organizer";
 
-export default function OrganizerCreateEventLocationTimePage() {
+export default function OrganizerTicketsPage() {
   return (
     <>
       <Head>
-        <title>Create Event - Location & Time | EventHub</title>
+        <title>Organizer Tickets | EventHub</title>
       </Head>
 
       <main className="min-h-screen w-full bg-slate-50 text-slate-900">
         <div className="flex min-h-screen w-full flex-col lg:flex-row">
           <OrganizerDashboardSidebar
-            navigationItems={getOrganizerNavigationItems("Events")}
+            navigationItems={getOrganizerNavigationItems("Tickets")}
             profile={organizerProfile}
           />
-          <OrganizerCreateEventStepTwoContent />
+          <OrganizerTicketsContent />
         </div>
       </main>
     </>
