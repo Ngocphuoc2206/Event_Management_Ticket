@@ -13,6 +13,7 @@ import {
   AUTH_SHELL_CLASSNAME,
   AUTH_TEXT_LINK_CLASSNAME,
   AUTH_TEXT_INPUT_CLASSNAME,
+  // Đã xóa dòng AUTH_TEXT_LINK_CLASSNAME bị trùng ở đây
   DEFAULT_API_BASE_URL,
 } from "@/features/auth/constants";
 import {
@@ -76,9 +77,11 @@ export default function LoginPage() {
       });
       setSubmitSuccess(result.message);
 
-      if (result.shouldRedirect && result.redirectTo) {
+      const redirectTo = result.redirectTo;
+
+      if (result.shouldRedirect && redirectTo) {
         window.setTimeout(() => {
-          void router.push(result.redirectTo);
+          void router.push(redirectTo);
         }, 800);
       }
     } catch (error) {

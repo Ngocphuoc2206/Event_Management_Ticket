@@ -1,7 +1,12 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
-import { UserCircle2 } from "lucide-react";
+import { LogOut, UserCircle2 } from "lucide-react";
+import { useRouter } from "next/router";
+import { useMemo, useState } from "react";
 
+import { useAuth } from "@/features/auth/hooks/useAuth";
 import { OrganizerDashboardIcon } from "./OrganizerDashboardIcons";
 import type { OrganizerNavItem, OrganizerProfile } from "../types";
 
@@ -11,6 +16,43 @@ type OrganizerDashboardSidebarProps = {
 };
 
 export function OrganizerDashboardSidebar({ navigationItems, profile }: OrganizerDashboardSidebarProps) {
+  const router = useRouter();
+  const { logout } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const resolvedNavigationItems = useMemo(() => {
+    const pathname = router.pathname;
+
+    return navigationItems.map((item) => {
+      const isDashboard = item.href === "/organizer";
+      const isEventsGroup = item.href === "/organizer/events";
+      const isActive = isDashboard
+        ? pathname === item.href
+        : isEventsGroup
+          ? pathname === item.href || pathname.startsWith(`${item.href}/`) || pathname.startsWith("/organizer/create-event")
+          : pathname === item.href || pathname.startsWith(`${item.href}/`);
+
+      return {
+        ...item,
+        active: isActive,
+      };
+    });
+  }, [navigationItems, router.pathname]);
+
+  const handleLogout = async () => {
+    if (isLoggingOut) {
+      return;
+    }
+
+    setIsLoggingOut(true);
+    try {
+      const result = await logout(undefined, { redirectTo: "/auth/login" });
+      await router.push(result.redirectTo);
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
   return (
     <aside className="flex w-full flex-col border-b border-slate-300/40 bg-gray-100 lg:sticky lg:top-0 lg:h-screen lg:w-72 lg:shrink-0 lg:overflow-y-auto lg:border-b-0 lg:border-r lg:border-slate-300/30">
       <div className="p-8">
@@ -26,7 +68,7 @@ export function OrganizerDashboardSidebar({ navigationItems, profile }: Organize
       </div>
 
       <nav className="flex flex-1 flex-col gap-1 overflow-hidden px-4 pb-5">
-        {navigationItems.map((item) => (
+        {resolvedNavigationItems.map((item) => (
           <Link
             key={item.label}
             href={item.href}
@@ -42,7 +84,17 @@ export function OrganizerDashboardSidebar({ navigationItems, profile }: Organize
         ))}
       </nav>
 
-      <div className="p-6 pt-4">
+      <div className="space-y-3 p-6 pt-4">
+        <button
+          type="button"
+          onClick={() => void handleLogout()}
+          disabled={isLoggingOut}
+          className="flex w-full items-center gap-3 rounded-2xl border border-slate-300/60 bg-white px-4 py-3 text-sm font-semibold text-gray-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <LogOut className="h-4 w-4" />
+          <span>{isLoggingOut ? "Dang dang xuat..." : "Dang xuat"}</span>
+        </button>
+
         <div className="flex items-center gap-3 rounded-2xl bg-zinc-200 p-4">
           <div className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-white">
             {profile.avatarSrc ? (

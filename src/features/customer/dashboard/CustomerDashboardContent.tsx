@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 import { CustomerDashboardIcon } from "./CustomerDashboardIcons";
 import type { CustomerOrderRow, CustomerOrderStatus, CustomerStatCard, CustomerTicketCard } from "../types";
@@ -31,10 +32,10 @@ function TicketArtwork({
   title,
 }: Pick<CustomerTicketCard, "palette" | "artTitle" | "imageSrc" | "status" | "title">) {
   return (
-    <div className={`relative h-full min-h-[150px] overflow-hidden bg-gradient-to-br ${palette}`}>
+    <div className={`relative h-full min-h-[160px] overflow-hidden bg-gradient-to-br ${palette}`}>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.45),_transparent_30%)]" />
-      <div className="absolute inset-x-0 top-3 z-10 flex justify-center">
-        <span className="rounded-full bg-white/85 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.26em] text-blue-600">
+      <div className="absolute left-3 top-3 z-10">
+        <span className="rounded-full bg-white/90 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.26em] text-blue-600">
           {status}
         </span>
       </div>
@@ -62,6 +63,30 @@ function OrderStatusBadge({ status }: { status: CustomerOrderStatus }) {
   );
 }
 
+function getTicketQrSrc(ticket: Pick<CustomerTicketCard, "ticketCode" | "title" | "date" | "venue">) {
+  const payload = `EventHub|${ticket.ticketCode}|${ticket.title}|${ticket.date}|${ticket.venue}`;
+  return `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(payload)}`;
+}
+
+function TicketQr({ ticket }: { ticket: CustomerTicketCard }) {
+  return (
+    <button
+      type="button"
+      className="flex h-11 w-14 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 transition hover:scale-[1.03]"
+      aria-label={`Open QR code for ${ticket.title}`}
+      title="Open QR"
+    >
+      <Image
+        src={getTicketQrSrc(ticket)}
+        alt={`QR for ${ticket.ticketCode}`}
+        width={28}
+        height={28}
+        className="rounded-[4px]"
+      />
+    </button>
+  );
+}
+
 type CustomerDashboardContentProps = {
   customerName: string;
   statCards: CustomerStatCard[];
@@ -75,9 +100,27 @@ export function CustomerDashboardContent({
   upcomingTickets,
   recentOrders,
 }: CustomerDashboardContentProps) {
+  const [selectedQrTicket, setSelectedQrTicket] = useState<CustomerTicketCard | null>(null);
+
+  useEffect(() => {
+    if (!selectedQrTicket) {
+      return;
+    }
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setSelectedQrTicket(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [selectedQrTicket]);
+
   return (
-    <section className="flex-1 px-5 py-6 sm:px-8 lg:px-10 xl:px-12">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <>
+      <section className="flex-1 px-5 py-6 sm:px-8 lg:px-10 xl:px-12">
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="text-2xl font-semibold tracking-tight">Dashboard</div>
         <div className="flex items-center gap-2 self-end sm:self-auto">
           {HEADER_ACTION_ICONS.map((icon) => (
@@ -90,9 +133,9 @@ export function CustomerDashboardContent({
             </button>
           ))}
         </div>
-      </header>
+        </header>
 
-      <section className="mt-10">
+        <section className="mt-10">
         <div className="text-xs font-bold uppercase tracking-[0.34em] text-blue-600">Overview</div>
         <h1 className="mt-2 text-4xl font-bold tracking-tight text-slate-900 sm:text-[2.8rem]">
           Welcome back, {customerName}!
@@ -103,7 +146,7 @@ export function CustomerDashboardContent({
           {statCards.map((card) => (
             <article
               key={card.label}
-              className="rounded-[28px] border border-white/90 bg-white/92 p-6 shadow-[0_20px_50px_rgba(148,163,184,0.14)]"
+              className="rounded-[24px] border border-white/90 bg-white/92 p-5 shadow-[0_20px_50px_rgba(148,163,184,0.14)]"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="text-[11px] font-bold uppercase tracking-[0.24em] text-slate-500">{card.label}</div>
@@ -114,12 +157,12 @@ export function CustomerDashboardContent({
             </article>
           ))}
         </div>
-      </section>
+        </section>
 
-      <section id="tickets" className="mt-12">
+        <section id="tickets" className="mt-12">
         <div className="flex items-center justify-between gap-4">
           <h2 className="text-[2rem] font-bold tracking-tight text-slate-900">Upcoming Tickets</h2>
-          <Link href="#view-all" className="text-sm font-semibold text-blue-600 transition hover:text-blue-700">
+          <Link href="/customer/my-tickets" className="text-sm font-semibold text-blue-600 transition hover:text-blue-700">
             View All -&gt;
           </Link>
         </div>
@@ -128,7 +171,7 @@ export function CustomerDashboardContent({
           {upcomingTickets.map((ticket) => (
             <article
               key={ticket.title}
-              className="overflow-hidden rounded-[28px] border border-white/90 bg-white/92 shadow-[0_24px_60px_rgba(148,163,184,0.16)] sm:grid sm:grid-cols-[1.02fr_1.2fr]"
+              className="overflow-hidden rounded-[24px] border border-white/90 bg-white/95 shadow-[0_24px_60px_rgba(148,163,184,0.16)] sm:grid sm:grid-cols-[0.92fr_1.18fr]"
             >
               <TicketArtwork
                 palette={ticket.palette}
@@ -138,9 +181,8 @@ export function CustomerDashboardContent({
                 title={ticket.title}
               />
 
-              <div className="flex flex-col p-6">
-                <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-blue-600">{ticket.status}</div>
-                <h3 className="mt-3 text-[1.8rem] font-bold leading-tight tracking-tight text-slate-900">{ticket.title}</h3>
+              <div className="flex flex-col p-5">
+                <h3 className="text-[1.8rem] font-bold leading-tight tracking-tight text-slate-900">{ticket.title}</h3>
 
                 <div className="mt-4 space-y-2 text-sm text-slate-500">
                   <div className="flex items-center gap-2">
@@ -153,22 +195,25 @@ export function CustomerDashboardContent({
                   </div>
                 </div>
 
-                <div className="mt-auto pt-6">
-                  <button
-                    type="button"
+                <div className="mt-auto flex items-end justify-between gap-4 pt-5">
+                  <div onClick={() => setSelectedQrTicket(ticket)}>
+                    <TicketQr ticket={ticket} />
+                  </div>
+                  <Link
+                    href="/customer/my-tickets"
                     className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-700 to-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_32px_rgba(76,92,193,0.28)] transition hover:translate-y-[-1px]"
                   >
                     <CustomerDashboardIcon type="download" className="h-4 w-4" />
                     <span>Download Ticket</span>
-                  </button>
+                  </Link>
                 </div>
               </div>
             </article>
           ))}
         </div>
-      </section>
+        </section>
 
-      <section id="orders" className="mt-12">
+        <section id="orders" className="mt-12">
         <h2 className="text-[2rem] font-bold tracking-tight text-slate-900">Recent Orders</h2>
 
         <div className="mt-6 overflow-hidden rounded-[28px] border border-white/90 bg-white/92 shadow-[0_24px_60px_rgba(148,163,184,0.16)]">
@@ -202,12 +247,60 @@ export function CustomerDashboardContent({
             </table>
           </div>
         </div>
+        </section>
+
+        <footer className="py-10 text-center text-[11px] font-medium uppercase tracking-[0.28em] text-slate-400">
+          Copyright 2024 EventHub Ticketing Platform | All rights reserved
+        </footer>
       </section>
 
-      <footer className="py-10 text-center text-[11px] font-medium uppercase tracking-[0.28em] text-slate-400">
-        Copyright 2024 EventHub Ticketing Platform | All rights reserved
-      </footer>
-    </section>
+      {selectedQrTicket ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 px-4 backdrop-blur-[2px]"
+          onClick={() => setSelectedQrTicket(null)}
+        >
+          <div
+            className="w-full max-w-md rounded-[28px] bg-white p-6 shadow-[0_30px_80px_rgba(15,23,42,0.28)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-violet-600">
+                  Scan Ticket QR
+                </div>
+                <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">{selectedQrTicket.title}</h2>
+                <p className="mt-2 text-sm text-slate-500">{selectedQrTicket.date}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedQrTicket(null)}
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition hover:text-slate-900"
+                aria-label="Close QR preview"
+              >
+                <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2">
+                  <path d="M6 6l12 12M18 6 6 18" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="mt-6 rounded-[26px] bg-slate-50 p-5 text-center">
+              <div className="mx-auto flex w-fit rounded-[24px] bg-white p-4 shadow-[0_16px_38px_rgba(148,163,184,0.2)]">
+                <Image
+                  src={getTicketQrSrc(selectedQrTicket)}
+                  alt={`Large QR for ${selectedQrTicket.ticketCode}`}
+                  width={240}
+                  height={240}
+                  className="rounded-[18px]"
+                />
+              </div>
+              <div className="mt-5 text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">Ticket Code</div>
+              <div className="mt-2 text-sm font-semibold tracking-[0.24em] text-slate-700">{selectedQrTicket.ticketCode}</div>
+              <p className="mt-3 text-xs text-slate-500">Show this QR at the gate for scanning.</p>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </>
   );
 }
 

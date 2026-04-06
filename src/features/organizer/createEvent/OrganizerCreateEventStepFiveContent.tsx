@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Bell,
   CalendarDays,
@@ -8,6 +10,7 @@ import {
   Search,
   Settings,
 } from "lucide-react";
+import { useMemo, useState } from "react";
 
 type TicketPreview = {
   name: string;
@@ -42,6 +45,27 @@ const TICKET_PREVIEWS: TicketPreview[] = [
 ];
 
 export function OrganizerCreateEventStepFiveContent() {
+  const [isActionsOpen, setIsActionsOpen] = useState(false);
+  const [expectedAttendees, setExpectedAttendees] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [hasConfirmedAttendeesPlan, setHasConfirmedAttendeesPlan] = useState(false);
+
+  const isAttendeesCompleted = useMemo(() => {
+    const expected = Number(expectedAttendees);
+    const isExpectedValid = Number.isFinite(expected) && expected > 0;
+    const isEmailValid = /\S+@\S+\.\S+/.test(contactEmail.trim());
+
+    return isExpectedValid && isEmailValid && hasConfirmedAttendeesPlan;
+  }, [contactEmail, expectedAttendees, hasConfirmedAttendeesPlan]);
+
+  const toggleActions = () => {
+    if (!isAttendeesCompleted) {
+      return;
+    }
+
+    setIsActionsOpen((prev) => !prev);
+  };
+
   return (
     <section className="relative flex-1 overflow-hidden bg-slate-50">
       <header className="flex h-20 items-center justify-between border-b border-slate-300/10 bg-slate-50/80 px-5 backdrop-blur-[6px] sm:px-8 lg:px-10 xl:px-10">
@@ -219,6 +243,94 @@ export function OrganizerCreateEventStepFiveContent() {
                     </div>
                   </div>
                 </div>
+              </article>
+
+              <article className="space-y-5 rounded-3xl bg-white p-6 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="text-lg font-bold text-zinc-900">Attendees Setup</h3>
+                  <span
+                    className={`inline-flex rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wide ${
+                      isAttendeesCompleted ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
+                    }`}
+                  >
+                    {isAttendeesCompleted ? "Completed" : "Required"}
+                  </span>
+                </div>
+
+                <div className="space-y-4">
+                  <label className="block space-y-1">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-gray-700">Expected Attendees</span>
+                    <input
+                      type="number"
+                      min={1}
+                      value={expectedAttendees}
+                      onChange={(event) => setExpectedAttendees(event.target.value)}
+                      placeholder="e.g. 500"
+                      className="w-full rounded-2xl bg-gray-100 px-4 py-3 text-sm text-zinc-900 outline-none ring-sky-500 transition focus:ring-2"
+                    />
+                  </label>
+
+                  <label className="block space-y-1">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-gray-700">Attendees Contact Email</span>
+                    <input
+                      type="email"
+                      value={contactEmail}
+                      onChange={(event) => setContactEmail(event.target.value)}
+                      placeholder="attendees@yourevent.com"
+                      className="w-full rounded-2xl bg-gray-100 px-4 py-3 text-sm text-zinc-900 outline-none ring-sky-500 transition focus:ring-2"
+                    />
+                  </label>
+
+                  <label className="inline-flex items-start gap-2 text-xs text-gray-700">
+                    <input
+                      type="checkbox"
+                      checked={hasConfirmedAttendeesPlan}
+                      onChange={(event) => setHasConfirmedAttendeesPlan(event.target.checked)}
+                      className="mt-0.5 h-4 w-4 rounded border-gray-300"
+                    />
+                    I confirm attendees check-in workflow is prepared.
+                  </label>
+                </div>
+
+                <div className="relative">
+                  <button
+                    type="button"
+                    disabled={!isAttendeesCompleted}
+                    onClick={toggleActions}
+                    className="inline-flex w-full items-center justify-center rounded-2xl bg-zinc-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-300"
+                    aria-haspopup="menu"
+                    aria-expanded={isActionsOpen}
+                  >
+                    Actions
+                  </button>
+
+                  {isActionsOpen ? (
+                    <div role="menu" className="absolute right-0 top-14 z-10 min-w-44 rounded-xl border border-gray-100 bg-white p-1 shadow-lg">
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => setIsActionsOpen(false)}
+                        className="block w-full rounded-lg px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Preview attendees page
+                      </button>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => setIsActionsOpen(false)}
+                        className="block w-full rounded-lg px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Export attendees plan
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
+
+                {!isAttendeesCompleted ? (
+                  <p className="text-xs leading-5 text-amber-700">
+                    Complete Attendees Setup to enable Actions.
+                  </p>
+                ) : null}
               </article>
 
               <article className="space-y-4">

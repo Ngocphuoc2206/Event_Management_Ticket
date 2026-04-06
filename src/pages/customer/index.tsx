@@ -18,7 +18,8 @@ export default function CustomerDashboardPage() {
 
   const handleLogout = async () => {
     const result = await logout();
-    void router.push(result.redirectTo);
+    const redirectTo = result.redirectTo;
+    void router.push(redirectTo);
   };
 
   return (

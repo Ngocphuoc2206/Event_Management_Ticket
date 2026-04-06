@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { useRouter } from "next/router";
 
 import { BrandIcon, CustomerDashboardIcon } from "./CustomerDashboardIcons";
 import type { CustomerNavItem, CustomerProfile } from "../types";
@@ -38,7 +39,7 @@ export function CustomerDashboardSidebar({ navigationItems, profile, onLogout }:
             key={item.label}
             href={item.href}
             className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition ${
-              item.active
+              (item.href.startsWith("/") ? router.pathname === item.href : false) || item.active
                 ? "bg-white text-blue-600 shadow-[0_10px_30px_rgba(148,163,184,0.16)]"
                 : "text-slate-600 hover:bg-white/70 hover:text-slate-900"
             }`}

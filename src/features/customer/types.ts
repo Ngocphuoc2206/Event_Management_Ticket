@@ -33,6 +33,7 @@ export type CustomerTicketCard = {
   title: string;
   date: string;
   venue: string;
+  ticketCode: string;
   palette: string;
   artTitle: string;
   imageSrc?: string;
