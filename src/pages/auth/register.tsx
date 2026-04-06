@@ -3,7 +3,6 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { useDispatch } from "react-redux";
 
 import {
   APP_NAME,
@@ -62,7 +61,6 @@ const INITIAL_FORM_VALUES: RegisterFormValues = {
 export default function RegisterPage() {
   const { register: registerAccount } = useAuth();
   const router = useRouter();
-  const dispatch = useDispatch();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -92,9 +90,11 @@ export default function RegisterPage() {
       setSubmitSuccess(result.message);
       reset(INITIAL_FORM_VALUES);
 
-      if (result.shouldRedirect && result.redirectTo) {
+      const redirectTo = result.redirectTo;
+
+      if (result.shouldRedirect && redirectTo) {
         window.setTimeout(() => {
-          void router.push(result.redirectTo);
+          void router.push(redirectTo);
         }, 1200);
       }
     } catch (error) {
