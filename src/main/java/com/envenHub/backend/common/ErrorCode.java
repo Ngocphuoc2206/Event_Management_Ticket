@@ -21,6 +21,10 @@ public enum ErrorCode {
     INVALID_SORT_FIELD(1014, "Invalid sort field"),
     INVALID_EVENT_STATE(1015, "Invalid event state"),
     EVENT_CANNOT_BE_UPDATED(1016, "Event cannot be update!"),
+    TICKET_TYPE_NOT_FOUND(1017, "Ticket type not found"),
+    TICKET_SALE_TIME_INVALID(1018, "Ticket is not in sale period"),
+    INSUFFICIENT_TICKET_QUANTITY(1019, "Not enough tickets available"),
+    INVALID_QUANTITY(1020, "Invalid quantity"),
     INTERNAL_ERROR (9999, "Internal Error!"),
     ;
     private final int code;
