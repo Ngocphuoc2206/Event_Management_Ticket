@@ -15,6 +15,7 @@ import com.envenHub.backend.mapper.OrderMapper;
 import com.envenHub.backend.repository.OrderRepository;
 import com.envenHub.backend.repository.TicketTypeRepository;
 import com.envenHub.backend.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -36,33 +37,40 @@ public class OrderService {
     @Autowired
     private UserService userService;
 //    private final
+    @Transactional
     public OrderResponse createOrder(OrderRequest request, Authentication authentication) {
         LocalDateTime now = LocalDateTime.now();
 
         User user = userRepository.findById(authentication.getName())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
+        // init list orderItems, total_amount list orderItems
         List<OrderItem> orderItems = new ArrayList<>();
         BigDecimal totalAmount = BigDecimal.ZERO;
 
         for (OrderItemRequest itemReq : request.getItems()) {
-            TicketType ticketType = ticketTypeRepository.findById(itemReq.getTicketTypeId())
+
+            // Validate quantity
+            if (itemReq.getQuantity() == null || itemReq.getQuantity() <= 0) {
+                throw new AppException(ErrorCode.INVALID_QUANTITY);
+            }
+
+            TicketType ticketType = ticketTypeRepository.findByIdForUpdate(itemReq.getTicketTypeId())
                     .orElseThrow(() -> new AppException(ErrorCode.TICKET_TYPE_NOT_FOUND));
 
             if (now.isBefore(ticketType.getSaleStart()) || now.isAfter(ticketType.getSaleEnd())) {
                 throw new AppException(ErrorCode.TICKET_SALE_TIME_INVALID);
             }
 
-            // Validate quantity
-            if(itemReq.getQuantity() < 0) {
-                throw new AppException(ErrorCode.INVALID_QUANTITY);
-            }
+            int sold = ticketType.getSoldQuantity() == null ? 0 : ticketType.getSoldQuantity();
+            int total = ticketType.getQuantity() == null ? 0 : ticketType.getQuantity();
+            int available = total - sold;
 
-            int available = ticketType.getQuantity() - ticketType.getSoldQuantity();
             if (available < itemReq.getQuantity()) {
                 throw new AppException(ErrorCode.INSUFFICIENT_TICKET_QUANTITY);
             }
-
+            //Reserve in transaction
+            ticketType.setSoldQuantity(sold + itemReq.getQuantity());
 
             // Calculate total
             BigDecimal subTotal = ticketType.getPrice()
@@ -91,15 +99,7 @@ public class OrderService {
 
         Order savedOrder = orderRepository.save(order);
 
-        // Increase soldQuantity after save order success
-        for(OrderItem item : savedOrder.getItems()) {
-            TicketType ticketType = item.getTicketType();
-            ticketType.setSoldQuantity(ticketType.getSoldQuantity() + item.getQuantity());
-            ticketTypeRepository.save(ticketType);
-        }
-
         return orderMapper.toOrderResponse(savedOrder);
     }
-
 
 }
