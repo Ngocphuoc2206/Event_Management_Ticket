@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -24,7 +26,7 @@ public class Event {
 
     private String title;
     @Column(length = 500)
-    private String shortDescriptions;
+    private String shortDescription;
     @Column(columnDefinition = "TEXT")
     private String description;
     private String category;
@@ -48,6 +50,12 @@ public class Event {
     private Integer totalTickets;
     private Integer availableTickets;
     private Boolean featured;
+
+    @CreationTimestamp
+    private LocalDateTime createAt;
+
+    @UpdateTimestamp
+    private LocalDateTime updateAt;
 
     @Column(columnDefinition = "TEXT")
     private String rejectReason;

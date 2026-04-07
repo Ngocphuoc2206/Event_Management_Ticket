@@ -21,6 +21,10 @@ public enum ErrorCode {
     INVALID_SORT_FIELD(1014, "Invalid sort field"),
     INVALID_EVENT_STATE(1015, "Invalid event state"),
     EVENT_CANNOT_BE_UPDATED(1016, "Event cannot be update!"),
+    INVALID_FILE(1021, "File is empty or invalid"),
+    INVALID_FILE_TYPE(1022, "Only JPG, PNG, WEBP files are allowed"),
+    FILE_TOO_LARGE(1023, "File size exceeds the allowed limit"),
+    FILE_UPLOAD_FAILED(1024, "File upload failed"),
     INTERNAL_ERROR (9999, "Internal Error!"),
     ;
     private final int code;
