@@ -25,6 +25,10 @@ public enum ErrorCode {
     INVALID_FILE_TYPE(1022, "Only JPG, PNG, WEBP files are allowed"),
     FILE_TOO_LARGE(1023, "File size exceeds the allowed limit"),
     FILE_UPLOAD_FAILED(1024, "File upload failed"),
+    TICKET_TYPE_NOT_FOUND(1017, "Ticket type not found"),
+    TICKET_SALE_TIME_INVALID(1018, "Ticket is not in sale period"),
+    INSUFFICIENT_TICKET_QUANTITY(1019, "Not enough tickets available"),
+    INVALID_QUANTITY(1020, "Invalid quantity"),
     INTERNAL_ERROR (9999, "Internal Error!"),
     ;
     private final int code;
