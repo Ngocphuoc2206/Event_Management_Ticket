@@ -69,15 +69,20 @@ export function useAuth() {
     const response = await registerUser(payload);
     const authPayload = getApiResultData<RegisterResponse>(response);
     const session = createAuthSession(authPayload, { fallbackRole: "CUSTOMER" });
-    const shouldRedirect = Boolean(session?.accessToken);
-    const redirectTo =
-      shouldRedirect
-        ? options?.redirectTo ?? getPostAuthRoute(session?.role ?? undefined)
-        : null;
+    const hasRegisteredAccount = Boolean(authPayload);
+    const shouldRedirect = hasRegisteredAccount || Boolean(session?.accessToken);
+    const redirectTo = shouldRedirect
+      ? options?.redirectTo ??
+        (session?.accessToken
+          ? getPostAuthRoute(session?.role ?? undefined)
+          : "/auth/login")
+      : null;
     const message =
       getApiResultMessage(response) ||
       (shouldRedirect
-        ? "Account created successfully. Redirecting..."
+        ? session?.accessToken
+          ? "Account created successfully. Redirecting..."
+          : "Account created successfully. Redirecting to login..."
         : "Account created successfully.");
 
     persistResolvedAuthSession(session);

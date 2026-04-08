@@ -1,5 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/router";
 
 import { BrandIcon, CustomerDashboardIcon } from "./CustomerDashboardIcons";
 import type { CustomerNavItem, CustomerProfile } from "../types";
@@ -16,6 +16,13 @@ type CustomerDashboardSidebarProps = {
 };
 
 export function CustomerDashboardSidebar({ navigationItems, profile, onLogout }: CustomerDashboardSidebarProps) {
+  const initials = profile.name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
+
   return (
     <aside className="flex w-full flex-col border-b border-white/80 bg-[#f6f8fc] px-5 py-6 shadow-[inset_-1px_0_0_rgba(226,232,240,0.8)] xl:sticky xl:top-0 xl:h-screen xl:w-[280px] xl:shrink-0 xl:overflow-y-auto xl:border-b-0 xl:border-r">
       <div className="flex items-start gap-3">
@@ -32,7 +39,7 @@ export function CustomerDashboardSidebar({ navigationItems, profile, onLogout }:
             key={item.label}
             href={item.href}
             className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition ${
-              item.active
+              (item.href.startsWith("/") ? router.pathname === item.href : false) || item.active
                 ? "bg-white text-blue-600 shadow-[0_10px_30px_rgba(148,163,184,0.16)]"
                 : "text-slate-600 hover:bg-white/70 hover:text-slate-900"
             }`}
@@ -60,7 +67,12 @@ export function CustomerDashboardSidebar({ navigationItems, profile, onLogout }:
 
         <div className="mt-5 flex items-center gap-3 rounded-[22px] bg-slate-200/70 px-4 py-3">
           <div className="relative h-11 w-11 overflow-hidden rounded-full bg-slate-100">
-            <Image src={profile.avatarSrc} alt={`${profile.name} avatar`} fill sizes="44px" className="object-cover" />
+            {profile.avatarSrc ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={profile.avatarSrc} alt={`${profile.name} avatar`} className="h-full w-full object-cover" />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-sm font-bold text-slate-500">{initials || "U"}</div>
+            )}
           </div>
           <div>
             <div className="text-sm font-semibold text-slate-800">{profile.name}</div>

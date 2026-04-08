@@ -76,14 +76,25 @@ export function OrganizerCreateEventContent() {
                 <div className="space-y-8">
                   <div className="space-y-2">
                     <label className="text-xs font-bold uppercase tracking-wider text-gray-700">Event Title</label>
-                    <div className="rounded-2xl bg-gray-100 px-6 py-4 text-base text-gray-700/40">e.g. Summer Music Festival 2024</div>
+                    <input
+                      type="text"
+                      placeholder="e.g. Summer Music Festival 2024"
+                      className="w-full rounded-2xl bg-gray-100 px-6 py-4 text-base text-zinc-900 outline-none ring-sky-500 transition focus:ring-2"
+                    />
                   </div>
 
                   <div className="grid gap-4 lg:grid-cols-2">
                     <div className="space-y-2">
                       <label className="text-xs font-bold uppercase tracking-wider text-gray-700">Category</label>
-                      <div className="relative rounded-2xl bg-gray-100 px-6 py-4">
-                        <span className="text-base text-zinc-900">Select a category</span>
+                      <div className="relative rounded-2xl bg-gray-100">
+                        <select className="h-[56px] w-full appearance-none rounded-2xl bg-transparent px-6 pr-14 text-base text-zinc-900 outline-none ring-sky-500 transition focus:ring-2">
+                          <option value="">Select a category</option>
+                          <option value="music">Music</option>
+                          <option value="technology">Technology</option>
+                          <option value="business">Business</option>
+                          <option value="sports">Sports</option>
+                          <option value="education">Education</option>
+                        </select>
                         <ChevronDown className="absolute right-5 top-4 h-6 w-6 text-gray-500" />
                       </div>
                     </div>
@@ -112,11 +123,11 @@ export function OrganizerCreateEventContent() {
 
                   <div className="space-y-2">
                     <label className="text-xs font-bold uppercase tracking-wider text-gray-700">Description</label>
-                    <div className="rounded-2xl bg-gray-100 px-6 pb-28 pt-4 text-base leading-6 text-gray-700/40">
-                      What is your event about? Share the highlights and what
-                      <br />
-                      guests can expect...
-                    </div>
+                    <textarea
+                      placeholder="What is your event about? Share the highlights and what guests can expect..."
+                      rows={6}
+                      className="w-full resize-y rounded-2xl bg-gray-100 px-6 py-4 text-base leading-6 text-zinc-900 outline-none ring-sky-500 transition focus:ring-2"
+                    />
                   </div>
                 </div>
               </article>
