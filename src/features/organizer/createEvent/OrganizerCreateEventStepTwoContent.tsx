@@ -1,8 +1,8 @@
 import Link from "next/link";
+import { useMemo, useState } from "react";
 import {
   Bell,
   CalendarDays,
-  ChevronDown,
   Clock3,
   Info,
   MapPin,
@@ -12,6 +12,13 @@ import {
 } from "lucide-react";
 
 export function OrganizerCreateEventStepTwoContent() {
+  const [venueName, setVenueName] = useState("");
+  const [address, setAddress] = useState("");
+  const [startDateTime, setStartDateTime] = useState("");
+  const [endDateTime, setEndDateTime] = useState("");
+
+  const minEndDateTime = useMemo(() => startDateTime || undefined, [startDateTime]);
+
   return (
     <section className="relative flex-1 overflow-hidden bg-slate-50">
       <header className="flex h-20 items-center justify-between border-b border-slate-300/10 bg-slate-50/80 px-5 backdrop-blur-[6px] sm:px-8 lg:px-10 xl:px-10">
@@ -69,17 +76,33 @@ export function OrganizerCreateEventStepTwoContent() {
 
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <label className="text-sm font-bold uppercase tracking-tight text-gray-700">Venue Name</label>
-                      <div className="rounded-2xl bg-gray-100 px-4 py-4 outline outline-1 outline-slate-300/10 text-base text-gray-500">
-                        e.g. Grand Metropolitan Hall
-                      </div>
+                      <label htmlFor="venue-name" className="text-sm font-bold uppercase tracking-tight text-gray-700">
+                        Venue Name
+                      </label>
+                      <input
+                        id="venue-name"
+                        type="text"
+                        value={venueName}
+                        onChange={(event) => setVenueName(event.target.value)}
+                        placeholder="e.g. Grand Metropolitan Hall"
+                        className="w-full rounded-2xl bg-gray-100 px-4 py-4 text-base text-zinc-900 outline-none ring-sky-500 transition focus:ring-2"
+                      />
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-sm font-bold uppercase tracking-tight text-gray-700">Address</label>
-                      <div className="relative rounded-2xl bg-gray-100 pl-12 pr-4 py-4 outline outline-1 outline-slate-300/10 text-base text-gray-500">
-                        Street address, city, state
-                        <MapPin className="absolute left-[19px] top-[19px] h-4 w-4 text-gray-700/50" />
+                      <label htmlFor="venue-address" className="text-sm font-bold uppercase tracking-tight text-gray-700">
+                        Address
+                      </label>
+                      <div className="relative">
+                        <MapPin className="pointer-events-none absolute left-[19px] top-[19px] h-4 w-4 text-gray-700/50" />
+                        <input
+                          id="venue-address"
+                          type="text"
+                          value={address}
+                          onChange={(event) => setAddress(event.target.value)}
+                          placeholder="Street address, city, state"
+                          className="w-full rounded-2xl bg-gray-100 py-4 pl-12 pr-4 text-base text-zinc-900 outline-none ring-sky-500 transition focus:ring-2"
+                        />
                       </div>
                     </div>
                   </div>
@@ -93,18 +116,35 @@ export function OrganizerCreateEventStepTwoContent() {
 
                   <div className="grid gap-4 lg:grid-cols-2">
                     <div className="space-y-2">
-                      <label className="text-sm font-bold uppercase tracking-tight text-gray-700">Start Date &amp; Time</label>
-                      <div className="flex items-center justify-between rounded-2xl bg-gray-100 p-4 outline outline-1 outline-slate-300/10 text-base text-zinc-900">
-                        <span>mm/dd/yyyy, --:-- --</span>
-                        <Clock3 className="h-5 w-5 text-gray-500" />
+                      <label htmlFor="start-time" className="text-sm font-bold uppercase tracking-tight text-gray-700">
+                        Start Date &amp; Time
+                      </label>
+                      <div className="relative">
+                        <input
+                          id="start-time"
+                          type="datetime-local"
+                          value={startDateTime}
+                          onChange={(event) => setStartDateTime(event.target.value)}
+                          className="w-full rounded-2xl bg-gray-100 p-4 pr-11 text-base text-zinc-900 outline-none ring-sky-500 transition focus:ring-2"
+                        />
+                        <Clock3 className="pointer-events-none absolute right-4 top-4 h-5 w-5 text-gray-500" />
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-sm font-bold uppercase tracking-tight text-gray-700">End Date &amp; Time</label>
-                      <div className="flex items-center justify-between rounded-2xl bg-gray-100 p-4 outline outline-1 outline-slate-300/10 text-base text-zinc-900">
-                        <span>mm/dd/yyyy, --:-- --</span>
-                        <Clock3 className="h-5 w-5 text-gray-500" />
+                      <label htmlFor="end-time" className="text-sm font-bold uppercase tracking-tight text-gray-700">
+                        End Date &amp; Time
+                      </label>
+                      <div className="relative">
+                        <input
+                          id="end-time"
+                          type="datetime-local"
+                          value={endDateTime}
+                          onChange={(event) => setEndDateTime(event.target.value)}
+                          min={minEndDateTime}
+                          className="w-full rounded-2xl bg-gray-100 p-4 pr-11 text-base text-zinc-900 outline-none ring-sky-500 transition focus:ring-2"
+                        />
+                        <Clock3 className="pointer-events-none absolute right-4 top-4 h-5 w-5 text-gray-500" />
                       </div>
                     </div>
                   </div>
@@ -133,7 +173,7 @@ export function OrganizerCreateEventStepTwoContent() {
                 </div>
                 <div className="absolute bottom-6 left-6">
                   <p className="text-xs font-bold uppercase tracking-wider text-white/80">Live Preview</p>
-                  <h4 className="text-xl font-bold text-white">Map visualization</h4>
+                  <h4 className="text-xl font-bold text-white">{venueName.trim() || "Map visualization"}</h4>
                 </div>
               </article>
 
@@ -153,7 +193,9 @@ export function OrganizerCreateEventStepTwoContent() {
                     </div>
                     <div>
                       <h5 className="text-base font-bold text-zinc-900">Timezone detected</h5>
-                      <p className="text-xs text-gray-700">Eastern Standard Time (GMT-5)</p>
+                      <p className="text-xs text-gray-700">
+                        {startDateTime || endDateTime ? "Follow browser local timezone" : "Eastern Standard Time (GMT-5)"}
+                      </p>
                     </div>
                   </div>
                   <div className="rounded-full bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-sky-700 outline outline-1 outline-slate-300/20">

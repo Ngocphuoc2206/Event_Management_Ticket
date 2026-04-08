@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle2, UserCircle2 } from "lucide-react";
+import { AlertCircle, CheckCircle2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -242,18 +242,15 @@ export function OrganizerEventsContent() {
             <OrganizerDashboardIcon type="bell" className="h-[18px] w-[18px]" />
             <span className="absolute left-6 top-2 h-2 w-2 rounded-full border-2 border-slate-50 bg-rose-700" />
           </button>
-
-          <Link
-            href="/organizer/create-event"
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-sky-700 to-violet-700 px-6 text-sm font-semibold text-white shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)] transition hover:brightness-105"
+          <button
+            type="button"
+            className="flex h-10 w-10 items-center justify-center rounded-full text-gray-700 transition hover:bg-slate-100"
+            aria-label="Settings"
           >
-            <span className="text-sm leading-none">+</span>
-            <span>Create New Event</span>
-          </Link>
-
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-200 text-gray-700">
-            <UserCircle2 className="h-5 w-5" />
-          </div>
+            <OrganizerDashboardIcon type="settings" className="h-5 w-5" />
+          </button>
+          <div className="h-8 w-px bg-slate-300/30" />
+          <p className="text-sm font-bold tracking-wider text-gray-700">ORGANIZER DASHBOARD</p>
         </div>
       </header>
 
@@ -268,11 +265,21 @@ export function OrganizerEventsContent() {
             </p>
           </div>
 
-          <div className="inline-flex items-center gap-3 rounded-2xl bg-white px-5 py-3 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
-            <span className="text-sm text-gray-700">Draft:</span>
-            <span className="text-base font-bold text-zinc-900">{totalDraftEvents}</span>
-            <span className="text-sm text-gray-700">Page:</span>
-            <span className="text-base font-bold text-zinc-900">{page}</span>
+          <div className="flex flex-wrap items-center justify-end gap-3">
+            <div className="inline-flex items-center gap-3 rounded-2xl bg-white px-5 py-3 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
+              <span className="text-sm text-gray-700">Draft:</span>
+              <span className="text-base font-bold text-zinc-900">{totalDraftEvents}</span>
+              <span className="text-sm text-gray-700">Page:</span>
+              <span className="text-base font-bold text-zinc-900">{page}</span>
+            </div>
+
+            <Link
+              href="/organizer/create-event"
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-sky-700 to-violet-700 px-6 text-sm font-semibold text-white shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)] transition hover:brightness-105"
+            >
+              <span className="text-sm leading-none">+</span>
+              <span>Create New Event</span>
+            </Link>
           </div>
         </section>
 
