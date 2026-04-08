@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { useRouter } from "next/router";
+import router from "next/router";
 
 import { BrandIcon, CustomerDashboardIcon } from "./CustomerDashboardIcons";
 import type { CustomerNavItem, CustomerProfile } from "../types";
@@ -15,7 +15,11 @@ type CustomerDashboardSidebarProps = {
   onLogout: () => void;
 };
 
-export function CustomerDashboardSidebar({ navigationItems, profile, onLogout }: CustomerDashboardSidebarProps) {
+export function CustomerDashboardSidebar({
+  navigationItems,
+  profile,
+  onLogout,
+}: CustomerDashboardSidebarProps) {
   const initials = profile.name
     .split(" ")
     .filter(Boolean)
@@ -29,7 +33,9 @@ export function CustomerDashboardSidebar({ navigationItems, profile, onLogout }:
         <BrandIcon />
         <div>
           <div className="text-[1.7rem] font-bold tracking-tight">EventHub</div>
-          <div className="mt-1 text-[10px] uppercase tracking-[0.32em] text-slate-400">Customer Portal</div>
+          <div className="mt-1 text-[10px] uppercase tracking-[0.32em] text-slate-400">
+            Customer Portal
+          </div>
         </div>
       </div>
 
@@ -39,12 +45,14 @@ export function CustomerDashboardSidebar({ navigationItems, profile, onLogout }:
             key={item.label}
             href={item.href}
             className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition ${
-              (item.href.startsWith("/") ? router.pathname === item.href : false) || item.active
+              (item.href.startsWith("/")
+                ? router.pathname === item.href
+                : false) || item.active
                 ? "bg-white text-blue-600 shadow-[0_10px_30px_rgba(148,163,184,0.16)]"
                 : "text-slate-600 hover:bg-white/70 hover:text-slate-900"
             }`}
           >
-            <CustomerDashboardIcon type={item.icon} className="h-[18px] w-[18px]" />
+            <CustomerDashboardIcon type={item.icon} className="h-4.5 w-4.5" />
             <span>{item.label}</span>
           </Link>
         ))}
@@ -59,7 +67,10 @@ export function CustomerDashboardSidebar({ navigationItems, profile, onLogout }:
               onClick={action.label === "Logout" ? onLogout : undefined}
               className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm text-slate-600 transition hover:bg-white/70 hover:text-slate-900"
             >
-              <CustomerDashboardIcon type={action.icon} className="h-[18px] w-[18px]" />
+              <CustomerDashboardIcon
+                type={action.icon}
+                className="h-4.5 w-4.5"
+              />
               <span>{action.label}</span>
             </button>
           ))}
@@ -69,13 +80,21 @@ export function CustomerDashboardSidebar({ navigationItems, profile, onLogout }:
           <div className="relative h-11 w-11 overflow-hidden rounded-full bg-slate-100">
             {profile.avatarSrc ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={profile.avatarSrc} alt={`${profile.name} avatar`} className="h-full w-full object-cover" />
+              <img
+                src={profile.avatarSrc}
+                alt={`${profile.name} avatar`}
+                className="h-full w-full object-cover"
+              />
             ) : (
-              <div className="flex h-full w-full items-center justify-center text-sm font-bold text-slate-500">{initials || "U"}</div>
+              <div className="flex h-full w-full items-center justify-center text-sm font-bold text-slate-500">
+                {initials || "U"}
+              </div>
             )}
           </div>
           <div>
-            <div className="text-sm font-semibold text-slate-800">{profile.name}</div>
+            <div className="text-sm font-semibold text-slate-800">
+              {profile.name}
+            </div>
             <div className="text-xs text-slate-500">{profile.membership}</div>
           </div>
         </div>
@@ -83,4 +102,3 @@ export function CustomerDashboardSidebar({ navigationItems, profile, onLogout }:
     </aside>
   );
 }
-
