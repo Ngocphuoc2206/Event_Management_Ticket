@@ -143,11 +143,16 @@ function isWithinTimeFilter(order: OrderHistoryItem, filter: TimeFilter) {
     return orderDate.getFullYear() === 2024;
   }
 
-  const anchorDate = new Date("2024-09-30");
-  const thresholdDate = new Date(anchorDate);
-  thresholdDate.setMonth(anchorDate.getMonth() - (filter === "30days" ? 1 : 6));
+  const now = new Date();
+  const thresholdDate = new Date(now);
 
-  return orderDate >= thresholdDate && orderDate <= anchorDate;
+  if (filter === "30days") {
+    thresholdDate.setDate(now.getDate() - 30);
+  } else if (filter === "6months") {
+    thresholdDate.setMonth(now.getMonth() - 6);
+  }
+
+  return orderDate >= thresholdDate && orderDate <= now;
 }
 
 function StatCard({ label, value, accent, note }: { label: string; value: string; accent: string; note: string }) {
