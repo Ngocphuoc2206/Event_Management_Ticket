@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { useMemo, useState } from "react";
 
 function getEventIdFromQuery(eventId: string | string[] | undefined) {
   if (Array.isArray(eventId)) {
@@ -25,6 +26,11 @@ export function OrganizerEditEventStepTwoContent() {
   const router = useRouter();
   const eventId = getEventIdFromQuery(router.query.eventId);
   const basePath = `/organizer/events/edit/${eventId}`;
+  const [venueName, setVenueName] = useState("Skyline Arena");
+  const [address, setAddress] = useState("New York");
+  const [startTime, setStartTime] = useState("2024-08-15T09:00");
+  const [endTime, setEndTime] = useState("2024-08-17T23:30");
+  const minEndTime = useMemo(() => startTime || undefined, [startTime]);
 
   return (
     <section className="relative flex-1 overflow-hidden bg-slate-50">
@@ -101,13 +107,29 @@ export function OrganizerEditEventStepTwoContent() {
 
               <div className="space-y-6">
                 <div className="space-y-2">
-                  <label className="text-base uppercase tracking-widest text-gray-700">Venue Name</label>
-                  <div className="rounded-lg bg-zinc-200 px-6 py-4 text-base text-zinc-900">Skyline Arena</div>
+                  <label htmlFor="edit-venue-name" className="text-base uppercase tracking-widest text-gray-700">
+                    Venue Name
+                  </label>
+                  <input
+                    id="edit-venue-name"
+                    type="text"
+                    value={venueName}
+                    onChange={(event) => setVenueName(event.target.value)}
+                    className="w-full rounded-lg bg-zinc-200 px-6 py-4 text-base text-zinc-900 outline-none ring-sky-500 transition focus:ring-2"
+                  />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-base uppercase tracking-widest text-gray-700">Address</label>
-                  <div className="rounded-lg bg-zinc-200 px-6 py-4 text-base text-zinc-900">New York</div>
+                  <label htmlFor="edit-address" className="text-base uppercase tracking-widest text-gray-700">
+                    Address
+                  </label>
+                  <input
+                    id="edit-address"
+                    type="text"
+                    value={address}
+                    onChange={(event) => setAddress(event.target.value)}
+                    className="w-full rounded-lg bg-zinc-200 px-6 py-4 text-base text-zinc-900 outline-none ring-sky-500 transition focus:ring-2"
+                  />
                 </div>
               </div>
             </article>
@@ -120,25 +142,36 @@ export function OrganizerEditEventStepTwoContent() {
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <label className="text-base uppercase tracking-widest text-gray-700">Start Time</label>
-                  <button
-                    type="button"
-                    className="flex w-full items-center justify-between rounded-lg bg-zinc-200 px-6 py-4 text-base text-zinc-900"
-                  >
-                    <span>08 / 15 / 2024 • 09:00 AM</span>
-                    <Clock3 className="h-5 w-5 text-gray-500" />
-                  </button>
+                  <label htmlFor="edit-start-time" className="text-base uppercase tracking-widest text-gray-700">
+                    Start Time
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="edit-start-time"
+                      type="datetime-local"
+                      value={startTime}
+                      onChange={(event) => setStartTime(event.target.value)}
+                      className="w-full rounded-lg bg-zinc-200 px-6 py-4 pr-12 text-base text-zinc-900 outline-none ring-sky-500 transition focus:ring-2"
+                    />
+                    <Clock3 className="pointer-events-none absolute right-4 top-4 h-5 w-5 text-gray-500" />
+                  </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-base uppercase tracking-widest text-gray-700">End Time</label>
-                  <button
-                    type="button"
-                    className="flex w-full items-center justify-between rounded-lg bg-zinc-200 px-6 py-4 text-base text-zinc-900"
-                  >
-                    <span>08 / 17 / 2024 • 11:30 PM</span>
-                    <Clock3 className="h-5 w-5 text-gray-500" />
-                  </button>
+                  <label htmlFor="edit-end-time" className="text-base uppercase tracking-widest text-gray-700">
+                    End Time
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="edit-end-time"
+                      type="datetime-local"
+                      value={endTime}
+                      onChange={(event) => setEndTime(event.target.value)}
+                      min={minEndTime}
+                      className="w-full rounded-lg bg-zinc-200 px-6 py-4 pr-12 text-base text-zinc-900 outline-none ring-sky-500 transition focus:ring-2"
+                    />
+                    <Clock3 className="pointer-events-none absolute right-4 top-4 h-5 w-5 text-gray-500" />
+                  </div>
                 </div>
               </div>
 
@@ -197,7 +230,7 @@ export function OrganizerEditEventStepTwoContent() {
               </div>
               <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between rounded-xl bg-white/80 px-4 py-4 backdrop-blur-md">
                 <div>
-                  <p className="text-base font-bold text-sky-700">Skyline Arena</p>
+                  <p className="text-base font-bold text-sky-700">{venueName || "Skyline Arena"}</p>
                   <p className="text-xs text-gray-700">Confirmed Partner Venue</p>
                 </div>
                 <button type="button" className="text-sm font-bold text-sky-700">
