@@ -403,6 +403,11 @@ export default function CustomerNotificationsPage() {
     setNotifications((current) => current.filter((item) => !visibleIds.has(item.id)));
   };
 
+  const handleResetFilters = () => {
+    setFilter("all");
+    setQuery("");
+  };
+
   const hasVisibleNotifications = groupedNotifications.length > 0;
 
   return (
@@ -537,7 +542,7 @@ export default function CustomerNotificationsPage() {
                   })}
                 </div>
               ) : (
-                <EmptyNotificationState onReset={() => setFilter("all")} />
+                <EmptyNotificationState onReset={handleResetFilters} />
               )}
             </section>
           </section>
