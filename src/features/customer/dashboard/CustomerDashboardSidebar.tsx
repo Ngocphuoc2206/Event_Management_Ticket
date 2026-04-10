@@ -1,103 +1,103 @@
+// src/components/templates/customer/dashboard/CustomerDashboardSidebar.tsx
 import Link from "next/link";
-import router from "next/router";
-
-import { BrandIcon, CustomerDashboardIcon } from "./CustomerDashboardIcons";
+import { useRouter } from "next/router";
+import { CustomerDashboardIcon } from "./CustomerDashboardIcons";
 import type { CustomerNavItem, CustomerProfile } from "../types";
-
-const SIDEBAR_ACTIONS = [
-  { label: "Help", icon: "help" },
-  { label: "Logout", icon: "logout" },
-] as const;
 
 type CustomerDashboardSidebarProps = {
   navigationItems: CustomerNavItem[];
-  profile: CustomerProfile;
+  profile: CustomerProfile; // Giữ lại prop này để không bị lỗi type ở file index.tsx
   onLogout: () => void;
 };
 
 export function CustomerDashboardSidebar({
   navigationItems,
-  profile,
   onLogout,
 }: CustomerDashboardSidebarProps) {
-  const initials = profile.name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("");
+  const router = useRouter();
+  
+  // Kiểm tra xem trang hiện tại có phải là Help không
+  const isHelpPageActive = router.pathname === '/customer/help';
 
   return (
-    <aside className="flex w-full flex-col border-b border-white/80 bg-[#f6f8fc] px-5 py-6 shadow-[inset_-1px_0_0_rgba(226,232,240,0.8)] xl:sticky xl:top-0 xl:h-screen xl:w-[280px] xl:shrink-0 xl:overflow-y-auto xl:border-b-0 xl:border-r">
-      <div className="flex items-start gap-3">
-        <BrandIcon />
-        <div>
-          <div className="text-[1.7rem] font-bold tracking-tight">EventHub</div>
-          <div className="mt-1 text-[10px] uppercase tracking-[0.32em] text-slate-400">
-            Customer Portal
-          </div>
-        </div>
-      </div>
-
-      <nav className="mt-8 space-y-2">
-        {navigationItems.map((item) => (
-          <Link
-            key={item.label}
-            href={item.href}
-            className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition ${
-              (item.href.startsWith("/")
-                ? router.pathname === item.href
-                : false) || item.active
-                ? "bg-white text-blue-600 shadow-[0_10px_30px_rgba(148,163,184,0.16)]"
-                : "text-slate-600 hover:bg-white/70 hover:text-slate-900"
-            }`}
-          >
-            <CustomerDashboardIcon type={item.icon} className="h-4.5 w-4.5" />
-            <span>{item.label}</span>
-          </Link>
-        ))}
-      </nav>
-
-      <div className="mt-auto pt-8">
-        <div className="space-y-1">
-          {SIDEBAR_ACTIONS.map((action) => (
-            <button
-              key={action.label}
-              type="button"
-              onClick={action.label === "Logout" ? onLogout : undefined}
-              className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm text-slate-600 transition hover:bg-white/70 hover:text-slate-900"
-            >
-              <CustomerDashboardIcon
-                type={action.icon}
-                className="h-4.5 w-4.5"
-              />
-              <span>{action.label}</span>
-            </button>
-          ))}
-        </div>
-
-        <div className="mt-5 flex items-center gap-3 rounded-[22px] bg-slate-200/70 px-4 py-3">
-          <div className="relative h-11 w-11 overflow-hidden rounded-full bg-slate-100">
-            {profile.avatarSrc ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={profile.avatarSrc}
-                alt={`${profile.name} avatar`}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-sm font-bold text-slate-500">
-                {initials || "U"}
-              </div>
-            )}
+    <aside className="w-[280px] bg-white border-r border-slate-100 flex flex-col sticky top-0 h-screen z-40">
+      
+      {/* --- TOP SECTION --- */}
+      <div className="p-7">
+        
+        {/* Logo giống y hệt Admin (Khối vuông bo tròn góc, xoay nhẹ) */}
+        <div className="flex items-center gap-3 mb-10 px-1">
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-100 rotate-3">
+            {/* Dùng luôn icon tia sét (Zap) giống admin hoặc bạn có thể thay bằng icon khác */}
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="white" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
           </div>
           <div>
-            <div className="text-sm font-semibold text-slate-800">
-              {profile.name}
-            </div>
-            <div className="text-xs text-slate-500">{profile.membership}</div>
+            <span className="text-xl font-black text-slate-900 tracking-tighter block uppercase leading-none">EventHub</span>
+            <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest mt-1 block">Customer Portal</span>
           </div>
         </div>
+
+        {/* Menu Navigation */}
+        <nav className="space-y-1.5">
+          {navigationItems.map((item) => {
+            const isActive = (item.href.startsWith("/")
+              ? router.pathname === item.href
+              : false) || item.active;
+
+            return (
+              <Link key={item.label} href={item.href}>
+                <div className={`flex items-center gap-3.5 px-5 py-3 rounded-full cursor-pointer transition-all duration-300 group ${
+                  isActive 
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-100' 
+                    : 'text-slate-600 hover:bg-slate-50 hover:text-blue-700'
+                }`}>
+                  <CustomerDashboardIcon 
+                    type={item.icon} 
+                    className={`w-5 h-5 ${isActive ? '' : 'text-slate-400 group-hover:text-blue-600'}`} 
+                  />
+                  <span className={`text-sm ${isActive ? 'font-bold' : 'font-semibold'}`}>
+                    {item.label}
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
+
+      {/* --- BOTTOM SECTION --- */}
+      {/* Nút Help và Sign Out ép xuống đáy giống Admin */}
+      <div className="mt-auto p-7 border-t border-slate-100 space-y-2">
+        
+        {/* Nút Help (Giống nút Support ở Admin) */}
+        <Link href="/customer/help">
+          <div className={`flex items-center gap-3.5 px-5 py-3 cursor-pointer rounded-full transition-all duration-300 group ${
+            isHelpPageActive 
+              ? 'bg-blue-600 text-white shadow-md shadow-blue-100' 
+              : 'text-slate-500 hover:text-blue-700 hover:bg-slate-50'
+          }`}>
+            <CustomerDashboardIcon 
+              type="help" 
+              className={`w-5 h-5 ${isHelpPageActive ? 'text-white' : 'text-slate-400 group-hover:text-blue-600'}`} 
+            />
+            <span className={`text-sm ${isHelpPageActive ? 'font-bold' : 'font-semibold'}`}>Help</span>
+          </div>
+        </Link>
+
+        {/* Nút Sign Out (Mặc định màu đỏ, hover trượt icon sang trái giống Admin) */}
+        <button 
+          onClick={onLogout}
+          className="flex items-center gap-3.5 px-5 py-3 text-rose-500 font-bold hover:bg-rose-50 w-full rounded-full transition-all group"
+        >
+          <CustomerDashboardIcon 
+            type="logout" 
+            className="w-5 h-5 group-hover:-translate-x-1 transition-transform" 
+          />
+          <span className="text-sm">Sign Out</span>
+        </button>
+
       </div>
     </aside>
   );

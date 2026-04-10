@@ -28,13 +28,15 @@ export default function CustomerDashboardPage() {
         <title>Customer Dashboard | EventHub</title>
       </Head>
 
-      <main className="min-h-screen w-full bg-[#eef2f8] text-slate-900">
+      {/* Đồng bộ: Đổi bg-[#eef2f8] thành bg-[#FDFDFF] và thêm font-sans giống hệt Admin Layout */}
+      <main className="min-h-screen w-full bg-[#FDFDFF] font-sans text-slate-900">
         <div className="flex min-h-screen w-full flex-col xl:flex-row">
           <CustomerDashboardSidebar
             navigationItems={customerNavigationItems}
             profile={customerProfile}
             onLogout={() => void handleLogout()}
           />
+          
           <CustomerDashboardContent
             customerName={customerProfile.name}
             statCards={customerStatCards}

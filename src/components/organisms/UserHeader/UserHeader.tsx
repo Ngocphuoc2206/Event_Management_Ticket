@@ -1,103 +1,95 @@
-import Link from "next/link";
-import { useRouter } from "next/router";
-import { useDispatch, useSelector } from "react-redux";
-
-import { clearPersistedAuth } from "@/features/auth/utils";
-import { clearUser } from "@/stores/slices/user/user.slice";
+// src/components/organisms/UserHeader/UserHeader.tsx
+import { useSelector } from "react-redux";
 import type { RootState } from "@/stores";
 
-export default function UserHeader() {
-  const router = useRouter();
-  const dispatch = useDispatch();
-  const { isLoggedIn, fullName } = useSelector((state: RootState) => state.user);
+type Props = {
+  // Có thể truyền title động từ Layout vào, hoặc dùng mặc định
+  title?: string;
+  subtitle?: string;
+};
 
-  const handleLogout = () => {
-    clearPersistedAuth();
-    dispatch(clearUser());
-    void router.push("/auth/login");
-  };
+export default function UserHeader({
+  title = "Dashboard Overview",
+  subtitle = "Monitoring your personal activities",
+}: Props) {
+  const { fullName } = useSelector((state: RootState) => state.user);
+
+  // Lấy chữ cái đầu tiên của tên để làm Avatar
+  const initial = (fullName?.trim().charAt(0) || "U").toUpperCase();
 
   return (
-    <header className="bg-white border-b border-gray-100 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between gap-6">
-        <Link href="/" className="text-2xl font-black text-indigo-600 tracking-tighter">
-          EventHub
-        </Link>
+    <header className="h-20 px-6 md:px-8 bg-white/80 backdrop-blur-md border-b border-slate-100 sticky top-0 z-40 flex items-center justify-between">
+      
+      {/* --- CỘT TRÁI: Tiêu đề trang (Page Title & Subtitle) --- */}
+      <div className="flex flex-col">
+        <h1 className="text-[1.375rem] font-bold text-slate-900 leading-tight">
+          {title}
+        </h1>
+        <p className="text-sm text-slate-400 font-medium mt-0.5">
+          {subtitle}
+        </p>
+      </div>
 
-        <nav className="hidden md:flex items-center gap-8 font-bold text-sm text-gray-600">
-          <Link href="/events" className="hover:text-indigo-600 transition-colors">Khám phá</Link>
-          <Link href="/profile" className="hover:text-indigo-600 transition-colors">Vé của tôi</Link>
-          <Link href="/organizer" className="hover:text-indigo-600 transition-colors">Tổ chức sự kiện</Link>
-        </nav>
+      {/* --- CỘT PHẢI: Thanh công cụ (Search, Notification, Profile) --- */}
+      <div className="flex items-center gap-4 lg:gap-6">
+        
+        {/* 1. Global Search */}
+        <div className="hidden md:block relative w-64 lg:w-[320px]">
+          <svg
+            className="w-[18px] h-[18px] absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
+          <input
+            type="text"
+            placeholder="Global search..."
+            className="w-full bg-slate-50/50 hover:bg-slate-50 border border-slate-100 text-slate-900 text-sm rounded-full py-2.5 pl-11 pr-4 outline-none focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all placeholder:text-slate-400 font-medium"
+          />
+        </div>
 
-        <div className="flex items-center gap-6">
-          <Link href="/cart" className="relative text-gray-600 hover:text-indigo-600 transition-colors" aria-label="Cart">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-            <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-white">
-              1
+        {/* 2. Notification Bell */}
+        <button
+          type="button"
+          className="relative text-slate-400 hover:text-blue-600 transition-colors p-2 rounded-full hover:bg-slate-50"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+            />
+          </svg>
+          {/* Blue dot indicator (Chấm xanh nhỏ báo có thông báo) */}
+          <span className="absolute top-[6px] right-[6px] w-[8px] h-[8px] bg-blue-500 rounded-full border-2 border-white"></span>
+        </button>
+
+        {/* 3. User Profile */}
+        <div className="flex items-center gap-3 pl-2 lg:pl-4 border-l border-slate-100 cursor-pointer hover:opacity-80 transition-opacity">
+          {/* Avatar vuông bo góc giống hình */}
+          <div className="flex h-10 w-10 items-center justify-center rounded-[12px] bg-indigo-50 text-sm font-bold text-indigo-600 shadow-sm border border-indigo-100/50">
+            {initial}
+          </div>
+          
+          {/* Tên và Role (Ẩn trên mobile để tiết kiệm diện tích) */}
+          <div className="hidden sm:flex flex-col">
+            <span className="text-[13px] font-bold text-slate-900 leading-tight">
+              {fullName || "ng hài hước"}
             </span>
-          </Link>
-
-          {isLoggedIn ? (
-            <button type="button" onClick={handleLogout} className="text-sm font-semibold text-gray-700 hover:text-indigo-600 transition-colors">
-              Log Out
-            </button>
-          ) : (
-            <Link href="/auth/login" className="text-sm font-semibold text-gray-700 hover:text-indigo-600 transition-colors">
-              Sign In
-            </Link>
-          )}
-
-          <Link href="/profile" className="flex items-center gap-3" aria-label="Profile">
-            <div className="w-10 h-10 rounded-full border-2 border-indigo-100 overflow-hidden hover:border-indigo-500 transition-colors">
-              {isLoggedIn ? (
-                <div className="flex h-full w-full items-center justify-center bg-sky-100 text-sm font-semibold text-sky-800">
-                  {(fullName?.trim().charAt(0) || "U").toUpperCase()}
-                </div>
-              ) : (
-                <img src="https://i.pravatar.cc/150?u=alex" alt="User" className="w-full h-full object-cover" />
-              )}
-            </div>
-          </Link>
-          </div>
-        <div data-layer="Container" className="Container flex justify-start items-center gap-8">
-          <div data-layer="Container" className="Container flex justify-start items-center gap-6">
-            <Link href="/explore" data-layer="Link" className="Link inline-flex flex-col justify-start items-start">
-              <span data-layer="Text" className="Text justify-center text-zinc-900 text-base font-medium font-['Inter'] leading-6">Explore</span>
-            </Link>
-            <Link href="/help" data-layer="Link" className="Link inline-flex flex-col justify-start items-start">
-              <span data-layer="Text" className="Text justify-center text-zinc-900 text-base font-medium font-['Inter'] leading-6">Help</span>
-            </Link>
-            {isLoggedIn ? (
-              <button
-                type="button"
-                onClick={handleLogout}
-                data-layer="Button"
-                className="text-zinc-900 text-base font-medium font-['Inter'] leading-6"
-              >
-                Log Out
-              </button>
-            ) : (
-              <Link href="/auth/login" data-layer="Link" className="Link inline-flex flex-col justify-start items-start">
-                <span data-layer="Text" className="Text justify-center text-zinc-900 text-base font-medium font-['Inter'] leading-6">Sign In</span>
-              </Link>
-            )}
-          </div>
-          <button data-layer="Button" className="Button px-6 py-2.5 bg-gradient-to-r from-sky-700 to-violet-700 rounded-2xl shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)] inline-flex flex-col justify-center items-center">
-            <span data-layer="Text" className="Text text-center justify-center text-white text-base font-semibold font-['Inter'] leading-6">Create Event</span>
-          </button>
-          <div data-layer="Overlay+Border+Shadow" className="OverlayBorderShadow size-10 bg-white/0 rounded-full shadow-[0px_0px_0px_2px_rgba(247,249,251,1.00)] outline outline-2 outline-offset-[-2px] outline-blue-100 inline-flex flex-col justify-center items-start overflow-hidden">
-            {isLoggedIn ? (
-              <div className="flex h-full w-full items-center justify-center bg-sky-100 text-sm font-semibold text-sky-800">
-                {(fullName?.trim().charAt(0) || "U").toUpperCase()}
-              </div>
-            ) : (
-              <img alt="User Avatar" src="https://placehold.co/36x36" className="self-stretch flex-1 w-full h-full object-cover" />
-            )}
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+              PRO MEMBER
+            </span>
           </div>
         </div>
+
       </div>
     </header>
   );
