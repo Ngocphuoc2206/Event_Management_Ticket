@@ -1,30 +1,28 @@
-package com.envenHub.backend.entity;
+package com.envenHub.backend.dto.response;
 
 import com.envenHub.backend.enums.TicketTypeStatus;
-import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-@Entity
 @Data
-public class TicketType {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class TicketTypeResponse {
     private String id;
-
     private String name;
     private BigDecimal price;
     private Integer quantity;
     private Integer soldQuantity;
+
     private LocalDateTime saleStart;
     private LocalDateTime saleEnd;
 
-    @Enumerated(EnumType.STRING)
+    private String eventId;
     private TicketTypeStatus status;
-
-    @ManyToOne
-    @JoinColumn(name = "event_id", nullable = false)
-    private Event event;
 }

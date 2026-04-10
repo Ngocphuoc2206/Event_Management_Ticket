@@ -29,6 +29,10 @@ public enum ErrorCode {
     TICKET_SALE_TIME_INVALID(1018, "Ticket is not in sale period"),
     INSUFFICIENT_TICKET_QUANTITY(1019, "Not enough tickets available"),
     INVALID_QUANTITY(1020, "Invalid quantity"),
+    INVALID_TIME_RANGE(1021, "Invalid time range"),
+    CANNOT_UPDATE_EXPIRED_TICKET(1022, "Cannot update expired ticket"),
+    CANNOT_DELETE_ACTIVE_TICKET(1023,"Cannot delete active ticket"),
+    INVALID_TICKET_STATUS(1024,"Invalid ticket status"),
     INTERNAL_ERROR (9999, "Internal Error!"),
     ;
     private final int code;

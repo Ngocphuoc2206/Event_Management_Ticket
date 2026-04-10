@@ -15,6 +15,7 @@ import com.envenHub.backend.mapper.OrderMapper;
 import com.envenHub.backend.repository.OrderRepository;
 import com.envenHub.backend.repository.TicketTypeRepository;
 import com.envenHub.backend.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -27,6 +28,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class OrderService {
     private final OrderRepository orderRepository;
     private final TicketTypeRepository ticketTypeRepository;
