@@ -16,7 +16,7 @@ export default function OrganizerDashboardPage() {
         <title>Organizer Dashboard | EventHub</title>
       </Head>
 
-      <main className="min-h-screen w-full bg-[#eef2f8] text-slate-900">
+      <main className="min-h-screen w-full bg-[#FDFDFF] text-slate-900">
         <div className="flex min-h-screen w-full flex-col lg:flex-row">
           <OrganizerDashboardSidebar
             navigationItems={getOrganizerNavigationItems("Dashboard")}

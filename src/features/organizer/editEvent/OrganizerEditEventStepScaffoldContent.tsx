@@ -33,7 +33,7 @@ export function OrganizerEditEventStepScaffoldContent({
 
   return (
     <section className="relative flex-1 overflow-hidden bg-slate-50">
-      <header className="flex h-20 items-center justify-between border-b border-slate-300/10 bg-slate-50/80 px-5 backdrop-blur-[6px] sm:px-8 lg:px-10">
+      <header className="flex h-20 items-center justify-between border-b border-slate-100 bg-white/80 px-8 backdrop-blur-xl">
         <div className="flex-1 max-w-[576px]">
           <div className="relative">
             <div className="inline-flex h-11 w-full items-start justify-center overflow-hidden rounded-2xl bg-gray-100 py-3.5 pl-12 pr-4">
@@ -73,13 +73,13 @@ export function OrganizerEditEventStepScaffoldContent({
               </div>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-gray-200">
-              <div className="h-full rounded-full bg-gradient-to-r from-sky-700 to-violet-700" style={{ width: `${progress}%` }} />
+              <div className="h-full rounded-full bg-indigo-600" style={{ width: `${progress}%` }} />
             </div>
           </section>
 
           <section className="grid gap-8 xl:grid-cols-[1.65fr_1fr]">
             <div className="space-y-8 pb-12">
-              <article className="space-y-6 rounded-3xl bg-white p-8 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline outline-1 outline-slate-300/20">
+              <article className="space-y-6 rounded-[32px] bg-white p-8 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline outline-1 outline-slate-300/20">
                 <h3 className="text-xl font-semibold text-zinc-900">{title}</h3>
                 <p className="text-base leading-7 text-gray-700">
                   This step screen is ready for your next editing requirements. It follows the same spacing and ratio as the Create Event flow,
@@ -96,7 +96,7 @@ export function OrganizerEditEventStepScaffoldContent({
                 </Link>
                 <Link
                   href={nextHref}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-sky-700 to-violet-700 px-10 py-4 text-base font-bold text-white shadow-[0px_8px_10px_-6px_rgba(0,88,190,0.20),0px_20px_25px_-5px_rgba(0,88,190,0.20)]"
+                  className="inline-flex items-center gap-2 rounded-2xl bg-indigo-600 px-10 py-4 text-base font-bold text-white shadow-[0px_8px_10px_-6px_rgba(0,88,190,0.20),0px_20px_25px_-5px_rgba(0,88,190,0.20)]"
                 >
                   {nextLabel}
                   <ChevronDown className="h-4 w-4 -rotate-90" />
@@ -105,7 +105,7 @@ export function OrganizerEditEventStepScaffoldContent({
             </div>
 
             <aside className="space-y-6">
-              <article className="rounded-3xl bg-gray-100 p-8 outline outline-1 outline-slate-300/10">
+              <article className="rounded-[32px] bg-gray-100 p-8 outline outline-1 outline-slate-300/10">
                 <h4 className="text-lg font-bold text-zinc-900">Editing Workflow</h4>
                 <ul className="mt-4 space-y-3 text-sm text-gray-700">
                   <li>1. Basic Information</li>

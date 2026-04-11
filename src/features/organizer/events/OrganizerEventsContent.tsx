@@ -18,6 +18,7 @@ import type {
   OrganizerEventsPageData,
 } from "@/features/organizer/events/types";
 import { OrganizerDashboardIcon } from "@/features/organizer/dashboard/OrganizerDashboardIcons";
+import { OrganizerBrandLogo } from "@/features/organizer/shared/OrganizerBrandLogo";
 import { OrganizerMetaFooter } from "@/features/organizer/shared/OrganizerMetaFooter";
 
 type ToastState = {
@@ -219,7 +220,7 @@ export function OrganizerEventsContent() {
         </div>
       )}
 
-      <header className="flex h-20 items-center justify-between border-b border-slate-300/10 bg-slate-50/80 px-5 backdrop-blur-[6px] sm:px-8 lg:px-10 xl:px-10">
+      <header className="flex h-20 items-center justify-between border-b border-slate-100 bg-white/80 px-8 backdrop-blur-xl">
         <div className="flex-1 max-w-[576px]">
           <div className="relative">
             <div className="inline-flex h-11 w-full items-start justify-center overflow-hidden rounded-2xl bg-gray-100 py-3.5 pl-12 pr-4">
@@ -250,7 +251,7 @@ export function OrganizerEventsContent() {
             <OrganizerDashboardIcon type="settings" className="h-5 w-5" />
           </button>
           <div className="h-8 w-px bg-slate-300/30" />
-          <p className="text-sm font-bold tracking-wider text-gray-700">ORGANIZER DASHBOARD</p>
+          <OrganizerBrandLogo />
         </div>
       </header>
 
@@ -266,7 +267,7 @@ export function OrganizerEventsContent() {
           </div>
 
           <div className="flex flex-wrap items-center justify-end gap-3">
-            <div className="inline-flex items-center gap-3 rounded-2xl bg-white px-5 py-3 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
+            <div className="inline-flex items-center gap-3 rounded-2xl bg-white px-5 py-3 shadow-sm">
               <span className="text-sm text-gray-700">Draft:</span>
               <span className="text-base font-bold text-zinc-900">{totalDraftEvents}</span>
               <span className="text-sm text-gray-700">Page:</span>
@@ -275,7 +276,7 @@ export function OrganizerEventsContent() {
 
             <Link
               href="/organizer/create-event"
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-sky-700 to-violet-700 px-6 text-sm font-semibold text-white shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)] transition hover:brightness-105"
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-6 text-sm font-semibold text-white shadow-sm transition hover:brightness-105"
             >
               <span className="text-sm leading-none">+</span>
               <span>Create New Event</span>
@@ -283,7 +284,7 @@ export function OrganizerEventsContent() {
           </div>
         </section>
 
-        <section className="overflow-hidden rounded-3xl bg-white shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
+        <section className="overflow-hidden rounded-[32px] bg-white shadow-sm">
           <div className="flex items-center justify-between border-b border-gray-100 p-6">
             <h2 className="text-xl font-bold leading-7 text-zinc-900">Event List</h2>
             <button

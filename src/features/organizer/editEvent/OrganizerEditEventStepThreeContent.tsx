@@ -89,7 +89,7 @@ export function OrganizerEditEventStepThreeContent() {
             <div className="space-y-2">
               <p className="text-right text-base font-bold uppercase tracking-widest text-sky-700">Step 03 of 05</p>
               <div className="h-2 w-48 overflow-hidden rounded-full bg-gray-100">
-                <div className="h-full w-28 bg-gradient-to-r from-sky-700 to-violet-700" />
+                <div className="h-full w-28 bg-indigo-600" />
               </div>
             </div>
           </div>
@@ -97,7 +97,7 @@ export function OrganizerEditEventStepThreeContent() {
 
         <section className="grid gap-8 xl:grid-cols-[1.2fr_0.8fr]">
           <div className="space-y-8">
-            <article className="rounded-3xl bg-white p-1 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]">
+            <article className="rounded-[32px] bg-white p-1 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]">
               <div className="relative overflow-hidden rounded-2xl">
                 <img
                   src="https://placehold.co/900x360?text=Main+Event+Banner"
@@ -161,7 +161,7 @@ export function OrganizerEditEventStepThreeContent() {
           </div>
 
           <aside className="space-y-6 pb-12">
-            <article className="rounded-3xl border border-slate-300/10 bg-gray-100 p-6">
+            <article className="rounded-[32px] border border-slate-300/10 bg-gray-100 p-6">
               <h3 className="text-xs font-black uppercase tracking-wider text-gray-700">Media Requirements</h3>
 
               <ul className="mt-4 space-y-4 border-b border-slate-300/20 pb-4">
@@ -202,7 +202,7 @@ export function OrganizerEditEventStepThreeContent() {
               </div>
             </article>
 
-            <article className="rounded-3xl bg-blue-100 p-6">
+            <article className="rounded-[32px] bg-blue-100 p-6">
               <div className="flex items-center gap-2">
                 <CircleHelp className="h-5 w-5 text-sky-950" />
                 <h4 className="text-sm font-bold text-sky-950">Smart Cropping</h4>
@@ -232,7 +232,7 @@ export function OrganizerEditEventStepThreeContent() {
             </button>
             <Link
               href={`${basePath}/team-access`}
-              className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-sky-700 to-violet-700 px-10 py-3 text-base font-bold text-white shadow-lg"
+              className="inline-flex items-center gap-2 rounded-2xl bg-indigo-600 px-10 py-3 text-base font-bold text-white shadow-lg"
             >
               Next Step
               <ChevronRight className="h-4 w-4" />

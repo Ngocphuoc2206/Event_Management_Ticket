@@ -25,7 +25,7 @@ export function OrganizerEditEventStepOneContent() {
 
   return (
     <section className="relative flex-1 overflow-hidden bg-slate-50">
-      <header className="flex h-20 items-center justify-between border-b border-slate-300/20 bg-slate-50 px-5 sm:px-8 lg:px-10">
+      <header className="flex h-20 items-center justify-between border-b border-slate-100 bg-white/80 px-8 backdrop-blur-xl">
         <div className="flex items-center gap-4">
           <div className="pr-8">
             <p className="text-[28px] font-black leading-8 text-sky-700">
@@ -92,7 +92,7 @@ export function OrganizerEditEventStepOneContent() {
               </div>
 
               <div className="h-1.5 overflow-hidden rounded-full bg-gray-200">
-                <div className="h-full w-1/5 rounded-full bg-gradient-to-r from-sky-700 to-violet-700" />
+                <div className="h-full w-1/5 rounded-full bg-indigo-600" />
               </div>
             </section>
 
@@ -162,7 +162,7 @@ export function OrganizerEditEventStepOneContent() {
                   </button>
                   <Link
                     href={`${basePath}/location-time`}
-                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-700 to-violet-700 px-10 py-4 text-base font-bold text-white shadow-[0px_4px_6px_-4px_rgba(0,88,190,0.20),0px_10px_15px_-3px_rgba(0,88,190,0.20)]"
+                    className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-10 py-4 text-base font-bold text-white shadow-[0px_4px_6px_-4px_rgba(0,88,190,0.20),0px_10px_15px_-3px_rgba(0,88,190,0.20)]"
                   >
                     Next Step
                     <ChevronDown className="h-4 w-4 -rotate-90" />
@@ -173,7 +173,7 @@ export function OrganizerEditEventStepOneContent() {
           </div>
 
           <aside className="space-y-6 pb-20">
-            <article className="space-y-6 rounded-3xl bg-gray-100 p-8">
+            <article className="space-y-6 rounded-[32px] bg-gray-100 p-8">
               <h3 className="text-lg font-bold leading-7 text-zinc-900">Event Preview</h3>
 
               <div className="overflow-hidden rounded-2xl bg-white shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]">
@@ -209,7 +209,7 @@ export function OrganizerEditEventStepOneContent() {
               </div>
             </article>
 
-            <article className="rounded-3xl border border-slate-300/10 bg-zinc-200/30 p-8">
+            <article className="rounded-[32px] border border-slate-300/10 bg-zinc-200/30 p-8">
               <h3 className="text-xs font-bold uppercase tracking-[2.4px] text-gray-700">Checklist</h3>
               <ul className="mt-4 space-y-4">
                 <li className="flex items-center gap-3 text-sm font-medium text-zinc-900">

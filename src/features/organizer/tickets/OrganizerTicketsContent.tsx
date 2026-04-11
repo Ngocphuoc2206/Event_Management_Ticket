@@ -308,7 +308,7 @@ export function OrganizerTicketsContent() {
             <button
               type="button"
               onClick={openCreateForm}
-              className="inline-flex items-center gap-3 rounded-2xl bg-gradient-to-r from-sky-700 to-violet-700 px-6 py-3 text-base font-semibold text-white shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]"
+              className="inline-flex items-center gap-3 rounded-2xl bg-indigo-600 px-6 py-3 text-base font-semibold text-white shadow-sm"
             >
               <Plus className="h-4 w-4" />
               New Ticket Type
@@ -317,7 +317,7 @@ export function OrganizerTicketsContent() {
         </section>
 
         {isFormOpen ? (
-          <section className="rounded-3xl bg-white p-6 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)] outline outline-1 outline-slate-300/10">
+          <section className="rounded-[32px] bg-white p-6 shadow-sm outline outline-1 outline-slate-300/10">
             <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 pb-4">
               <div>
                 <h3 className="text-lg font-bold text-zinc-900">{editingTicketId ? "Edit Ticket Type" : "Create Ticket Type"}</h3>
@@ -374,25 +374,25 @@ export function OrganizerTicketsContent() {
         ) : null}
 
         <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <article className="rounded-3xl bg-white p-6 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
+          <article className="rounded-[32px] bg-white p-6 shadow-sm">
             <p className="text-xs font-bold uppercase tracking-wider text-gray-700">Total Revenue</p>
             <p className="mt-4 text-3xl font-bold text-zinc-900">{formatCurrency(totals.totalRevenue)}</p>
             <p className="mt-4 inline-flex items-center gap-2 text-xs font-medium text-sky-700"><TrendingUp className="h-3.5 w-3.5" />+12.5% from last month</p>
           </article>
 
-          <article className="rounded-3xl bg-white p-6 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
+          <article className="rounded-[32px] bg-white p-6 shadow-sm">
             <p className="text-xs font-bold uppercase tracking-wider text-gray-700">Tickets Sold</p>
             <p className="mt-4 text-3xl font-bold text-zinc-900">{totals.totalSold.toLocaleString()}</p>
             <p className="mt-4 text-xs font-medium text-sky-700">{totals.soldPercent}% total capacity sold</p>
           </article>
 
-          <article className="rounded-3xl border-l-4 border-violet-700 bg-white p-6 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
+          <article className="rounded-[32px] border-l-4 border-violet-700 bg-white p-6 shadow-sm">
             <p className="text-xs font-bold uppercase tracking-wider text-gray-700">Active Events</p>
             <p className="mt-4 text-3xl font-bold text-zinc-900">{totals.activeEvents}</p>
             <p className="mt-4 inline-flex items-center gap-2 text-xs text-gray-700"><span className="h-2 w-2 rounded-full bg-rose-700" />{totals.activeEvents} events in current view</p>
           </article>
 
-          <article className="rounded-3xl border-l-4 border-rose-700 bg-white p-6 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
+          <article className="rounded-[32px] border-l-4 border-rose-700 bg-white p-6 shadow-sm">
             <p className="text-xs font-bold uppercase tracking-wider text-gray-700">Waitlisted</p>
             <p className="mt-4 text-3xl font-bold text-zinc-900">{totals.soldOutCount}</p>
             <p className="mt-4 text-xs text-gray-700">Sold-out categories in filtered result</p>
@@ -452,7 +452,7 @@ export function OrganizerTicketsContent() {
           </div>
         </section>
 
-        <section className="overflow-hidden rounded-3xl bg-white shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
+        <section className="overflow-hidden rounded-[32px] bg-white shadow-sm">
           <div className="overflow-x-auto">
             <table className="min-w-[980px] w-full">
               <thead className="border-b border-gray-100 bg-gray-100/50">
@@ -534,7 +534,7 @@ export function OrganizerTicketsContent() {
         </section>
 
         <section className="grid gap-4 lg:grid-cols-2 lg:items-stretch">
-          <article className="rounded-3xl bg-white/80 p-8 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)] outline outline-1 outline-white/40 backdrop-blur-md">
+          <article className="rounded-[32px] bg-white/80 p-8 shadow-sm outline outline-1 outline-white/40 backdrop-blur-md">
             <div className="mb-6 flex items-center justify-between">
               <h3 className="text-xl font-bold text-zinc-900">Inventory Alerts</h3>
               <TriangleAlert className="h-5 w-5 text-rose-700" />
@@ -560,7 +560,7 @@ export function OrganizerTicketsContent() {
             </div>
           </article>
 
-          <article className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-sky-700 to-violet-700 p-8 text-white shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
+          <article className="relative overflow-hidden rounded-[32px] bg-indigo-600 p-8 text-white shadow-sm">
             <div className="absolute -right-10 -top-10 h-56 w-56 rounded-full bg-white/10 blur-2xl" />
             <h3 className="text-2xl font-bold">Automated Dynamic Pricing</h3>
             <p className="mt-2 max-w-xl text-base text-white/80">Boost your revenue by enabling AI-driven price adjustments based on demand velocity.</p>

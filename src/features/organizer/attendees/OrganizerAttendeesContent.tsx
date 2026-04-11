@@ -116,7 +116,7 @@ export function OrganizerAttendeesContent() {
 
   return (
     <section className="flex-1 bg-slate-50 text-zinc-900">
-      <header className="flex min-h-20 w-full flex-wrap items-center justify-between gap-4 border-b border-gray-100 bg-slate-50 px-5 py-4 sm:px-8 lg:px-10">
+      <header className="flex min-h-20 w-full flex-wrap items-center justify-between gap-4 border-b border-slate-100 bg-white/80 px-8 py-4 backdrop-blur-xl">
         <h1 className="text-xl font-semibold leading-7 text-zinc-900">Attendee Management</h1>
 
         <div className="flex w-full flex-wrap items-center justify-end gap-4 sm:w-auto sm:gap-6">
@@ -172,7 +172,7 @@ export function OrganizerAttendeesContent() {
 
             <button
               type="button"
-              className="inline-flex h-10 items-center gap-2 rounded-2xl bg-gradient-to-r from-sky-700 to-violet-700 px-5 text-sm font-semibold text-white shadow-[0px_4px_6px_-4px_rgba(0,88,190,0.2),0px_10px_15px_-3px_rgba(0,88,190,0.2)]"
+              className="inline-flex h-10 items-center gap-2 rounded-2xl bg-indigo-600 px-5 text-sm font-semibold text-white shadow-[0px_4px_6px_-4px_rgba(0,88,190,0.2),0px_10px_15px_-3px_rgba(0,88,190,0.2)]"
             >
               <Download className="h-4 w-4" />
               <span>Export List</span>
@@ -180,7 +180,7 @@ export function OrganizerAttendeesContent() {
           </div>
         </section>
 
-        <section className="overflow-hidden rounded-3xl bg-white shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline outline-1 outline-gray-100">
+        <section className="overflow-hidden rounded-[32px] bg-white shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline outline-1 outline-gray-100">
           <div className="overflow-x-auto">
             <table className="min-w-[980px] w-full border-collapse">
               <thead>
@@ -313,7 +313,7 @@ export function OrganizerAttendeesContent() {
               </button>
 
               <div className="flex items-center gap-1">
-                <button type="button" className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-700 to-violet-700 text-sm font-bold text-white" aria-label="Page 1">
+                <button type="button" className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 text-sm font-bold text-white" aria-label="Page 1">
                   1
                 </button>
                 <button type="button" className="flex h-10 w-10 items-center justify-center rounded-2xl text-sm font-medium text-zinc-900" aria-label="Page 2">
@@ -336,7 +336,7 @@ export function OrganizerAttendeesContent() {
         </section>
 
         <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <article className="flex items-center gap-4 rounded-3xl bg-gray-100 p-6">
+          <article className="flex items-center gap-4 rounded-[32px] bg-gray-100 p-6">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-sky-700/10 text-sky-700">
               <Users className="h-5 w-5" />
             </div>
@@ -346,7 +346,7 @@ export function OrganizerAttendeesContent() {
             </div>
           </article>
 
-          <article className="flex items-center gap-4 rounded-3xl bg-gray-100 p-6">
+          <article className="flex items-center gap-4 rounded-[32px] bg-gray-100 p-6">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-violet-700/10 text-violet-700">
               <Zap className="h-5 w-5" />
             </div>
@@ -356,7 +356,7 @@ export function OrganizerAttendeesContent() {
             </div>
           </article>
 
-          <article className="flex items-center gap-4 rounded-3xl bg-gray-100 p-6">
+          <article className="flex items-center gap-4 rounded-[32px] bg-gray-100 p-6">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-rose-700/10 text-rose-700">
               <Timer className="h-5 w-5" />
             </div>
