@@ -29,6 +29,11 @@ public enum ErrorCode {
     TICKET_SALE_TIME_INVALID(1018, "Ticket is not in sale period"),
     INSUFFICIENT_TICKET_QUANTITY(1019, "Not enough tickets available"),
     INVALID_QUANTITY(1020, "Invalid quantity"),
+    ORDER_NOT_FOUND(1025, "Order not found"),
+    ORDER_NOT_PAYABLE(1026, "Order is not payable"),
+    PAYMENT_ALREADY_PENDING(1027, "Payment is already pending for this order"),
+    PAYMENT_METHOD_NOT_SUPPORTED(1028, "Payment method is not supported"),
+    PAYMENT_NOT_FOUND(1029, "Payment not found"),
     INTERNAL_ERROR (9999, "Internal Error!"),
     ;
     private final int code;
