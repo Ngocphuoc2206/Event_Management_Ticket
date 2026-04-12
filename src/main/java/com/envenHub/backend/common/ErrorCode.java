@@ -34,6 +34,10 @@ public enum ErrorCode {
     PAYMENT_ALREADY_PENDING(1027, "Payment is already pending for this order"),
     PAYMENT_METHOD_NOT_SUPPORTED(1028, "Payment method is not supported"),
     PAYMENT_NOT_FOUND(1029, "Payment not found"),
+    INVALID_TIME_RANGE(1021, "Invalid time range"),
+    CANNOT_UPDATE_EXPIRED_TICKET(1022, "Cannot update expired ticket"),
+    CANNOT_DELETE_ACTIVE_TICKET(1023,"Cannot delete active ticket"),
+    INVALID_TICKET_STATUS(1024,"Invalid ticket status"),
     INTERNAL_ERROR (9999, "Internal Error!"),
     ;
     private final int code;
