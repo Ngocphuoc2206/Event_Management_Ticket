@@ -93,7 +93,7 @@ export function OrganizerEditEventStepTwoContent() {
           </div>
 
           <div className="h-2 overflow-hidden rounded-full bg-gray-200">
-            <div className="h-full w-2/5 rounded-full bg-gradient-to-r from-sky-700 to-violet-700" />
+            <div className="h-full w-2/5 rounded-full bg-indigo-600" />
           </div>
         </section>
 
@@ -283,7 +283,7 @@ export function OrganizerEditEventStepTwoContent() {
             </button>
             <Link
               href={`${basePath}/ticket-tiers`}
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-700 to-violet-700 px-10 py-4 text-base font-black text-white shadow-lg"
+              className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-10 py-4 text-base font-black text-white shadow-lg"
             >
               Next Step
               <ChevronRight className="h-4 w-4" />

@@ -12,10 +12,12 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+import { OrganizerBrandLogo } from "@/features/organizer/shared/OrganizerBrandLogo";
+
 export function OrganizerCreateEventContent() {
   return (
     <section className="relative flex-1 overflow-hidden bg-slate-50">
-      <header className="flex h-20 items-center justify-between border-b border-slate-300/10 bg-slate-50/80 px-5 backdrop-blur-[6px] sm:px-8 lg:px-10 xl:px-10">
+      <header className="flex h-20 items-center justify-between border-b border-slate-100 bg-white/80 px-8 backdrop-blur-xl">
         <div className="flex-1 max-w-[576px]">
           <div className="relative">
             <div className="inline-flex h-11 w-full items-start justify-center overflow-hidden rounded-2xl bg-gray-100 py-3.5 pl-12 pr-4">
@@ -46,7 +48,7 @@ export function OrganizerCreateEventContent() {
           </button>
 
           <div className="h-8 w-px bg-slate-300/30" />
-          <p className="text-sm font-bold tracking-wider text-gray-700">ORGANIZER DASHBOARD</p>
+          <OrganizerBrandLogo />
         </div>
       </header>
 
@@ -64,7 +66,7 @@ export function OrganizerCreateEventContent() {
                 <p className="text-sm font-bold text-zinc-900">Basic Info</p>
               </div>
               <div className="h-2 overflow-hidden rounded-full bg-gray-200">
-                <div className="h-full w-12 rounded-full bg-gradient-to-r from-sky-700 to-violet-700" />
+                <div className="h-full w-12 rounded-full bg-indigo-600" />
               </div>
               <div className="text-right text-[10px] leading-4 text-gray-700">20% COMPLETED</div>
             </div>
@@ -72,7 +74,7 @@ export function OrganizerCreateEventContent() {
 
           <section className="grid gap-6 xl:grid-cols-[1.65fr_1fr]">
             <div className="space-y-6 pb-10">
-              <article className="relative rounded-3xl bg-white px-8 pb-12 pt-8 outline outline-1 outline-slate-300/5 shadow-[0px_32px_64px_-15px_rgba(0,0,0,0.06)]">
+              <article className="relative rounded-[32px] bg-white px-8 pb-12 pt-8 border border-slate-100 shadow-[0px_32px_64px_-15px_rgba(0,0,0,0.06)]">
                 <div className="space-y-8">
                   <div className="space-y-2">
                     <label className="text-xs font-bold uppercase tracking-wider text-gray-700">Event Title</label>
@@ -138,7 +140,7 @@ export function OrganizerCreateEventContent() {
                 </button>
                 <Link
                   href="/organizer/create-event/location-time"
-                  className="relative inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-sky-700 to-violet-700 px-12 py-4 text-base font-bold text-white shadow-[0px_8px_10px_-6px_rgba(0,88,190,0.20),0px_20px_25px_-5px_rgba(0,88,190,0.20)]"
+                  className="relative inline-flex items-center gap-2 rounded-2xl bg-indigo-600 px-12 py-4 text-base font-bold text-white shadow-[0px_8px_10px_-6px_rgba(0,88,190,0.20),0px_20px_25px_-5px_rgba(0,88,190,0.20)]"
                 >
                   Continue to Location
                   <ChevronDown className="h-4 w-4 -rotate-90" />
@@ -147,8 +149,8 @@ export function OrganizerCreateEventContent() {
             </div>
 
             <aside className="space-y-6">
-              <article className="overflow-hidden rounded-3xl bg-gray-100 outline outline-1 outline-slate-300/10">
-                <div className="relative h-48 bg-gradient-to-br from-sky-700 to-violet-700">
+              <article className="overflow-hidden rounded-[32px] bg-gray-100 outline outline-1 outline-slate-300/10">
+                <div className="relative h-48 bg-gradient-to-br from-blue-600 to-indigo-700">
                   <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_white_10%,_transparent_60%)]" />
                   <div className="absolute bottom-4 left-4 rounded-full bg-white/20 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-white backdrop-blur-[6px]">
                     Preview
@@ -182,7 +184,7 @@ export function OrganizerCreateEventContent() {
                 </div>
               </article>
 
-              <article className="rounded-3xl bg-gradient-to-br from-violet-100 to-purple-100/60 p-6 outline outline-1 outline-violet-700/10">
+              <article className="rounded-[32px] bg-gradient-to-br from-violet-100 to-purple-100/60 p-6 outline outline-1 outline-violet-700/10">
                 <div className="flex items-start gap-3">
                   <Info className="mt-0.5 h-5 w-5 text-violet-700" />
                   <div className="space-y-1">
@@ -194,7 +196,7 @@ export function OrganizerCreateEventContent() {
                 </div>
               </article>
 
-              <article className="rounded-3xl bg-white p-6 outline outline-1 outline-slate-300/5">
+              <article className="rounded-[32px] bg-white p-6 border border-slate-100">
                 <ul className="space-y-6">
                   <li className="flex items-center gap-3">
                     <span className="flex h-6 w-6 items-center justify-center rounded-full bg-sky-700 text-[10px] font-bold text-white">1</span>

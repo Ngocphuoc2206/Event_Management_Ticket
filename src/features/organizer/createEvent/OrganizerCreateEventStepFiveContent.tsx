@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { OrganizerBrandLogo } from "@/features/organizer/shared/OrganizerBrandLogo";
+
 type TicketPreview = {
   name: string;
   subtitle: string;
@@ -68,7 +70,7 @@ export function OrganizerCreateEventStepFiveContent() {
 
   return (
     <section className="relative flex-1 overflow-hidden bg-slate-50">
-      <header className="flex h-20 items-center justify-between border-b border-slate-300/10 bg-slate-50/80 px-5 backdrop-blur-[6px] sm:px-8 lg:px-10 xl:px-10">
+      <header className="flex h-20 items-center justify-between border-b border-slate-100 bg-white/80 px-8 backdrop-blur-xl">
         <div className="flex-1 max-w-[576px]">
           <div className="relative">
             <div className="inline-flex h-11 w-full items-start justify-center overflow-hidden rounded-2xl bg-gray-100 py-3.5 pl-12 pr-4">
@@ -89,7 +91,7 @@ export function OrganizerCreateEventStepFiveContent() {
             <Settings className="h-5 w-5" />
           </button>
           <div className="h-8 w-px bg-slate-300/30" />
-          <p className="text-sm font-bold tracking-wider text-gray-700">ORGANIZER DASHBOARD</p>
+          <OrganizerBrandLogo />
         </div>
       </header>
 
@@ -108,13 +110,13 @@ export function OrganizerCreateEventStepFiveContent() {
               </div>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-gray-100">
-              <div className="h-full w-full rounded-full bg-gradient-to-r from-sky-700 to-violet-700" />
+              <div className="h-full w-full rounded-full bg-indigo-600" />
             </div>
           </section>
 
           <section className="grid gap-8 xl:grid-cols-[1.75fr_1fr]">
             <div className="space-y-8">
-              <article className="space-y-8 rounded-3xl bg-white p-8 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
+              <article className="space-y-8 rounded-[32px] bg-white p-8 shadow-sm">
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-bold text-zinc-900">Event Details</h2>
                   <button type="button" className="inline-flex items-center gap-1 text-sm font-semibold text-sky-700">
@@ -123,7 +125,7 @@ export function OrganizerCreateEventStepFiveContent() {
                   </button>
                 </div>
 
-                <div className="relative h-80 overflow-hidden rounded-3xl">
+                <div className="relative h-80 overflow-hidden rounded-[32px]">
                   <div className="h-full w-full bg-[linear-gradient(145deg,#3a79d9,#5d44be)]" />
                   <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/0" />
                   <div className="absolute left-6 top-[228px] space-y-2">
@@ -159,7 +161,7 @@ export function OrganizerCreateEventStepFiveContent() {
                 </div>
               </article>
 
-              <article className="space-y-8 rounded-3xl bg-white p-8 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
+              <article className="space-y-8 rounded-[32px] bg-white p-8 shadow-sm">
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-bold text-zinc-900">Ticket Categories</h2>
                   <button type="button" className="inline-flex items-center gap-1 text-sm font-semibold text-sky-700">
@@ -170,7 +172,7 @@ export function OrganizerCreateEventStepFiveContent() {
 
                 <div className="space-y-4">
                   {TICKET_PREVIEWS.map((ticket) => (
-                    <article key={ticket.name} className="flex items-center justify-between rounded-3xl bg-gray-100 p-6">
+                    <article key={ticket.name} className="flex items-center justify-between rounded-[32px] bg-gray-100 p-6">
                       <div className="flex items-center gap-4">
                         <div className={`h-12 w-2 rounded-full ${ticket.stripe}`} />
                         <div>
@@ -189,14 +191,14 @@ export function OrganizerCreateEventStepFiveContent() {
             </div>
 
             <aside className="space-y-8 pb-32">
-              <article className="rounded-3xl bg-white p-6 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
+              <article className="rounded-[32px] bg-white p-6 shadow-sm">
                 <h3 className="text-lg font-bold text-zinc-900">Venue Preview</h3>
 
-                <div className="relative mt-4 h-64 overflow-hidden rounded-3xl bg-gray-200">
+                <div className="relative mt-4 h-64 overflow-hidden rounded-[32px] bg-gray-200">
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_65%_28%,_#b2d6ff_0%,_transparent_45%),linear-gradient(145deg,#cbd5e1,#f1f5f9)] opacity-90" />
                   <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-white/50 to-transparent" />
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-sky-700 to-violet-700 text-white shadow-[0px_0px_0px_8px_rgba(255,255,255,0.30)]">
+                    <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-[0px_0px_0px_8px_rgba(255,255,255,0.30)]">
                       <MapPin className="h-4 w-4" />
                     </div>
                   </div>
@@ -213,7 +215,7 @@ export function OrganizerCreateEventStepFiveContent() {
                 </p>
               </article>
 
-              <article className="space-y-6 rounded-3xl bg-white p-6 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
+              <article className="space-y-6 rounded-[32px] bg-white p-6 shadow-sm">
                 <h3 className="text-lg font-bold text-zinc-900">Publishing Settings</h3>
 
                 <div className="space-y-6">
@@ -245,7 +247,7 @@ export function OrganizerCreateEventStepFiveContent() {
                 </div>
               </article>
 
-              <article className="space-y-5 rounded-3xl bg-white p-6 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
+              <article className="space-y-5 rounded-[32px] bg-white p-6 shadow-sm">
                 <div className="flex items-center justify-between gap-3">
                   <h3 className="text-lg font-bold text-zinc-900">Attendees Setup</h3>
                   <span
@@ -336,14 +338,14 @@ export function OrganizerCreateEventStepFiveContent() {
               <article className="space-y-4">
                 <button
                   type="button"
-                  className="inline-flex w-full justify-center rounded-3xl bg-gradient-to-r from-sky-700 to-violet-700 px-8 py-4 text-lg font-bold text-white shadow-[0px_8px_32px_-8px_rgba(0,88,190,0.50)]"
+                  className="inline-flex w-full justify-center rounded-[32px] bg-indigo-600 px-8 py-4 text-lg font-bold text-white shadow-[0px_8px_32px_-8px_rgba(0,88,190,0.50)]"
                 >
                   Publish Event
                 </button>
 
                 <button
                   type="button"
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-3xl bg-gray-200 px-8 py-4 text-base font-bold text-zinc-900"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-[32px] bg-gray-200 px-8 py-4 text-base font-bold text-zinc-900"
                 >
                   <Save className="h-3 w-3.5" />
                   Save as Draft

@@ -95,7 +95,7 @@ export function OrganizerEditEventStepFourContent() {
           </div>
 
           <div className="h-2 overflow-hidden rounded-full bg-gray-200">
-            <div className="h-full w-4/5 bg-gradient-to-r from-sky-700 to-violet-700" />
+            <div className="h-full w-4/5 bg-indigo-600" />
           </div>
         </section>
 
@@ -110,13 +110,13 @@ export function OrganizerEditEventStepFourContent() {
               {TICKET_CARDS.map((ticket, index) => (
                 <article
                   key={ticket.name}
-                  className={`flex flex-wrap items-center gap-6 rounded-xl bg-white p-6 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)] ${
+                  className={`flex flex-wrap items-center gap-6 rounded-xl bg-white p-6 shadow-sm ${
                     ticket.muted ? "opacity-75" : ""
                   }`}
                 >
                   <div
                     className={`flex h-16 w-16 items-center justify-center rounded-lg ${
-                      index === 0 ? "bg-gradient-to-br from-sky-700 to-violet-700" : "bg-gray-200"
+                      index === 0 ? "bg-gradient-to-br from-blue-600 to-indigo-700" : "bg-gray-200"
                     }`}
                   >
                     <Ticket className={`h-6 w-6 ${index === 0 ? "text-white" : "text-gray-700"}`} />
@@ -203,7 +203,7 @@ export function OrganizerEditEventStepFourContent() {
             </button>
             <Link
               href="/organizer/events"
-              className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-sky-700 to-violet-700 px-10 py-3 text-base font-bold text-white shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]"
+              className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-10 py-3 text-base font-bold text-white shadow-sm"
             >
               Complete Editing
               <ArrowRight className="h-4 w-4" />

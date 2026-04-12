@@ -2,25 +2,25 @@ import Head from "next/head";
 
 import {
   OrganizerDashboardSidebar,
-  OrganizerEventsContent,
+  OrganizerSettingsContent,
   getOrganizerNavigationItems,
   organizerProfile,
 } from "@/features/organizer";
 
-export default function OrganizerEventsPage() {
+export default function OrganizerSettingsPage() {
   return (
     <>
       <Head>
-        <title>Organizer Events | EventHub</title>
+        <title>Organizer Settings | EventHub</title>
       </Head>
 
       <main className="min-h-screen w-full bg-[#FDFDFF] text-slate-900">
         <div className="flex min-h-screen w-full flex-col lg:flex-row">
           <OrganizerDashboardSidebar
-            navigationItems={getOrganizerNavigationItems("Events")}
+            navigationItems={getOrganizerNavigationItems("Settings")}
             profile={organizerProfile}
           />
-          <OrganizerEventsContent />
+          <OrganizerSettingsContent />
         </div>
       </main>
     </>

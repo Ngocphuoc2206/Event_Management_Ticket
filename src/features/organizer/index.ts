@@ -23,4 +23,5 @@ export { OrganizerEditEventStepFourContent } from "./editEvent/OrganizerEditEven
 export { OrganizerEditEventStepScaffoldContent } from "./editEvent/OrganizerEditEventStepScaffoldContent";
 export { OrganizerEventsContent } from "./events/OrganizerEventsContent";
 export { OrganizerTicketsContent } from "./tickets/OrganizerTicketsContent";
+export { OrganizerSettingsContent } from "./settings/OrganizerSettingsContent";
 export { OrganizerMetaFooter } from "./shared/OrganizerMetaFooter";
