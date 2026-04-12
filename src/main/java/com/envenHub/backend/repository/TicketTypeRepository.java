@@ -15,7 +15,6 @@ import java.util.Optional;
 public interface TicketTypeRepository extends JpaRepository<TicketType, String>, JpaSpecificationExecutor<TicketType> {
     Optional<TicketType> findByIdAndEvent_OrganizerId(String ticketId, String userId);
     Optional<TicketType> findByEvent_IdAndEvent_OrganizerId(String eventId, String userId);
-public interface TicketTypeRepository extends JpaRepository<TicketType, String> {
     // Lock ticket row user is buying
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select t from TicketType t where t.id = :id")
