@@ -3,8 +3,10 @@ package com.envenHub.backend.service.PaymentGateway;
 import com.envenHub.backend.common.ErrorCode;
 import com.envenHub.backend.dto.request.PaymentGatewayInitRequest;
 import com.envenHub.backend.dto.request.PaymentInitRequest;
+import com.envenHub.backend.dto.request.PaymentWebhookRequest;
 import com.envenHub.backend.dto.response.PaymentGatewayInitResponse;
 import com.envenHub.backend.dto.response.PaymentInitResponse;
+import com.envenHub.backend.dto.response.PaymentWebhookResponse;
 import com.envenHub.backend.entity.Order;
 import com.envenHub.backend.entity.Payment;
 import com.envenHub.backend.entity.User;
@@ -15,6 +17,7 @@ import com.envenHub.backend.exception.AppException;
 import com.envenHub.backend.repository.OrderRepository;
 import com.envenHub.backend.repository.PaymentRepository;
 import com.envenHub.backend.repository.UserRepository;
+import com.envenHub.backend.service.TicketIssuingService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -36,6 +39,9 @@ public class PaymentService {
 
     @Autowired
     private List<PaymentGatewayInterface> paymentGatewayInterfaces;
+
+    @Autowired
+    private TicketIssuingService ticketIssuingService;
 
     @Transactional
     public PaymentInitResponse initPayment(PaymentInitRequest request, Authentication authentication){
@@ -115,6 +121,69 @@ public class PaymentService {
                 .clientSecret(payment.getClientSecret())
                 .createdAt(payment.getCreatedAt())
                 .expiredAt(payment.getExpiredAt())
+                .build();
+    }
+
+    @Transactional
+    public PaymentWebhookResponse handleWebhook(PaymentWebhookRequest request) {
+        //Validate request
+        if (request == null || request.getPaymentId() == null || request.getOrderId() == null) {
+            throw new AppException(ErrorCode.VALIDATION_ERROR);
+        }
+
+        //Find payment
+        Payment payment = paymentRepository.findByIdForUpdate(request.getPaymentId())
+                .orElseThrow(() -> new AppException(ErrorCode.PAYMENT_NOT_FOUND));
+
+        if (payment.getOrder() == null || !payment.getOrder().getId().equals(request.getOrderId())) {
+            throw new AppException(ErrorCode.VALIDATION_ERROR);
+        }
+
+        //Lock payment record
+        PaymentGatewayInterface gatewayService = paymentGatewayInterfaces.stream()
+                .filter(s -> s.getSupportedMethod() == payment.getPaymentMethod())
+                .findFirst()
+                .orElseThrow(() -> new AppException(ErrorCode.PAYMENT_METHOD_NOT_SUPPORTED));
+
+        //Verify signature
+        boolean validSignature = gatewayService.verifyWebhookSignature(request);
+        if (!validSignature) {
+            throw new AppException(ErrorCode.VALIDATION_ERROR);
+        }
+
+        // idempotent: if payment is success then return
+        if (payment.getPaymentStatus() == PaymentStatus.SUCCESS) {
+            return PaymentWebhookResponse.builder()
+                    .success(true)
+                    .message("Webhook already processed")
+                    .build();
+        }
+
+        PaymentStatus newStatus = gatewayService.mapWebhookStatus(request);
+        payment.setPaymentStatus(newStatus);
+        payment.setUpdatedAt(LocalDateTime.now());
+        payment.setWebhookEventId(request.getEventId());
+        payment.setWebhookPayload(request.getRawData());
+
+        Order order = payment.getOrder();
+
+        if (newStatus == PaymentStatus.SUCCESS) {
+            order.setStatus(OrderStatus.PAID);
+            // trigger issue ticket
+            ticketIssuingService.issueTicketsForOrder(order);
+
+        } else if (newStatus == PaymentStatus.FAILED
+                || newStatus == PaymentStatus.CANCELLED
+                || newStatus == PaymentStatus.EXPIRED) {
+            order.setStatus(OrderStatus.CANCELLED);
+        }
+
+        paymentRepository.save(payment);
+        orderRepository.save(order);
+
+        return PaymentWebhookResponse.builder()
+                .success(true)
+                .message("Webhook processed successfully")
                 .build();
     }
 }

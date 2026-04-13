@@ -40,4 +40,11 @@ public class Payment {
 
     private LocalDateTime createdAt;
     private LocalDateTime expiredAt;
+    private LocalDateTime updatedAt;
+
+    @Column(length = 255)
+    private String webhookEventId;
+
+    @Column(length = 2000)
+    private String webhookPayload;
 }
