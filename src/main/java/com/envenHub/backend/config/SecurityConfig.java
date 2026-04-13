@@ -31,7 +31,8 @@ public class SecurityConfig {
             "/api/health",
             "/api/auth/register",
             "/api/auth/login",
-            "/api/auth/refresh"
+            "/api/auth/refresh",
+            "/api/payments/webhook/**"
     };
 
 
