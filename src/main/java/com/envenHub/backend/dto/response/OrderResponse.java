@@ -22,7 +22,7 @@ public class OrderResponse {
     private OrderStatus status;
 
 //    private String userId;
-    private String userName;
+//    private String userName;
 
     private List<OrderItemResponse> items;
 }
