@@ -1,6 +1,7 @@
 package com.envenHub.backend.mapper;
 
 import com.envenHub.backend.dto.request.OrderRequest;
+import com.envenHub.backend.dto.response.OrderDetailResponse;
 import com.envenHub.backend.dto.response.OrderItemResponse;
 import com.envenHub.backend.dto.response.OrderResponse;
 import com.envenHub.backend.entity.Order;
@@ -8,11 +9,13 @@ import com.envenHub.backend.entity.OrderItem;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+import java.util.List;
+
 @Mapper(componentModel = "spring")
 public interface OrderMapper {
     Order toOrder(OrderRequest request);
 
-    @Mapping(target = "userId", source = "user.id")
+//    @Mapping(target = "userId", source = "user.id")
     @Mapping(target = "userName", source = "user.fullName")
     @Mapping(target = "items", source = "items")
     OrderResponse toOrderResponse(Order order);
@@ -21,4 +24,10 @@ public interface OrderMapper {
     @Mapping(target = "ticketTypeName", source = "ticketType.name")
     @Mapping(target = "subTotal", source = "subTotal")
     OrderItemResponse toOrderItemResponse(OrderItem orderItem);
+
+    @Mapping(target = "items", source = "items")
+    List<OrderResponse> toOrderResponseList(List<Order> orders);
+
+    @Mapping(target = "userName", source = "user.fullName")
+    OrderDetailResponse toOrderDetailResponse(Order order);
 }

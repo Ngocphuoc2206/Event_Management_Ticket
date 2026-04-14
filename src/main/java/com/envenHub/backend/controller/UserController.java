@@ -98,7 +98,7 @@ public class UserController {
         Cookie cookie = new Cookie("refreshToken", refreshToken);
         cookie.setHttpOnly(true);
         cookie.setSecure(false); // true for https, false for http
-        cookie.setPath("/auth/refresh");
+        cookie.setPath("/api/auth/refresh");
         cookie.setMaxAge((int) (jwtUtil.getRefreshExpiration() / 1000));
 
         response.addCookie(cookie);
@@ -135,7 +135,7 @@ public class UserController {
         storedToken.ifPresent(refreshTokenRepository::delete);
 
         // Save new refreshToken
-        RefreshToken newRt =new RefreshToken();
+        RefreshToken newRt = new RefreshToken();
         newRt.setToken(newRefreshToken);
         newRt.setUserId(userId);
         newRt.setExpiryDate(LocalDateTime.now()
@@ -146,7 +146,7 @@ public class UserController {
         Cookie cookie = new Cookie("refreshToken", newRefreshToken);
         cookie.setHttpOnly(true);
         cookie.setSecure(false);
-        cookie.setPath("/auth/refresh");
+        cookie.setPath("/api/auth/refresh");
         cookie.setMaxAge((int) (jwtUtil.getRefreshExpiration() / 1000));
         response.addCookie(cookie);
 
@@ -185,7 +185,7 @@ public class UserController {
         Cookie deleteCookie = new Cookie("refreshToken", null);
         deleteCookie.setHttpOnly(true);
         deleteCookie.setSecure(false);
-        deleteCookie.setPath("/auth/refresh");
+        deleteCookie.setPath("/api/auth/refresh");
         deleteCookie.setMaxAge(0);
 
         response.addCookie(deleteCookie);

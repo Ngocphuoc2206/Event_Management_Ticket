@@ -20,6 +20,7 @@ public class Order {
     private BigDecimal totalAmount;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "order_status")
     private OrderStatus status;
 
     @ManyToOne
