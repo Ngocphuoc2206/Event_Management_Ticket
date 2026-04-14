@@ -24,7 +24,6 @@ public class OrderDetailResponse {
     private OrderStatus status;
     private PaymentStatus paymentStatus;
 
-    private String userId;
     private String userName;
 
     private List<OrderItemResponse> items;
