@@ -9,29 +9,33 @@ import org.springframework.stereotype.Service;
 public class PaymentServiceHelper {
 
     public PaymentStatus getPaymentStatus(Order order) {
-        if (order.getPayments() == null || order.getPayments().isEmpty()) {
+
+        var payments = order.getPayments();
+
+        if (payments == null || payments.isEmpty()) {
             return null;
         }
 
-        if (order.getPayments().stream()
-                .anyMatch(p -> p.getPaymentStatus() == PaymentStatus.SUCCESS)) {
-            return PaymentStatus.SUCCESS;
+        // Flag
+        boolean hasSuccess = false;
+        boolean hasPending = false;
+        boolean hasFailed = false;
+        boolean hasExpired = false;
+
+        for (var p : payments ) {
+            switch (p.getPaymentStatus()) {
+                case SUCCESS -> hasSuccess = true;
+                case PENDING -> hasPending = true;
+                case FAILED -> hasFailed = true;
+                case EXPIRED -> hasExpired = true;
+                case CANCELLED -> {}
+            }
         }
 
-        if (order.getPayments().stream()
-                .anyMatch(p -> p.getPaymentStatus() == PaymentStatus.PENDING)) {
-            return PaymentStatus.PENDING;
-        }
-
-        if (order.getPayments().stream()
-                .anyMatch(p -> p.getPaymentStatus() == PaymentStatus.FAILED)) {
-            return PaymentStatus.FAILED;
-        }
-
-        if (order.getPayments().stream()
-                .anyMatch(p -> p.getPaymentStatus() == PaymentStatus.EXPIRED)) {
-            return PaymentStatus.EXPIRED;
-        }
+        if (hasSuccess) return PaymentStatus.SUCCESS;
+        if (hasPending) return PaymentStatus.PENDING;
+        if (hasFailed) return PaymentStatus.FAILED;
+        if (hasExpired) return PaymentStatus.EXPIRED;
 
         return PaymentStatus.CANCELLED;
     }

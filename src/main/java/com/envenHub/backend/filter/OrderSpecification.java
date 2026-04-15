@@ -43,12 +43,13 @@ public class OrderSpecification {
     public static Specification<Order> hasPaymentStatus(String status) {
         return (((root, query, cb) -> {
             if (status == null || status.isBlank()) return null;
+            query.distinct(true);
 
             try {
                 PaymentStatus paymentStatus = PaymentStatus.valueOf(status.toUpperCase());
                 return cb.equal(root.join("payments").get("paymentStatus"), paymentStatus);
             } catch (IllegalArgumentException e) {
-                throw new AppException(ErrorCode.INVALID_TICKET_STATUS);
+                throw new AppException(ErrorCode.INVALID_PAYMENT_STATUS);
             }
         }));
     }
