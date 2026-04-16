@@ -1,6 +1,10 @@
 server:
   port: 8080
 
+payment:
+  mock:
+    webhook-secret: ${MOCK_WEBHOOK_SECRET:mock_secret_123}
+
 app:
   upload:
     max-file-size: 5MB

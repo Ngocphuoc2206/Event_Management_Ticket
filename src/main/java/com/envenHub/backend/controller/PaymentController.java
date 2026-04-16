@@ -2,7 +2,9 @@ package com.envenHub.backend.controller;
 
 import com.envenHub.backend.common.ApiResponse;
 import com.envenHub.backend.dto.request.PaymentInitRequest;
+import com.envenHub.backend.dto.request.PaymentWebhookRequest;
 import com.envenHub.backend.dto.response.PaymentInitResponse;
+import com.envenHub.backend.dto.response.PaymentWebhookResponse;
 import com.envenHub.backend.service.PaymentGateway.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -24,6 +26,15 @@ public class PaymentController {
     ){
         return ApiResponse.<PaymentInitResponse>builder()
                 .results(paymentService.initPayment(request, authentication))
+                .build();
+    }
+
+    @PostMapping("/webhook/mock")
+    public ApiResponse<PaymentWebhookResponse> mockWebhook(
+            @RequestBody PaymentWebhookRequest request
+    ) {
+        return ApiResponse.<PaymentWebhookResponse>builder()
+                .results(paymentService.handleWebhook(request))
                 .build();
     }
 }
