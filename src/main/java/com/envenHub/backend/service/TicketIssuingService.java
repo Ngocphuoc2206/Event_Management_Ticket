@@ -54,13 +54,36 @@ public class TicketIssuingService {
     }
 
     //User get ticket QR
-    public List<IssuedTicketResponse> getMyTickets(Authentication authentication){
+    public List<IssuedTicketResponse> getMyTickets(Authentication authentication, String type){
         String userId = authentication.getName();
+        LocalDateTime now = LocalDateTime.now();
+        List<IssuedTicket> tickets;
+        if (type == null || type.isBlank()){
+            tickets = issuedTicketRepository.findByUserIdOrderByIssuedAtDesc(userId);
+        } else if ("upcoming".equalsIgnoreCase(type)){
+            tickets = issuedTicketRepository
+                    .findByUserIdAndEvent_StartTimeGreaterThanEqualOrderByIssuedAtDesc(userId, now);
+        }  else if ("past".equalsIgnoreCase(type)) {
+            tickets = issuedTicketRepository
+                    .findByUserIdAndEvent_EndTimeLessThanOrderByIssuedAtDesc(userId, now);
+        } else {
+            throw new AppException(ErrorCode.VALIDATION_ERROR);
+        }
 
-        return issuedTicketRepository.findByUserIdOrderByIssuedAtDesc(userId)
-                .stream().map(this::toResponse)
+        return tickets.stream()
+                .map(this::toResponse)
                 .toList();
     }
+
+    public IssuedTicketResponse getMyTicketDetail(String ticketId, Authentication authentication) {
+        String userId = authentication.getName();
+
+        IssuedTicket ticket = issuedTicketRepository.findByIdAndUserId(ticketId, userId)
+                .orElseThrow(() -> new AppException(ErrorCode.TICKET_NOT_FOUND));
+        return toResponse(ticket);
+    }
+
+
 
     private IssuedTicketResponse toResponse(IssuedTicket ticket){
         IssuedTicketResponse response = new IssuedTicketResponse();
@@ -71,18 +94,36 @@ public class TicketIssuingService {
         response.setIssuedAt(ticket.getIssuedAt());
 
         response.setOrderId(ticket.getOrder().getId());
+
         response.setEventId(ticket.getEvent().getId());
-        response.setEventName(ticket.getEvent().getVenueName());
+        response.setEventName(ticket.getEvent().getTitle());
+        response.setVenueName(ticket.getEvent().getVenueName());
+        response.setAddress(ticket.getEvent().getAddress());
+        response.setCity(ticket.getEvent().getCity());
+        response.setEventStartTime(ticket.getEvent().getStartTime());
+        response.setEventEndTime(ticket.getEvent().getEndTime());
+
         response.setTicketTypeId(ticket.getOrderItem().getTicketType().getId());
         response.setTicketTypeName(ticket.getOrderItem().getTicketType().getName());
 
+        response.setTicketCategory(resolveTicketCategory(ticket));
         return response;
+    }
+
+    private String resolveTicketCategory(IssuedTicket ticket){
+        LocalDateTime now = LocalDateTime.now();
+
+        if (ticket.getEvent().getEndTime() != null && ticket.getEvent().getEndTime().isBefore(now)){
+            return "PAST";
+        }
+        return "UPCOMING";
     }
 
     private String generateUniqueTicketCode() {
         String code;
         do {
-            code = "TIX-" + UUID.randomUUID().toString().replace("-", "").substring(0, 12).toUpperCase();
+            code = "TIX-" + UUID.randomUUID().toString()
+                    .replace("-", "").substring(0, 12).toUpperCase();
         } while (issuedTicketRepository.existsByTicketCode(code));
         return code;
     }

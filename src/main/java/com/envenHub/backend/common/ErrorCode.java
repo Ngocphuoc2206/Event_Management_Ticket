@@ -42,6 +42,7 @@ public enum ErrorCode {
     WEBHOOK_ALREADY_PROCESSED(1031, "Webhook already processed"),
     TICKET_ALREADY_ISSUED(1032, "Tickets already issued"),
     INVALID_PAYMENT_STATUS(1033, "Invalid payment status"),
+    TICKET_NOT_FOUND(1034, "Ticket not found"),
     INTERNAL_ERROR (9999, "Internal Error!"),
     ;
     private final int code;
