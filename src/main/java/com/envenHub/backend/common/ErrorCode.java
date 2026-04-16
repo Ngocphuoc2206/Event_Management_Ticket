@@ -38,6 +38,7 @@ public enum ErrorCode {
     PAYMENT_ALREADY_PENDING(1027, "Payment is already pending for this order"),
     PAYMENT_METHOD_NOT_SUPPORTED(1028, "Payment method is not supported"),
     PAYMENT_NOT_FOUND(1029, "Payment not found"),
+    INVALID_PAYMENT_STATUS(1033, "Invalid payment status"),
     INVALID_WEBHOOK_SIGNATURE(1030, "Invalid webhook signature"),
     WEBHOOK_ALREADY_PROCESSED(1031, "Webhook already processed"),
     TICKET_ALREADY_ISSUED(1032, "Tickets already issued"),
