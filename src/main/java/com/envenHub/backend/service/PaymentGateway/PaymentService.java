@@ -139,7 +139,7 @@ public class PaymentService {
             throw new AppException(ErrorCode.VALIDATION_ERROR);
         }
 
-        //Lock payment record
+        //find payment gateway
         PaymentGatewayInterface gatewayService = paymentGatewayInterfaces.stream()
                 .filter(s -> s.getSupportedMethod() == payment.getPaymentMethod())
                 .findFirst()

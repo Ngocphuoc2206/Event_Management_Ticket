@@ -2,6 +2,7 @@ package com.envenHub.backend.service.S3_storage;
 
 import com.envenHub.backend.common.ErrorCode;
 import com.envenHub.backend.exception.AppException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,7 @@ import java.io.IOException;
 import java.util.UUID;
 
 @Service
+@Slf4j
 public class S3StorageService implements StorageService {
 
     @Autowired
@@ -42,9 +44,25 @@ public class S3StorageService implements StorageService {
                     RequestBody.fromBytes(file.getBytes())
             );
             return publicBaseUrl + "/" + key;
-        } catch (IOException e) {
+        } catch (Exception e) {
+            log.error(e.getMessage());
             throw new AppException(ErrorCode.FILE_UPLOAD_FAILED);
         }
+    }
+
+    @Override
+    public String uploadBytes(byte[] data, String fileName, String contentType, String folder) {
+        String extension = getExtension(fileName);
+        String key = folder + "/" + UUID.randomUUID() + extension;
+
+        PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .contentType(contentType)
+                .build();
+
+        s3Client.putObject(putObjectRequest, RequestBody.fromBytes(data));
+        return publicBaseUrl + "/" + key;
     }
 
     private String getExtension(String fileName) {

@@ -124,12 +124,17 @@
             <version>0.11.5</version>
             <scope>runtime</scope>
         </dependency>
-
-    <!--  aws S3      -->
+    <!--        QR Image      -->
         <dependency>
-            <groupId>software.amazon.awssdk</groupId>
-            <artifactId>s3</artifactId>
-            <version>2.29.38</version>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>core</artifactId>
+            <version>3.5.3</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>javase</artifactId>
+            <version>3.5.3</version>
         </dependency>
     </dependencies>
 
