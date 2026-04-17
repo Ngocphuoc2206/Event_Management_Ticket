@@ -43,6 +43,8 @@ public enum ErrorCode {
     TICKET_ALREADY_ISSUED(1032, "Tickets already issued"),
     INVALID_PAYMENT_STATUS(1033, "Invalid payment status"),
     TICKET_NOT_FOUND(1034, "Ticket not found"),
+    ORDER_ITEM_NOT_FOUND(1035, "OrderItem not found"),
+    TICKET_ALREADY_CHECKED(1036, "Ticket already checked"),
     INTERNAL_ERROR (9999, "Internal Error!"),
     ;
     private final int code;

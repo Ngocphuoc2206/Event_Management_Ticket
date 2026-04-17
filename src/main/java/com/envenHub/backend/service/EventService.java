@@ -1,17 +1,19 @@
 package com.envenHub.backend.service;
 
 import com.envenHub.backend.common.ErrorCode;
+import com.envenHub.backend.dto.request.CheckInRequest;
 import com.envenHub.backend.dto.request.EventRequest;
-import com.envenHub.backend.dto.response.EventDetailResponse;
-import com.envenHub.backend.dto.response.EventListResponse;
-import com.envenHub.backend.dto.response.PagedResponse;
-import com.envenHub.backend.dto.response.UserResponse;
+import com.envenHub.backend.dto.response.*;
 import com.envenHub.backend.entity.Event;
+import com.envenHub.backend.entity.OrderItem;
 import com.envenHub.backend.enums.EventStatus;
 import com.envenHub.backend.exception.AppException;
+import com.envenHub.backend.filter.AttendeesSpecification;
 import com.envenHub.backend.filter.EventSpecification;
+import com.envenHub.backend.mapper.AttendeesMapper;
 import com.envenHub.backend.mapper.EventMapper;
 import com.envenHub.backend.repository.EventRepository;
+import com.envenHub.backend.repository.OrderItemRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -22,6 +24,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -30,12 +33,17 @@ import java.util.Set;
 public class EventService {
     private final EventRepository eventRepository;
     private final EventMapper eventMapper;
+    private final OrderItemRepository orderItemRepository;
+    private final AttendeesMapper attendeesMapper;
 
     @Autowired
     private UserService userService;
 
     private static final Set<String> ALLOWED_SORT_FIELDS =
             Set.of("startTime", "title", "minPrice", "createdAt");
+
+    private static final Set<String> ALLOWED_SORT_FIELDS_ATTENDEES =
+            Set.of("fullName", "ticketTypeName", "check-in");
 
     public PagedResponse<EventListResponse> getPublicEvents(
             String search,
@@ -223,5 +231,86 @@ public class EventService {
         event.setRejectReason(reason);
 
         eventRepository.save(event);
+    }
+
+    public PagedResponse<AttendeeResponse> getAttendees(
+            String eventId,
+            String search,
+            String status,
+            int page,
+            int size,
+            String sortBy,
+            String sortDir,
+            Authentication authentication
+    )
+    {
+
+        if (!ALLOWED_SORT_FIELDS_ATTENDEES.contains(sortBy)) {
+            throw new AppException(ErrorCode.INVALID_SORT_FIELD);
+        }
+
+        UserResponse user = userService.getCurrentUser(authentication);
+        String organizerId = user.getId();
+
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+
+        if(!event.getOrganizerId().equals(organizerId)) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        Specification<OrderItem> specification = Specification
+                .where(AttendeesSpecification.hasEvent(eventId))
+                .and(AttendeesSpecification.hasSearch(search))
+                .and(AttendeesSpecification.hasStatus(status))
+                .and(AttendeesSpecification.sortBy(sortBy, sortDir));
+
+        Page<OrderItem> result = orderItemRepository.findAll(specification, pageable);
+
+
+        List<AttendeeResponse> attendees = attendeesMapper.toAttendeesResponseList(result.getContent());
+
+        return PagedResponse.<AttendeeResponse>builder()
+                .items(attendees)
+                .totalItems(result.getTotalElements())
+                .page(result.getNumber())
+                .size(result.getSize())
+                .totalPages(result.getTotalPages())
+                .hasNext(result.hasNext())
+                .build();
+    }
+
+    public CheckInResponse checkIn(CheckInRequest request, Authentication authentication) {
+        UserResponse user = userService.getCurrentUser(authentication);
+
+        String organizerId = user.getId();
+
+        OrderItem item = orderItemRepository.findById(request.getOrderItemId())
+                .orElseThrow(()-> new AppException(ErrorCode.ORDER_ITEM_NOT_FOUND));
+
+        // Validation
+        if(!item.getTicketType().getEvent().getOrganizerId().equals(organizerId)) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        if(Boolean.TRUE.equals(item.getCheckedIn())) {
+            throw new AppException(ErrorCode.TICKET_ALREADY_CHECKED);
+        }
+
+        item.setCheckedIn(true);
+        item.setCheckedAt(LocalDateTime.now());
+
+        orderItemRepository.save(item);
+
+        return CheckInResponse.builder()
+                .orderItemId(item.getId())
+                .checkedIn(true)
+                .checkedInAt(item.getCheckedAt())
+                .fullName(item.getOrder().getUser().getFullName())
+                .email(item.getOrder().getUser().getEmail())
+                .ticketTypeName(item.getTicketType().getName())
+                .build();
     }
 }

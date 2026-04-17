@@ -1,12 +1,10 @@
 package com.envenHub.backend.controller;
 
 import com.envenHub.backend.common.ApiResponse;
+import com.envenHub.backend.dto.request.CheckInRequest;
 import com.envenHub.backend.dto.request.EventRequest;
 import com.envenHub.backend.dto.request.TicketTypeRequest;
-import com.envenHub.backend.dto.response.EventDetailResponse;
-import com.envenHub.backend.dto.response.EventListResponse;
-import com.envenHub.backend.dto.response.PagedResponse;
-import com.envenHub.backend.dto.response.TicketTypeResponse;
+import com.envenHub.backend.dto.response.*;
 import com.envenHub.backend.service.EventService;
 import com.envenHub.backend.service.TicketTypeService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,6 +63,23 @@ public class OrganizerController {
                 .build();
     }
 
+    @GetMapping("/events/{id}/attendees")
+    public ApiResponse<PagedResponse<AttendeeResponse>> getAttendees(
+            @PathVariable String id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "fullName") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir,
+            Authentication authentication
+    ) {
+        return ApiResponse.<PagedResponse<AttendeeResponse>>builder()
+                .results(eventService.getAttendees(id, search, status, page, size,
+                        sortBy, sortDir, authentication))
+                .build();
+    }
+
     @PostMapping("/events")
     public ApiResponse<EventDetailResponse> createOrganizerEvent(
             @RequestBody EventRequest request,
@@ -87,6 +102,14 @@ public class OrganizerController {
 
         return ApiResponse.<TicketTypeResponse>builder()
                 .results(ticketType)
+                .build();
+    }
+
+    @PostMapping("/check-in")
+    public ApiResponse<CheckInResponse> checkIn(@RequestBody CheckInRequest request,
+                                                Authentication authentication) {
+        return ApiResponse.<CheckInResponse>builder()
+                .results(eventService.checkIn(request, authentication))
                 .build();
     }
 
