@@ -256,7 +256,7 @@ public class EventService {
                 .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
 
         if(!event.getOrganizerId().equals(organizerId)) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
+            throw new AppException(ErrorCode.FORBIDDEN_EVENT_ACCESS);
         }
 
         Pageable pageable = PageRequest.of(page, size);
