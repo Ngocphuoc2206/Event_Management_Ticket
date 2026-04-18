@@ -27,19 +27,13 @@ public class AttendeesSpecification {
         };
     }
 
-    public static Specification<OrderItem> hasStatus(String status) {
+    public static Specification<OrderItem> hasStatus(Boolean status) {
         return (root, query, cb) -> {
             if (status == null) return null;
 
-            if (status.equalsIgnoreCase("CHECKED_IN")) {
-                return cb.isTrue(root.get("checkedIn"));
-            }
-
-            if (status.equalsIgnoreCase("NOT_CHECKED_IN")) {
-                return cb.isFalse(root.get("checkedIn"));
-            }
-
-            return null;
+            return status
+                    ? cb.isTrue(root.get("checkedIn"))
+                    : cb.isFalse(root.get("checkedIn"));
         };
     }
 

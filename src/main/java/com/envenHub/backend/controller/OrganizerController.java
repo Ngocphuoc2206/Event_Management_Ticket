@@ -69,7 +69,7 @@ public class OrganizerController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String search,
-            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Boolean status,
             @RequestParam(defaultValue = "fullName") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir,
             Authentication authentication

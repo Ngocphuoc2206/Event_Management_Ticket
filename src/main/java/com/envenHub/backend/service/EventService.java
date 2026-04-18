@@ -43,7 +43,7 @@ public class EventService {
             Set.of("startTime", "title", "minPrice", "createdAt");
 
     private static final Set<String> ALLOWED_SORT_FIELDS_ATTENDEES =
-            Set.of("fullName", "ticketTypeName", "check-in");
+            Set.of("fullName", "ticketType","check-in");
 
     public PagedResponse<EventListResponse> getPublicEvents(
             String search,
@@ -236,7 +236,7 @@ public class EventService {
     public PagedResponse<AttendeeResponse> getAttendees(
             String eventId,
             String search,
-            String status,
+            Boolean status,
             int page,
             int size,
             String sortBy,
