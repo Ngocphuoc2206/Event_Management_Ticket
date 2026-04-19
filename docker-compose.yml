@@ -1,22 +1,22 @@
 version: "3.9"
 
 services:
-  mysql:
-    image: mysql:8.0.45-debian
-    container_name: event-mysql
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: event_ticket_db
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-    healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-proot" ]
-      interval: 5s
-      timeout: 5s
-      retries: 15
+#  mysql:
+#    image: mysql:8.0.45-debian
+#    container_name: event-mysql
+#    restart: always
+#    environment:
+#      MYSQL_ROOT_PASSWORD: root
+#      MYSQL_DATABASE: event_ticket_db
+#    ports:
+#      - "3306:3306"
+#    volumes:
+#      - mysql_data:/var/lib/mysql
+#    healthcheck:
+#      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-proot" ]
+#      interval: 5s
+#      timeout: 5s
+#      retries: 15
 
   backend:
     build: .
@@ -24,13 +24,10 @@ services:
     ports:
       - "8080:8080"
     environment:
-      DB_HOST: mysql
-      DB_PORT: 3306
-      DB_NAME: event_ticket_db
-      DB_USERNAME: root
-      DB_PASSWORD: root
-    depends_on:
-      mysql:
-        condition: service_healthy
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
 volumes:
   mysql_data:
