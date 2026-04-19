@@ -20,6 +20,7 @@ public interface IssuedTicketRepository extends JpaRepository<IssuedTicket, Stri
     List<IssuedTicket> findByUserIdAndEvent_EndTimeLessThanOrderByIssuedAtDesc(String userId, LocalDateTime now);
 
     Optional<IssuedTicket> findByIdAndUserId(String id, String userId);
+    Optional<IssuedTicket> findByTicketCode(String ticketCode);
 
     List<IssuedTicket> findByOrderId(String orderId);
 }

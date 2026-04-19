@@ -12,10 +12,11 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Builder
 public class CheckInResponse {
-    private String orderItemId;
-    private Boolean checkedIn;
-    private LocalDateTime checkedInAt;
-    private String fullName;
-    private String email;
+    private boolean success;
+    private String message;
+    private String ticketCode;
+    private String attendeeName;
     private String ticketTypeName;
+    private String eventName;
+    private LocalDateTime checkInTime;
 }

@@ -46,6 +46,9 @@ public enum ErrorCode {
     ORDER_ITEM_NOT_FOUND(1035, "OrderItem not found"),
     TICKET_ALREADY_CHECKED(1036, "Ticket already checked"),
     FORBIDDEN_EVENT_ACCESS(1037, "You can only access events you own"),
+    INVALID_TICKET_CODE(1038, "Invalid ticket code"),
+    TICKET_ALREADY_USED(1039, "Ticket Already used"),
+    TICKET_NOT_BELONG_TO_USER(1040, "You can only check in tickets that belong to you"),
     INTERNAL_ERROR (9999, "Internal Error!"),
     ;
     private final int code;

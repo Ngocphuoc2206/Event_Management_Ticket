@@ -2,10 +2,8 @@ package com.envenHub.backend.controller;
 
 import com.envenHub.backend.common.ApiResponse;
 import com.envenHub.backend.common.ErrorCode;
-import com.envenHub.backend.dto.request.LoginRequest;
-import com.envenHub.backend.dto.request.RegisterRequest;
-import com.envenHub.backend.dto.request.UpdateProfileRequest;
-import com.envenHub.backend.dto.request.UpdateStatusRequest;
+import com.envenHub.backend.dto.request.*;
+import com.envenHub.backend.dto.response.CheckInResponse;
 import com.envenHub.backend.dto.response.LogoutResponse;
 import com.envenHub.backend.dto.response.TokenResponse;
 import com.envenHub.backend.dto.response.UserResponse;
@@ -14,11 +12,13 @@ import com.envenHub.backend.entity.User;
 import com.envenHub.backend.exception.AppException;
 import com.envenHub.backend.repository.RefreshTokenRepository;
 import com.envenHub.backend.repository.UserRepository;
+import com.envenHub.backend.service.EventService;
 import com.envenHub.backend.service.UserService;
 import com.envenHub.backend.util.JwtUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -29,19 +29,13 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/auth")
 public class UserController {
-    @Autowired
-    private UserService userService;
-
-    @Autowired
-    private JwtUtil jwtUtil;
-
-    @Autowired
-    private RefreshTokenRepository refreshTokenRepository;
-
-    @Autowired
-    private UserRepository userRepository;
+    private final UserService userService;
+    private final JwtUtil jwtUtil;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final UserRepository userRepository;
 
     @GetMapping("/users/me")
     public ApiResponse<UserResponse> getUserProfile(Authentication authentication) {

@@ -5,6 +5,7 @@ import com.envenHub.backend.dto.request.CheckInRequest;
 import com.envenHub.backend.dto.request.EventRequest;
 import com.envenHub.backend.dto.response.*;
 import com.envenHub.backend.entity.Event;
+import com.envenHub.backend.entity.IssuedTicket;
 import com.envenHub.backend.entity.OrderItem;
 import com.envenHub.backend.enums.EventStatus;
 import com.envenHub.backend.exception.AppException;
@@ -13,6 +14,7 @@ import com.envenHub.backend.filter.EventSpecification;
 import com.envenHub.backend.mapper.AttendeesMapper;
 import com.envenHub.backend.mapper.EventMapper;
 import com.envenHub.backend.repository.EventRepository;
+import com.envenHub.backend.repository.IssuedTicketRepository;
 import com.envenHub.backend.repository.OrderItemRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +25,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -32,8 +35,9 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class EventService {
     private final EventRepository eventRepository;
-    private final EventMapper eventMapper;
     private final OrderItemRepository orderItemRepository;
+    private final IssuedTicketRepository issuedTicketRepository;
+    private final EventMapper eventMapper;
     private final AttendeesMapper attendeesMapper;
 
     @Autowired
@@ -282,35 +286,36 @@ public class EventService {
                 .build();
     }
 
+    @Transactional
     public CheckInResponse checkIn(CheckInRequest request, Authentication authentication) {
         UserResponse user = userService.getCurrentUser(authentication);
+        String userId = user.getId();
 
-        String organizerId = user.getId();
+        String ticketCode = request.getTicketCode();
 
-        OrderItem item = orderItemRepository.findById(request.getOrderItemId())
-                .orElseThrow(()-> new AppException(ErrorCode.ORDER_ITEM_NOT_FOUND));
+        IssuedTicket ticket = issuedTicketRepository.findByTicketCode(ticketCode)
+                .orElseThrow(() -> new AppException(ErrorCode.INVALID_TICKET_CODE));
 
-        // Validation
-        if(!item.getTicketType().getEvent().getOrganizerId().equals(organizerId)) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
+        if(!ticket.getUser().getId().equals(userId)) {
+            throw new AppException(ErrorCode.TICKET_NOT_BELONG_TO_USER);
         }
 
-        if(Boolean.TRUE.equals(item.getCheckedIn())) {
-            throw new AppException(ErrorCode.TICKET_ALREADY_CHECKED);
+        if (ticket.isUsed()) {
+            throw new AppException(ErrorCode.TICKET_ALREADY_USED);
         }
 
-        item.setCheckedIn(true);
-        item.setCheckedAt(LocalDateTime.now());
+        ticket.setUsed(true);
 
-        orderItemRepository.save(item);
+        issuedTicketRepository.save(ticket);
 
         return CheckInResponse.builder()
-                .orderItemId(item.getId())
-                .checkedIn(true)
-                .checkedInAt(item.getCheckedAt())
-                .fullName(item.getOrder().getUser().getFullName())
-                .email(item.getOrder().getUser().getEmail())
-                .ticketTypeName(item.getTicketType().getName())
+                .checkInTime(LocalDateTime.now())
+                .message("Check in success")
+                .ticketCode(ticket.getTicketCode())
+                .attendeeName(ticket.getUser().getFullName())
+                .ticketTypeName(ticket.getOrderItem().getTicketType().getName())
+                .eventName(ticket.getEvent().getTitle())
+                .success(true)
                 .build();
     }
 }
