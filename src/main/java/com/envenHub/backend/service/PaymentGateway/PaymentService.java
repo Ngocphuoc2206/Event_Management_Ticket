@@ -17,6 +17,7 @@ import com.envenHub.backend.exception.AppException;
 import com.envenHub.backend.repository.OrderRepository;
 import com.envenHub.backend.repository.PaymentRepository;
 import com.envenHub.backend.repository.UserRepository;
+import com.envenHub.backend.service.NotificationService;
 import com.envenHub.backend.service.TicketIssuingService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +43,9 @@ public class PaymentService {
 
     @Autowired
     private TicketIssuingService ticketIssuingService;
+
+    @Autowired
+    private NotificationService notificationService;
 
     @Transactional
     public PaymentInitResponse initPayment(PaymentInitRequest request, Authentication authentication){
@@ -171,11 +175,14 @@ public class PaymentService {
             order.setStatus(OrderStatus.PAID);
             // trigger issue ticket
             ticketIssuingService.issueTicketsForOrder(order);
+            notificationService.notifyTicketPurchaseSuccess(order);
+
 
         } else if (newStatus == PaymentStatus.FAILED
                 || newStatus == PaymentStatus.CANCELLED
                 || newStatus == PaymentStatus.EXPIRED) {
             order.setStatus(OrderStatus.CANCELLED);
+            notificationService.notifyPaymentFailed(order);
         }
 
         paymentRepository.save(payment);
