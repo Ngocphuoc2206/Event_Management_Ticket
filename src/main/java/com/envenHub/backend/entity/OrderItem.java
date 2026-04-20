@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Data
 @Entity
@@ -23,4 +24,7 @@ public class OrderItem {
     @ManyToOne
     @JoinColumn(name = "ticket_type_id")
     private TicketType ticketType;
+
+    private Boolean checkedIn;
+    private LocalDateTime checkedAt;
 }
