@@ -1,8 +1,11 @@
 package com.envenHub.backend.controller;
 
 import com.envenHub.backend.common.ApiResponse;
+import com.envenHub.backend.dto.request.CheckInRequest;
+import com.envenHub.backend.dto.response.CheckInResponse;
 import com.envenHub.backend.dto.response.IssuedTicketResponse;
 import com.envenHub.backend.entity.IssuedTicket;
+import com.envenHub.backend.service.EventService;
 import com.envenHub.backend.service.TicketIssuingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -15,6 +18,9 @@ import java.util.List;
 public class TicketController {
     @Autowired
     private TicketIssuingService ticketIssuingService;
+
+    @Autowired
+    private EventService eventService;
 
     @GetMapping
     public ApiResponse<List<IssuedTicketResponse>> getMyTickets(
@@ -32,6 +38,14 @@ public class TicketController {
     ) {
         return ApiResponse.<IssuedTicketResponse>builder()
                 .results(ticketIssuingService.getMyTicketDetail(id, authentication))
+                .build();
+    }
+
+    @PostMapping("/check-in")
+    public ApiResponse<CheckInResponse> checkIn(@RequestBody CheckInRequest request,
+                                                Authentication authentication) {
+        return ApiResponse.<CheckInResponse>builder()
+                .results(eventService.checkIn(request, authentication))
                 .build();
     }
 }
