@@ -2,9 +2,7 @@ import Head from "next/head";
 
 import {
   OrganizerAttendeesContent,
-  OrganizerDashboardSidebar,
-  getOrganizerNavigationItems,
-  organizerProfile,
+  OrganizerLayout,
 } from "@/features/organizer";
 
 export default function OrganizerAttendeesPage() {
@@ -14,15 +12,9 @@ export default function OrganizerAttendeesPage() {
         <title>Organizer Attendees | EventHub</title>
       </Head>
 
-      <main className="min-h-screen w-full bg-slate-50 text-slate-900">
-        <div className="flex min-h-screen w-full flex-col lg:flex-row">
-          <OrganizerDashboardSidebar
-            navigationItems={getOrganizerNavigationItems("Attendees")}
-            profile={organizerProfile}
-          />
-          <OrganizerAttendeesContent />
-        </div>
-      </main>
+      <OrganizerLayout title="Attendee Management" activeLabel="Attendees">
+        <OrganizerAttendeesContent />
+      </OrganizerLayout>
     </>
   );
 }
