@@ -1,0 +1,50 @@
+import Head from "next/head";
+import { useRouter } from "next/router";
+
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import {
+  CustomerDashboardContent,
+  CustomerDashboardSidebar,
+  customerNavigationItems,
+  customerProfile,
+  customerRecentOrders,
+  customerStatCards,
+  customerUpcomingTickets,
+} from "@/features/customer";
+
+export default function CustomerDashboardPage() {
+  const { logout } = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    const result = await logout();
+    const redirectTo = result.redirectTo;
+    void router.push(redirectTo);
+  };
+
+  return (
+    <>
+      <Head>
+        <title>Customer Dashboard | EventHub</title>
+      </Head>
+
+      {/* Đồng bộ: Đổi bg-[#eef2f8] thành bg-[#FDFDFF] và thêm font-sans giống hệt Admin Layout */}
+      <main className="min-h-screen w-full bg-[#FDFDFF] font-sans text-slate-900">
+        <div className="flex min-h-screen w-full flex-col xl:flex-row">
+          <CustomerDashboardSidebar
+            navigationItems={customerNavigationItems}
+            profile={customerProfile}
+            onLogout={() => void handleLogout()}
+          />
+          
+          <CustomerDashboardContent
+            customerName={customerProfile.name}
+            statCards={customerStatCards}
+            upcomingTickets={customerUpcomingTickets}
+            recentOrders={customerRecentOrders}
+          />
+        </div>
+      </main>
+    </>
+  );
+}
