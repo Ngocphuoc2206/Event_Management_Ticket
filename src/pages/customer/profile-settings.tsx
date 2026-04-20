@@ -1,11 +1,22 @@
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { useEffect, useId, useMemo, useState, type InputHTMLAttributes, type ReactNode } from "react";
+import {
+  useEffect,
+  useId,
+  useMemo,
+  useState,
+  type InputHTMLAttributes,
+  type ReactNode,
+} from "react";
 import { useForm } from "react-hook-form";
 
 import { useAuth } from "@/features/auth/hooks/useAuth";
-import { changeUserPassword, getUserProfile, updateUserProfile } from "@/features/auth/services/profile.service";
-import type { UserProfileResponse } from "@/features/auth/types";
+import {
+  changeUserPassword,
+  getUserProfile,
+  updateUserProfile,
+} from "@/features/auth/services/profile.service";
+import type { UserProfileResponse, UserResponse } from "@/features/auth/types";
 import {
   getApiErrorMessage,
   getApiResultData,
@@ -43,7 +54,12 @@ const customerProfileNavigationItems: CustomerNavItem[] = [
   { label: "My Tickets", href: "/customer/my-tickets", icon: "ticket" },
   { label: "Order History", href: "/customer/order-history", icon: "history" },
   { label: "Notifications", href: "/customer/notifications", icon: "bell" },
-  { label: "Profile Settings", href: "/customer/profile-settings", icon: "settings", active: true },
+  {
+    label: "Profile Settings",
+    href: "/customer/profile-settings",
+    icon: "settings",
+    active: true,
+  },
 ];
 
 const PHONE_PATTERN = /^[0-9+\s()-]{8,20}$/;
@@ -62,25 +78,64 @@ const INITIAL_PASSWORD_VALUES: PasswordFormValues = {
 };
 
 const INITIAL_NOTIFICATION_SETTINGS: ToggleSetting[] = [
-  { id: "order-confirmations", title: "Order confirmations", description: "Get receipts via email", enabled: true },
-  { id: "event-reminders", title: "Event reminders", description: "24h before event starts", enabled: true },
-  { id: "marketing", title: "Marketing", description: "New events near you", enabled: false },
-  { id: "sms", title: "SMS Notifications", description: "Text alerts to your number", enabled: false },
-  { id: "push", title: "Push Notifications", description: "Browser and app alerts", enabled: true },
+  {
+    id: "order-confirmations",
+    title: "Order confirmations",
+    description: "Get receipts via email",
+    enabled: true,
+  },
+  {
+    id: "event-reminders",
+    title: "Event reminders",
+    description: "24h before event starts",
+    enabled: true,
+  },
+  {
+    id: "marketing",
+    title: "Marketing",
+    description: "New events near you",
+    enabled: false,
+  },
+  {
+    id: "sms",
+    title: "SMS Notifications",
+    description: "Text alerts to your number",
+    enabled: false,
+  },
+  {
+    id: "push",
+    title: "Push Notifications",
+    description: "Browser and app alerts",
+    enabled: true,
+  },
 ];
 
-function NoticeBanner({ message, tone }: { message: string; tone: NoticeTone }) {
+function NoticeBanner({
+  message,
+  tone,
+}: {
+  message: string;
+  tone: NoticeTone;
+}) {
   const toneStyles = {
     error: "border-rose-200 bg-rose-50 text-rose-700",
     success: "border-emerald-200 bg-emerald-50 text-emerald-700",
     warning: "border-amber-200 bg-amber-50 text-amber-700",
   } as const;
 
-  return <div className={`rounded-2xl border px-4 py-3 text-sm ${toneStyles[tone]}`}>{message}</div>;
+  return (
+    <div className={`rounded-2xl border px-4 py-3 text-sm ${toneStyles[tone]}`}>
+      {message}
+    </div>
+  );
 }
 
 function FieldLabel({ children }: { children: ReactNode }) {
-  return <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">{children}</div>;
+  return (
+    <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
+      {children}
+    </div>
+  );
 }
 
 function InputField({
@@ -92,7 +147,9 @@ function InputField({
     <input
       {...props}
       className={`h-14 w-full rounded-xl border bg-[#f3f5f9] px-4 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 ${
-        hasError ? "border-rose-300 focus:border-rose-400" : "border-transparent focus:border-blue-400"
+        hasError
+          ? "border-rose-300 focus:border-rose-400"
+          : "border-transparent focus:border-blue-400"
       } ${className}`}
     />
   );
@@ -107,7 +164,9 @@ function TextAreaField({
     <textarea
       {...props}
       className={`min-h-[92px] w-full resize-none rounded-xl border bg-[#f3f5f9] px-4 py-4 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 ${
-        hasError ? "border-rose-300 focus:border-rose-400" : "border-transparent focus:border-blue-400"
+        hasError
+          ? "border-rose-300 focus:border-rose-400"
+          : "border-transparent focus:border-blue-400"
       } ${className}`}
     />
   );
@@ -131,12 +190,20 @@ function FormField({
   );
 }
 
-function ToggleRow({ item, onToggle }: { item: ToggleSetting; onToggle: (id: string) => void }) {
+function ToggleRow({
+  item,
+  onToggle,
+}: {
+  item: ToggleSetting;
+  onToggle: (id: string) => void;
+}) {
   return (
     <div className="flex items-center justify-between gap-3">
       <div>
         <div className="text-sm font-semibold text-slate-800">{item.title}</div>
-        <div className="mt-1 text-xs leading-5 text-slate-500">{item.description}</div>
+        <div className="mt-1 text-xs leading-5 text-slate-500">
+          {item.description}
+        </div>
       </div>
       <button
         type="button"
@@ -167,13 +234,21 @@ function PasswordStrength({ password }: { password: string }) {
   }, [password]);
 
   const widthClass = ["w-0", "w-1/4", "w-2/4", "w-3/4", "w-full"][score];
-  const colorClass = ["bg-slate-200", "bg-rose-400", "bg-amber-400", "bg-blue-500", "bg-emerald-500"][score];
+  const colorClass = [
+    "bg-slate-200",
+    "bg-rose-400",
+    "bg-amber-400",
+    "bg-blue-500",
+    "bg-emerald-500",
+  ][score];
   const label = ["Too weak", "Weak", "Fair", "Strong", "Very strong"][score];
 
   return (
     <div>
       <div className="h-2 rounded-full bg-slate-200">
-        <div className={`h-2 rounded-full transition-all ${widthClass} ${colorClass}`} />
+        <div
+          className={`h-2 rounded-full transition-all ${widthClass} ${colorClass}`}
+        />
       </div>
       <div className="mt-2 text-xs text-slate-500">{label}</div>
     </div>
@@ -185,13 +260,25 @@ export default function CustomerProfileSettingsPage() {
   const router = useRouter();
   const fileInputId = useId();
   const [userId, setUserId] = useState<string | null>(null);
-  const [profileData, setProfileData] = useState<UserProfileResponse | null>(null);
-  const [profileNotice, setProfileNotice] = useState<{ tone: NoticeTone; message: string } | null>(null);
-  const [passwordNotice, setPasswordNotice] = useState<{ tone: Exclude<NoticeTone, "warning">; message: string } | null>(null);
+  const [profileData, setProfileData] = useState<UserProfileResponse | null>(
+    null,
+  );
+  const [profileNotice, setProfileNotice] = useState<{
+    tone: NoticeTone;
+    message: string;
+  } | null>(null);
+  const [passwordNotice, setPasswordNotice] = useState<{
+    tone: Exclude<NoticeTone, "warning">;
+    message: string;
+  } | null>(null);
   const [isFetchingProfile, setIsFetchingProfile] = useState(true);
-  const [avatarPreview, setAvatarPreview] = useState<string>(customerProfile.avatarSrc);
+  const [avatarPreview, setAvatarPreview] = useState<string>(
+    customerProfile.avatarSrc,
+  );
   const [avatarFileName, setAvatarFileName] = useState<string | null>(null);
-  const [notificationSettings, setNotificationSettings] = useState(INITIAL_NOTIFICATION_SETTINGS);
+  const [notificationSettings, setNotificationSettings] = useState(
+    INITIAL_NOTIFICATION_SETTINGS,
+  );
 
   const {
     register: registerProfile,
@@ -215,17 +302,21 @@ export default function CustomerProfileSettingsPage() {
     defaultValues: INITIAL_PASSWORD_VALUES,
   });
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const watchedAvatar = watchProfile("avatar");
   const watchedPassword = watchPassword("newPassword");
 
   useEffect(() => {
     const accessToken = getStoredAccessToken();
-    const authPayload = resolveAuthPayload({ accessToken: accessToken ?? undefined });
+    const authPayload = resolveAuthPayload({
+      accessToken: accessToken ?? undefined,
+    });
 
     if (!accessToken || !authPayload?.id) {
       setProfileNotice({
         tone: "warning",
-        message: "Your login session is missing. Please sign in again before editing your profile.",
+        message:
+          "Your login session is missing. Please sign in again before editing your profile.",
       });
       setIsFetchingProfile(false);
       return;
@@ -262,7 +353,10 @@ export default function CustomerProfileSettingsPage() {
       } catch (error) {
         setProfileNotice({
           tone: "error",
-          message: getApiErrorMessage(error, "Could not load profile information."),
+          message: getApiErrorMessage(
+            error,
+            "Could not load profile information.",
+          ),
         });
       } finally {
         setIsFetchingProfile(false);
@@ -280,7 +374,10 @@ export default function CustomerProfileSettingsPage() {
       return;
     }
 
-    if (watchedAvatar.startsWith("data:image/") || watchedAvatar.startsWith("/")) {
+    if (
+      watchedAvatar.startsWith("data:image/") ||
+      watchedAvatar.startsWith("/")
+    ) {
       setAvatarPreview(watchedAvatar);
       return;
     }
@@ -338,7 +435,10 @@ export default function CustomerProfileSettingsPage() {
     const reader = new FileReader();
     reader.onload = () => {
       const result = typeof reader.result === "string" ? reader.result : "";
-      setProfileValue("avatar", result, { shouldDirty: true, shouldValidate: true });
+      setProfileValue("avatar", result, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
       setAvatarPreview(result);
       setAvatarFileName(file.name);
       setProfileNotice(null);
@@ -354,7 +454,9 @@ export default function CustomerProfileSettingsPage() {
 
   const handleToggleNotification = (id: string) => {
     setNotificationSettings((current) =>
-      current.map((item) => (item.id === id ? { ...item, enabled: !item.enabled } : item)),
+      current.map((item) =>
+        item.id === id ? { ...item, enabled: !item.enabled } : item,
+      ),
     );
   };
 
@@ -377,13 +479,13 @@ export default function CustomerProfileSettingsPage() {
         avatar: values.avatar.trim() || null,
       });
 
-      const nextProfile = getApiResultData<UserProfileResponse>(response) ?? {
+      const nextProfile = (getApiResultData<UserProfileResponse>(response) ?? {
         ...profileData,
         fullName: values.fullName.trim(),
         phone: values.phone.trim(),
-        bio: values.bio.trim() || null,
-        avatar: values.avatar.trim() || null,
-      };
+        bio: values.bio.trim() || undefined,
+        avatar: values.avatar.trim() || undefined,
+      }) as UserProfileResponse;
 
       setProfileData(nextProfile);
       resetProfileForm({
@@ -396,7 +498,8 @@ export default function CustomerProfileSettingsPage() {
       setAvatarFileName(null);
       setProfileNotice({
         tone: "success",
-        message: getApiResultMessage(response) || "Profile updated successfully.",
+        message:
+          getApiResultMessage(response) || "Profile updated successfully.",
       });
     } catch (error) {
       setProfileNotice({
@@ -426,7 +529,8 @@ export default function CustomerProfileSettingsPage() {
       resetPasswordForm(INITIAL_PASSWORD_VALUES);
       setPasswordNotice({
         tone: "success",
-        message: getApiResultMessage(response) || "Password changed successfully.",
+        message:
+          getApiResultMessage(response) || "Password changed successfully.",
       });
     } catch (error) {
       setPasswordNotice({
@@ -451,7 +555,9 @@ export default function CustomerProfileSettingsPage() {
           />
 
           <section className="flex-1 px-5 py-6 sm:px-8 lg:px-10 xl:px-12">
-            <div className="text-xs font-medium text-slate-500">Dashboard &nbsp;&rsaquo;&nbsp; Profile Settings</div>
+            <div className="text-xs font-medium text-slate-500">
+              Dashboard &nbsp;&rsaquo;&nbsp; Profile Settings
+            </div>
             <header className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-end">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center xl:ml-auto">
                 <button
@@ -459,10 +565,23 @@ export default function CustomerProfileSettingsPage() {
                   className="flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-slate-500 shadow-[0_10px_24px_rgba(148,163,184,0.12)]"
                   aria-label="Help"
                 >
-                  <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="1.8">
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="h-4 w-4 fill-none stroke-current"
+                    strokeWidth="1.8"
+                  >
                     <circle cx="12" cy="12" r="7" />
-                    <path d="M9.75 9.75a2.25 2.25 0 1 1 3.18 2.05c-.86.42-1.43 1.02-1.43 1.95v.25" strokeLinecap="round" />
-                    <circle cx="12" cy="17" r="0.8" fill="currentColor" stroke="none" />
+                    <path
+                      d="M9.75 9.75a2.25 2.25 0 1 1 3.18 2.05c-.86.42-1.43 1.02-1.43 1.95v.25"
+                      strokeLinecap="round"
+                    />
+                    <circle
+                      cx="12"
+                      cy="17"
+                      r="0.8"
+                      fill="currentColor"
+                      stroke="none"
+                    />
                   </svg>
                 </button>
                 <button
@@ -471,38 +590,70 @@ export default function CustomerProfileSettingsPage() {
                   className="flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-slate-500 shadow-[0_10px_24px_rgba(148,163,184,0.12)]"
                   aria-label="Logout"
                 >
-                  <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="1.8">
-                    <path d="M10 7.5H7.75A1.75 1.75 0 0 0 6 9.25v5.5c0 .97.78 1.75 1.75 1.75H10" strokeLinecap="round" />
-                    <path d="M13 8.5 17 12l-4 3.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="h-4 w-4 fill-none stroke-current"
+                    strokeWidth="1.8"
+                  >
+                    <path
+                      d="M10 7.5H7.75A1.75 1.75 0 0 0 6 9.25v5.5c0 .97.78 1.75 1.75 1.75H10"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M13 8.5 17 12l-4 3.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                     <path d="M10 12h7" strokeLinecap="round" />
                   </svg>
                 </button>
               </div>
             </header>
-            <h1 className="mt-5 text-4xl font-bold tracking-tight text-slate-900 sm:text-[2.85rem]">Profile Settings</h1>
+            <h1 className="mt-5 text-4xl font-bold tracking-tight text-slate-900 sm:text-[2.85rem]">
+              Profile Settings
+            </h1>
 
             <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1fr)_290px]">
               <div className="space-y-6">
                 <section className="rounded-[26px] border border-slate-100 bg-white p-5 shadow-[0_18px_45px_rgba(148,163,184,0.14)] sm:p-6">
                   <div className="flex items-center justify-between gap-4">
-                    <h2 className="text-[1.6rem] font-bold tracking-tight text-slate-900">Personal Information</h2>
+                    <h2 className="text-[1.6rem] font-bold tracking-tight text-slate-900">
+                      Personal Information
+                    </h2>
                     <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-blue-600">
                       ID: {profileData?.id ?? "EH-99231"}
                     </div>
                   </div>
 
                   <div className="mt-5 space-y-4">
-                    {profileNotice ? <NoticeBanner message={profileNotice.message} tone={profileNotice.tone} /> : null}
-                    {isFetchingProfile ? <NoticeBanner message="Loading profile information..." tone="warning" /> : null}
+                    {profileNotice ? (
+                      <NoticeBanner
+                        message={profileNotice.message}
+                        tone={profileNotice.tone}
+                      />
+                    ) : null}
+                    {isFetchingProfile ? (
+                      <NoticeBanner
+                        message="Loading profile information..."
+                        tone="warning"
+                      />
+                    ) : null}
                   </div>
 
-                  <form onSubmit={handleProfileSubmit(onSubmitProfile)} className="mt-5 grid gap-5 lg:grid-cols-[88px_1fr]">
+                  <form
+                    onSubmit={handleProfileSubmit(onSubmitProfile)}
+                    className="mt-5 grid gap-5 lg:grid-cols-[88px_1fr]"
+                  >
                     <div className="space-y-3">
                       <div className="h-[88px] w-[88px] overflow-hidden rounded-2xl bg-[#ffd8ca]">
                         {avatarPreview ? (
                           <>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={avatarPreview} alt="Avatar preview" className="h-full w-full object-cover" />
+                            <img
+                              src={avatarPreview}
+                              alt="Avatar preview"
+                              className="h-full w-full object-cover"
+                            />
                           </>
                         ) : (
                           <div className="flex h-full w-full items-center justify-center text-lg font-bold text-slate-500">
@@ -512,20 +663,36 @@ export default function CustomerProfileSettingsPage() {
                       </div>
 
                       <div className="flex gap-3 text-[11px] font-semibold">
-                        <label htmlFor={fileInputId} className="cursor-pointer text-slate-700 hover:text-slate-900">
+                        <label
+                          htmlFor={fileInputId}
+                          className="cursor-pointer text-slate-700 hover:text-slate-900"
+                        >
                           Edit
                         </label>
-                        <button type="button" onClick={handleRemoveAvatar} className="text-rose-500 hover:text-rose-600">
+                        <button
+                          type="button"
+                          onClick={handleRemoveAvatar}
+                          className="text-rose-500 hover:text-rose-600"
+                        >
                           Remove
                         </button>
                       </div>
 
-                      <input id={fileInputId} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+                      <input
+                        id={fileInputId}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleAvatarChange}
+                      />
                     </div>
 
                     <div className="grid gap-4">
                       <div className="grid gap-4 md:grid-cols-2">
-                        <FormField label="Full Name" error={profileErrors.fullName?.message}>
+                        <FormField
+                          label="Full Name"
+                          error={profileErrors.fullName?.message}
+                        >
                           <InputField
                             hasError={Boolean(profileErrors.fullName)}
                             placeholder="Alex Rivera"
@@ -533,13 +700,17 @@ export default function CustomerProfileSettingsPage() {
                               required: "Please enter your full name",
                               minLength: {
                                 value: 2,
-                                message: "Full name must be at least 2 characters",
+                                message:
+                                  "Full name must be at least 2 characters",
                               },
                             })}
                           />
                         </FormField>
 
-                        <FormField label="Phone Number" error={profileErrors.phone?.message}>
+                        <FormField
+                          label="Phone Number"
+                          error={profileErrors.phone?.message}
+                        >
                           <InputField
                             hasError={Boolean(profileErrors.phone)}
                             placeholder="+1 (555) 123-4567"
@@ -576,7 +747,10 @@ export default function CustomerProfileSettingsPage() {
                       </FormField>
 
                       <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_140px] md:items-end">
-                        <FormField label="Avatar URL" error={profileErrors.avatar?.message}>
+                        <FormField
+                          label="Avatar URL"
+                          error={profileErrors.avatar?.message}
+                        >
                           <InputField
                             hasError={Boolean(profileErrors.avatar)}
                             placeholder="https://example.com/avatar.png"
@@ -587,13 +761,17 @@ export default function CustomerProfileSettingsPage() {
                                   return true;
                                 }
 
-                                if (trimmedValue.startsWith("data:image/") || trimmedValue.startsWith("/")) {
+                                if (
+                                  trimmedValue.startsWith("data:image/") ||
+                                  trimmedValue.startsWith("/")
+                                ) {
                                   return true;
                                 }
 
                                 try {
                                   const parsedUrl = new URL(trimmedValue);
-                                  return parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:"
+                                  return parsedUrl.protocol === "http:" ||
+                                    parsedUrl.protocol === "https:"
                                     ? true
                                     : "Avatar URL must use http or https";
                                 } catch {
@@ -614,7 +792,9 @@ export default function CustomerProfileSettingsPage() {
                       </div>
 
                       <div className="text-xs text-slate-400">
-                        {avatarFileName ? `Selected image: ${avatarFileName}` : "You can upload an avatar or paste an image URL."}
+                        {avatarFileName
+                          ? `Selected image: ${avatarFileName}`
+                          : "You can upload an avatar or paste an image URL."}
                       </div>
                     </div>
                   </form>
@@ -623,22 +803,48 @@ export default function CustomerProfileSettingsPage() {
                 <section className="rounded-[26px] border border-slate-100 bg-white p-5 shadow-[0_18px_45px_rgba(148,163,184,0.14)] sm:p-6">
                   <div className="flex items-center gap-3">
                     <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-blue-50 text-blue-600">
-                      <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="1.8">
+                      <svg
+                        viewBox="0 0 24 24"
+                        className="h-4 w-4 fill-none stroke-current"
+                        strokeWidth="1.8"
+                      >
                         <path d="M12 3.5 6 6v5.1c0 3.7 2.5 7.1 6 8.4 3.5-1.3 6-4.7 6-8.4V6l-6-2.5Z" />
-                        <path d="M9.75 11.75V10a2.25 2.25 0 1 1 4.5 0v1.75" strokeLinecap="round" />
-                        <rect x="8.5" y="11.75" width="7" height="5.75" rx="1.25" />
+                        <path
+                          d="M9.75 11.75V10a2.25 2.25 0 1 1 4.5 0v1.75"
+                          strokeLinecap="round"
+                        />
+                        <rect
+                          x="8.5"
+                          y="11.75"
+                          width="7"
+                          height="5.75"
+                          rx="1.25"
+                        />
                       </svg>
                     </span>
-                    <h2 className="text-[1.55rem] font-bold tracking-tight text-slate-900">Security & Password</h2>
+                    <h2 className="text-[1.55rem] font-bold tracking-tight text-slate-900">
+                      Security & Password
+                    </h2>
                   </div>
 
                   <div className="mt-5 space-y-4">
-                    {passwordNotice ? <NoticeBanner message={passwordNotice.message} tone={passwordNotice.tone} /> : null}
+                    {passwordNotice ? (
+                      <NoticeBanner
+                        message={passwordNotice.message}
+                        tone={passwordNotice.tone}
+                      />
+                    ) : null}
                   </div>
 
-                  <form onSubmit={handlePasswordSubmit(onSubmitPassword)} className="mt-5">
+                  <form
+                    onSubmit={handlePasswordSubmit(onSubmitPassword)}
+                    className="mt-5"
+                  >
                     <div className="grid gap-4 md:grid-cols-3">
-                      <FormField label="Current Password" error={passwordErrors.currentPassword?.message}>
+                      <FormField
+                        label="Current Password"
+                        error={passwordErrors.currentPassword?.message}
+                      >
                         <InputField
                           type="password"
                           hasError={Boolean(passwordErrors.currentPassword)}
@@ -649,7 +855,10 @@ export default function CustomerProfileSettingsPage() {
                         />
                       </FormField>
 
-                      <FormField label="New Password" error={passwordErrors.newPassword?.message}>
+                      <FormField
+                        label="New Password"
+                        error={passwordErrors.newPassword?.message}
+                      >
                         <InputField
                           type="password"
                           hasError={Boolean(passwordErrors.newPassword)}
@@ -658,22 +867,29 @@ export default function CustomerProfileSettingsPage() {
                             required: "Please enter a new password",
                             minLength: {
                               value: 8,
-                              message: "New password must be at least 8 characters",
+                              message:
+                                "New password must be at least 8 characters",
                             },
                             validate: (value) =>
-                              value !== getPasswordValues("currentPassword") || "New password must differ from current password",
+                              value !== getPasswordValues("currentPassword") ||
+                              "New password must differ from current password",
                           })}
                         />
                       </FormField>
 
-                      <FormField label="Confirm New" error={passwordErrors.confirmPassword?.message}>
+                      <FormField
+                        label="Confirm New"
+                        error={passwordErrors.confirmPassword?.message}
+                      >
                         <InputField
                           type="password"
                           hasError={Boolean(passwordErrors.confirmPassword)}
                           placeholder="........"
                           {...registerPassword("confirmPassword", {
                             required: "Please confirm your new password",
-                            validate: (value) => value === getPasswordValues("newPassword") || "Passwords do not match",
+                            validate: (value) =>
+                              value === getPasswordValues("newPassword") ||
+                              "Passwords do not match",
                           })}
                         />
                       </FormField>
@@ -681,7 +897,9 @@ export default function CustomerProfileSettingsPage() {
 
                     <div className="mt-5 grid gap-4 md:grid-cols-[minmax(0,1fr)_180px] md:items-end">
                       <div>
-                        <div className="text-xs text-slate-400">Last changed: 3 months ago</div>
+                        <div className="text-xs text-slate-400">
+                          Last changed: 3 months ago
+                        </div>
                         <div className="mt-3 max-w-md">
                           <PasswordStrength password={watchedPassword} />
                         </div>
@@ -701,18 +919,27 @@ export default function CustomerProfileSettingsPage() {
 
               <aside className="space-y-6">
                 <section className="rounded-[22px] border border-slate-100 bg-white p-5 shadow-[0_18px_45px_rgba(148,163,184,0.14)]">
-                  <h3 className="text-2xl font-bold tracking-tight text-slate-900">Notifications</h3>
+                  <h3 className="text-2xl font-bold tracking-tight text-slate-900">
+                    Notifications
+                  </h3>
                   <div className="mt-6 space-y-5">
                     {notificationSettings.map((item) => (
-                      <ToggleRow key={item.id} item={item} onToggle={handleToggleNotification} />
+                      <ToggleRow
+                        key={item.id}
+                        item={item}
+                        onToggle={handleToggleNotification}
+                      />
                     ))}
                   </div>
                 </section>
 
                 <section className="rounded-[22px] border border-rose-100 bg-white p-5 shadow-[0_18px_45px_rgba(148,163,184,0.12)]">
-                  <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-rose-500">Danger Zone</div>
+                  <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-rose-500">
+                    Danger Zone
+                  </div>
                   <p className="mt-4 text-sm leading-7 text-slate-500">
-                    Deleting your account is permanent. All your ticket history and saved data will be removed from our servers.
+                    Deleting your account is permanent. All your ticket history
+                    and saved data will be removed from our servers.
                   </p>
                   <button
                     type="button"
@@ -723,8 +950,12 @@ export default function CustomerProfileSettingsPage() {
                 </section>
 
                 <section className="overflow-hidden rounded-[22px] bg-gradient-to-br from-blue-700 to-violet-600 p-5 text-white shadow-[0_18px_45px_rgba(76,92,193,0.25)]">
-                  <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-100">Pro Feature</div>
-                  <h3 className="mt-4 text-[1.65rem] font-bold leading-tight">Unlock Early Access to Festivals</h3>
+                  <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-100">
+                    Pro Feature
+                  </div>
+                  <h3 className="mt-4 text-[1.65rem] font-bold leading-tight">
+                    Unlock Early Access to Festivals
+                  </h3>
                   <button
                     type="button"
                     className="mt-5 inline-flex rounded-xl bg-white/20 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/30"

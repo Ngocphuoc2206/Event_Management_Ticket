@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
-import { OrganizerMetaFooter } from "../shared/OrganizerMetaFooter";
+import { OrganizerMetaFooter } from "@/features/organizer/shared/OrganizerMetaFooter";
 
 type ChannelKey = "email" | "push" | "sms";
 

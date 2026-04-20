@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import UserLayout from "@/components/templates/UserLayout/UserLayout";
 import { useState, useMemo } from "react";
 import Link from "next/link";
@@ -171,8 +172,8 @@ export default function EventsPage() {
       <div className="bg-[#F9FAFB] min-h-screen py-16 px-6">
         <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-10">
           {/* SIDEBAR BỘ LỌC */}
-          <aside className="w-full lg:w-72 space-y-8 flex-shrink-0">
-            <div className="bg-white p-7 rounded-[32px] border border-gray-100 shadow-sm">
+          <aside className="w-full lg:w-72 space-y-8 shrink-0">
+            <div className="bg-white p-7 rounded-4xl border border-gray-100 shadow-sm">
               <h4 className="font-black text-gray-900 mb-6 uppercase text-xs tracking-widest flex items-center gap-2">
                 <svg
                   className="w-4 h-4 text-indigo-500"
@@ -221,7 +222,7 @@ export default function EventsPage() {
               </div>
             </div>
 
-            <div className="bg-white p-7 rounded-[32px] border border-gray-100 shadow-sm">
+            <div className="bg-white p-7 rounded-4xl border border-gray-100 shadow-sm">
               <h4 className="font-black text-gray-900 mb-6 uppercase text-xs tracking-widest flex items-center gap-2">
                 <svg
                   className="w-4 h-4 text-indigo-500"

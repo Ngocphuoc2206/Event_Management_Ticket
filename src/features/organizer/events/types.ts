@@ -22,10 +22,6 @@ export type OrganizerCreateEventPayload = {
   minPrice: number;
 };
 
-export type OrganizerEventMutationPayload = Partial<OrganizerCreateEventPayload> & {
-  status?: OrganizerEventStatus | string;
-};
-
 export type OrganizerEvent = OrganizerCreateEventPayload & {
   id?: string;
   organizerId?: string;

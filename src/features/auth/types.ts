@@ -23,7 +23,7 @@ export type UserResponse = {
   fullName?: string;
   email?: string;
   phone?: string;
-  avatar?: string;
+  avatar?: string | null;
   bio?: string;
   password?: string;
 };

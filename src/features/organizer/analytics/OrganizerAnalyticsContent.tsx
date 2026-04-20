@@ -154,7 +154,7 @@ export function OrganizerAnalyticsContent() {
 
   return (
     <section className="flex-1 bg-slate-50 text-zinc-900">
-      <header className="flex min-h-20 w-full flex-wrap items-center justify-between gap-4 border-b border-gray-100 bg-slate-50 px-5 py-4 sm:px-8 lg:px-10">
+      <header className="flex min-h-20 w-full flex-wrap items-center justify-between gap-4 border-b border-slate-100 bg-white/80 px-8 py-4 backdrop-blur-xl">
         <div className="relative w-full max-w-xl">
           <Search className="pointer-events-none absolute left-4 top-3.5 h-4 w-4 text-gray-700" />
           <input
@@ -210,7 +210,7 @@ export function OrganizerAnalyticsContent() {
 
             <button
               type="button"
-              className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-sky-700 to-violet-700 px-5 py-2.5 text-sm font-semibold text-white shadow-[0px_8px_10px_-6px_rgba(0,88,190,0.1),0px_20px_25px_-5px_rgba(0,88,190,0.1)]"
+              className="inline-flex items-center gap-2 rounded-2xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-[0px_8px_10px_-6px_rgba(0,88,190,0.1),0px_20px_25px_-5px_rgba(0,88,190,0.1)]"
             >
               <Download className="h-4 w-4" />
               Export Report
@@ -227,10 +227,10 @@ export function OrganizerAnalyticsContent() {
             return (
               <article
                 key={card.title}
-                className="flex flex-col justify-between rounded-3xl bg-white p-8 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline outline-1 outline-slate-300/5"
+                className="flex flex-col justify-between rounded-[32px] bg-white p-8 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] border border-slate-100"
               >
                 <div className="mb-6 flex items-start justify-between">
-                  <div className={`rounded-3xl p-3 ${tone.iconBg}`}>{icon}</div>
+                  <div className={`rounded-[32px] p-3 ${tone.iconBg}`}>{icon}</div>
                   <span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-bold text-green-700">{card.change}</span>
                 </div>
 
@@ -253,7 +253,7 @@ export function OrganizerAnalyticsContent() {
             return (
               <article
                 key={card.label}
-                className="rounded-3xl bg-white p-6 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline outline-1 outline-slate-300/5"
+                className="rounded-[32px] bg-white p-6 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] border border-slate-100"
               >
                 <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${tone.iconBg}`}>{card.label}</span>
                 <p className="mt-4 text-xl font-bold text-zinc-900">{card.value}</p>
@@ -264,7 +264,7 @@ export function OrganizerAnalyticsContent() {
         </section>
 
         <section className="grid gap-4 xl:grid-cols-2">
-          <article className="rounded-3xl bg-white p-8 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline outline-1 outline-slate-300/5">
+          <article className="rounded-[32px] bg-white p-8 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] border border-slate-100">
             <h3 className="mb-6 text-lg font-bold text-zinc-900">Revenue Chart</h3>
             <div className="relative h-56 overflow-hidden rounded-2xl bg-white">
               <div className="absolute inset-0 flex flex-col justify-between">
@@ -283,7 +283,7 @@ export function OrganizerAnalyticsContent() {
             </div>
           </article>
 
-          <article className="rounded-3xl bg-white p-8 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline outline-1 outline-slate-300/5">
+          <article className="rounded-[32px] bg-white p-8 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] border border-slate-100">
             <h3 className="mb-6 text-lg font-bold text-zinc-900">Tickets Sold Chart</h3>
             <div className="relative h-56 overflow-hidden rounded-2xl bg-white">
               <div className="absolute inset-0 flex flex-col justify-between">
@@ -304,7 +304,7 @@ export function OrganizerAnalyticsContent() {
         </section>
 
         <section className="grid gap-4 xl:grid-cols-[1.25fr_1fr]">
-          <article className="rounded-3xl bg-white p-8 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline outline-1 outline-slate-300/5">
+          <article className="rounded-[32px] bg-white p-8 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] border border-slate-100">
             <h3 className="mb-6 text-xl font-bold leading-7 text-zinc-900">Revenue by Event</h3>
             <div className="space-y-6">
               {REVENUE_BARS.map((bar) => (
@@ -314,14 +314,14 @@ export function OrganizerAnalyticsContent() {
                     <span>{bar.revenue}</span>
                   </div>
                   <div className="h-3 overflow-hidden rounded-full bg-gray-100">
-                    <div className="h-3 rounded-full bg-gradient-to-r from-sky-700 to-violet-700" style={{ width: `${bar.progress}%` }} />
+                    <div className="h-3 rounded-full bg-indigo-600" style={{ width: `${bar.progress}%` }} />
                   </div>
                 </div>
               ))}
             </div>
           </article>
 
-          <article className="overflow-hidden rounded-3xl bg-white shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline outline-1 outline-slate-300/5">
+          <article className="overflow-hidden rounded-[32px] bg-white shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] border border-slate-100">
             <div className="border-b border-slate-300/10 p-6">
               <h3 className="text-xl font-bold leading-7 text-zinc-900">Top Performing Events</h3>
             </div>

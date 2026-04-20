@@ -7,6 +7,7 @@ import { useRouter } from "next/router";
 import { useMemo, useState } from "react";
 
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { OrganizerBrandLogo } from "@/features/organizer/shared/OrganizerBrandLogo";
 import { OrganizerDashboardIcon } from "./OrganizerDashboardIcons";
 import type { OrganizerNavItem, OrganizerProfile } from "../types";
 
@@ -54,48 +55,33 @@ export function OrganizerDashboardSidebar({ navigationItems, profile }: Organize
   };
 
   return (
-    <aside className="flex w-full flex-col border-b border-slate-300/40 bg-gray-100 lg:sticky lg:top-0 lg:h-screen lg:w-72 lg:shrink-0 lg:overflow-y-auto lg:border-b-0 lg:border-r lg:border-slate-300/30">
-      <div className="p-8">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-700 to-violet-700 text-white">
-            <OrganizerDashboardIcon type="events" className="h-5 w-5" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold leading-7 text-zinc-900">EventHub</h1>
-            <p className="text-xs tracking-wide text-gray-700">Organizer Portal</p>
-          </div>
-        </div>
-      </div>
+    <aside className="flex w-full flex-col border-b border-slate-100 bg-white lg:sticky lg:top-0 lg:h-screen lg:w-[280px] lg:shrink-0 lg:overflow-y-auto lg:border-b-0 lg:border-r">
+      <div className="p-7">
+        <OrganizerBrandLogo variant="sidebar" />
 
-      <nav className="flex flex-1 flex-col gap-1 overflow-hidden px-4 pb-5">
+        <nav className="space-y-1.5">
         {resolvedNavigationItems.map((item) => (
           <Link
             key={item.label}
             href={item.href}
-            className={`flex items-center gap-4 rounded-2xl px-4 py-3.5 transition ${
+            className={`group flex items-center gap-3.5 rounded-full px-5 py-3 transition-all duration-300 ${
               item.active
-                ? "bg-sky-700/10 text-sky-700"
-                : "text-gray-700 hover:bg-white/70 hover:text-slate-900"
+                ? "bg-blue-600 text-white shadow-md shadow-blue-100"
+                : "text-slate-600 hover:bg-slate-50 hover:text-blue-700"
             }`}
           >
-            <OrganizerDashboardIcon type={item.icon} className="h-[18px] w-[18px]" />
-            <span className={`text-base leading-6 ${item.active ? "font-medium" : "font-normal"}`}>{item.label}</span>
+            <OrganizerDashboardIcon
+              type={item.icon}
+              className={`h-5 w-5 ${item.active ? "" : "text-slate-400 group-hover:text-blue-600"}`}
+            />
+            <span className={`text-sm ${item.active ? "font-bold" : "font-semibold"}`}>{item.label}</span>
           </Link>
         ))}
-      </nav>
+        </nav>
+      </div>
 
-      <div className="space-y-3 p-6 pt-4">
-        <button
-          type="button"
-          onClick={() => void handleLogout()}
-          disabled={isLoggingOut}
-          className="flex w-full items-center gap-3 rounded-2xl border border-slate-300/60 bg-white px-4 py-3 text-sm font-semibold text-gray-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          <LogOut className="h-4 w-4" />
-          <span>{isLoggingOut ? "Dang dang xuat..." : "Dang xuat"}</span>
-        </button>
-
-        <div className="flex items-center gap-3 rounded-2xl bg-zinc-200 p-4">
+      <div className="mt-auto space-y-2 border-t border-slate-100 p-7">
+        <div className="flex items-center gap-3 rounded-2xl bg-slate-50 p-4">
           <div className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-white">
             {profile.avatarSrc ? (
               <Image src={profile.avatarSrc} alt={`${profile.name} avatar`} fill sizes="40px" className="object-cover" />
@@ -110,6 +96,16 @@ export function OrganizerDashboardSidebar({ navigationItems, profile }: Organize
             <p className="truncate text-xs text-gray-700">{profile.role}</p>
           </div>
         </div>
+
+        <button
+          type="button"
+          onClick={() => void handleLogout()}
+          disabled={isLoggingOut}
+          className="group flex w-full items-center gap-3.5 rounded-full px-5 py-3 text-sm font-bold text-rose-500 transition-all duration-300 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <LogOut className="h-5 w-5 transition-transform group-hover:-translate-x-0.5" />
+          <span>{isLoggingOut ? "Signing out..." : "Sign Out"}</span>
+        </button>
       </div>
     </aside>
   );

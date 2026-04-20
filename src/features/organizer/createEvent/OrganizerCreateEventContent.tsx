@@ -1,7 +1,6 @@
 import {
   Bell,
   CalendarDays,
-  CheckCircle2,
   ChevronDown,
   Globe,
   Info,
@@ -10,96 +9,15 @@ import {
   Search,
   Settings,
   UserCircle2,
-  AlertCircle,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/router";
-import { useCallback, useMemo, useState } from "react";
 
-import { getApiErrorMessage, getApiResultData, isApiResponse } from "@/features/auth/utils";
-import { createOrganizerEvent } from "@/features/organizer/events/services/create-event.service";
-import type { OrganizerCreateEventPayload, OrganizerEvent } from "@/features/organizer/events/types";
-
-function toIsoWithOffset(daysOffset: number, hoursOffset = 0) {
-  const date = new Date();
-  date.setDate(date.getDate() + daysOffset);
-  date.setHours(date.getHours() + hoursOffset);
-  return date.toISOString();
-}
+import { OrganizerBrandLogo } from "@/features/organizer/shared/OrganizerBrandLogo";
 
 export function OrganizerCreateEventContent() {
-  type ToastState = {
-    tone: "success" | "error";
-    message: string;
-  };
-
-  const router = useRouter();
-  const [title, setTitle] = useState("");
-  const [category, setCategory] = useState("");
-  const [description, setDescription] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
-  const [toast, setToast] = useState<ToastState | null>(null);
-
-  const showToast = useCallback((nextToast: ToastState) => {
-    setToast(nextToast);
-    window.setTimeout(() => {
-      setToast(null);
-    }, 2500);
-  }, []);
-
-  const canSave = useMemo(
-    () => title.trim() && category.trim() && description.trim(),
-    [title, category, description],
-  );
-
-  const handleSaveDraft = async () => {
-    if (!canSave || isSaving) {
-      return;
-    }
-
-    setIsSaving(true);
-    setToast(null);
-
-    try {
-      const safeDescription = description.trim();
-      const payload: OrganizerCreateEventPayload = {
-        title: title.trim(),
-        shortDescription: safeDescription.slice(0, 140),
-        description: safeDescription,
-        category: category.trim(),
-        venueName: "TBD Venue",
-        address: "Updating soon",
-        city: "TBD",
-        bannerUrl: "https://placehold.co/1200x675?text=Event+Banner",
-        startTime: toIsoWithOffset(7),
-        endTime: toIsoWithOffset(7, 4),
-        visibility: "PUBLIC",
-        minPrice: 0,
-      };
-
-      const response = await createOrganizerEvent(payload);
-
-      if (isApiResponse(response) && typeof response.code === "number" && response.code !== 0) {
-        throw new Error(response.message || "Khong the tao event moi.");
-      }
-
-      const createdEvent = getApiResultData(response) as OrganizerEvent | undefined;
-
-      showToast({ tone: "success", message: "Da tao event draft thanh cong." });
-
-      if (createdEvent?.id) {
-        void router.push(`/organizer/events/edit/${createdEvent.id}`);
-      }
-    } catch (error) {
-      showToast({ tone: "error", message: getApiErrorMessage(error, "Khong the tao event moi. Vui long thu lai.") });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
   return (
     <section className="relative flex-1 overflow-hidden bg-slate-50">
-      <header className="flex h-20 items-center justify-between border-b border-slate-300/10 bg-slate-50/80 px-5 backdrop-blur-[6px] sm:px-8 lg:px-10 xl:px-10">
+      <header className="flex h-20 items-center justify-between border-b border-slate-100 bg-white/80 px-8 backdrop-blur-xl">
         <div className="flex-1 max-w-[576px]">
           <div className="relative">
             <div className="inline-flex h-11 w-full items-start justify-center overflow-hidden rounded-2xl bg-gray-100 py-3.5 pl-12 pr-4">
@@ -130,29 +48,12 @@ export function OrganizerCreateEventContent() {
           </button>
 
           <div className="h-8 w-px bg-slate-300/30" />
-          <p className="text-sm font-bold tracking-wider text-gray-700">ORGANIZER DASHBOARD</p>
+          <OrganizerBrandLogo />
         </div>
       </header>
 
       <div className="px-5 py-8 sm:px-8 lg:px-10 xl:px-10">
         <div className="w-full space-y-12">
-          {toast ? (
-            <div className="fixed right-6 top-6 z-50">
-              <div
-                className={`inline-flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold shadow-lg ${
-                  toast.tone === "success" ? "bg-emerald-600 text-white" : "bg-rose-600 text-white"
-                }`}
-              >
-                {toast.tone === "success" ? (
-                  <CheckCircle2 className="h-4 w-4" />
-                ) : (
-                  <AlertCircle className="h-4 w-4" />
-                )}
-                {toast.message}
-              </div>
-            </div>
-          ) : null}
-
           <section className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
             <div className="max-w-[512px] space-y-3">
               <h1 className="text-4xl font-bold leading-[48px] text-zinc-900 sm:text-5xl">Create New Event</h1>
@@ -165,7 +66,7 @@ export function OrganizerCreateEventContent() {
                 <p className="text-sm font-bold text-zinc-900">Basic Info</p>
               </div>
               <div className="h-2 overflow-hidden rounded-full bg-gray-200">
-                <div className="h-full w-12 rounded-full bg-gradient-to-r from-sky-700 to-violet-700" />
+                <div className="h-full w-12 rounded-full bg-indigo-600" />
               </div>
               <div className="text-right text-[10px] leading-4 text-gray-700">20% COMPLETED</div>
             </div>
@@ -173,14 +74,12 @@ export function OrganizerCreateEventContent() {
 
           <section className="grid gap-6 xl:grid-cols-[1.65fr_1fr]">
             <div className="space-y-6 pb-10">
-              <article className="relative rounded-3xl bg-white px-8 pb-12 pt-8 outline outline-1 outline-slate-300/5 shadow-[0px_32px_64px_-15px_rgba(0,0,0,0.06)]">
+              <article className="relative rounded-[32px] bg-white px-8 pb-12 pt-8 border border-slate-100 shadow-[0px_32px_64px_-15px_rgba(0,0,0,0.06)]">
                 <div className="space-y-8">
                   <div className="space-y-2">
                     <label className="text-xs font-bold uppercase tracking-wider text-gray-700">Event Title</label>
                     <input
                       type="text"
-                      value={title}
-                      onChange={(event) => setTitle(event.target.value)}
                       placeholder="e.g. Summer Music Festival 2024"
                       className="w-full rounded-2xl bg-gray-100 px-6 py-4 text-base text-zinc-900 outline-none ring-sky-500 transition focus:ring-2"
                     />
@@ -190,17 +89,13 @@ export function OrganizerCreateEventContent() {
                     <div className="space-y-2">
                       <label className="text-xs font-bold uppercase tracking-wider text-gray-700">Category</label>
                       <div className="relative rounded-2xl bg-gray-100">
-                        <select
-                          value={category}
-                          onChange={(event) => setCategory(event.target.value)}
-                          className="h-[56px] w-full appearance-none rounded-2xl bg-transparent px-6 pr-14 text-base text-zinc-900 outline-none ring-sky-500 transition focus:ring-2"
-                        >
+                        <select className="h-[56px] w-full appearance-none rounded-2xl bg-transparent px-6 pr-14 text-base text-zinc-900 outline-none ring-sky-500 transition focus:ring-2">
                           <option value="">Select a category</option>
-                          <option value="Music">Music</option>
-                          <option value="Technology">Technology</option>
-                          <option value="Business">Business</option>
-                          <option value="Sports">Sports</option>
-                          <option value="Education">Education</option>
+                          <option value="music">Music</option>
+                          <option value="technology">Technology</option>
+                          <option value="business">Business</option>
+                          <option value="sports">Sports</option>
+                          <option value="education">Education</option>
                         </select>
                         <ChevronDown className="absolute right-5 top-4 h-6 w-6 text-gray-500" />
                       </div>
@@ -218,7 +113,7 @@ export function OrganizerCreateEventContent() {
                             Public
                           </span>
                         </button>
-                        <button type="button" disabled className="flex-1 py-4 text-sm font-medium text-gray-400">
+                        <button type="button" className="flex-1 py-4 text-sm font-medium text-gray-700">
                           <span className="inline-flex items-center gap-2">
                             <Lock className="h-3 w-3" />
                             Private
@@ -231,8 +126,6 @@ export function OrganizerCreateEventContent() {
                   <div className="space-y-2">
                     <label className="text-xs font-bold uppercase tracking-wider text-gray-700">Description</label>
                     <textarea
-                      value={description}
-                      onChange={(event) => setDescription(event.target.value)}
                       placeholder="What is your event about? Share the highlights and what guests can expect..."
                       rows={6}
                       className="w-full resize-y rounded-2xl bg-gray-100 px-6 py-4 text-base leading-6 text-zinc-900 outline-none ring-sky-500 transition focus:ring-2"
@@ -242,17 +135,12 @@ export function OrganizerCreateEventContent() {
               </article>
 
               <div className="flex items-center justify-between pt-4">
-                <button
-                  type="button"
-                  onClick={() => void handleSaveDraft()}
-                  disabled={!canSave || isSaving}
-                  className="rounded-2xl px-8 py-4 text-base font-bold text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {isSaving ? "Saving..." : "Save Draft"}
+                <button type="button" className="rounded-2xl px-8 py-4 text-base font-bold text-gray-700">
+                  Save Draft
                 </button>
                 <Link
                   href="/organizer/create-event/location-time"
-                  className="relative inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-sky-700 to-violet-700 px-12 py-4 text-base font-bold text-white shadow-[0px_8px_10px_-6px_rgba(0,88,190,0.20),0px_20px_25px_-5px_rgba(0,88,190,0.20)]"
+                  className="relative inline-flex items-center gap-2 rounded-2xl bg-indigo-600 px-12 py-4 text-base font-bold text-white shadow-[0px_8px_10px_-6px_rgba(0,88,190,0.20),0px_20px_25px_-5px_rgba(0,88,190,0.20)]"
                 >
                   Continue to Location
                   <ChevronDown className="h-4 w-4 -rotate-90" />
@@ -261,8 +149,8 @@ export function OrganizerCreateEventContent() {
             </div>
 
             <aside className="space-y-6">
-              <article className="overflow-hidden rounded-3xl bg-gray-100 outline outline-1 outline-slate-300/10">
-                <div className="relative h-48 bg-gradient-to-br from-sky-700 to-violet-700">
+              <article className="overflow-hidden rounded-[32px] bg-gray-100 outline outline-1 outline-slate-300/10">
+                <div className="relative h-48 bg-gradient-to-br from-blue-600 to-indigo-700">
                   <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_white_10%,_transparent_60%)]" />
                   <div className="absolute bottom-4 left-4 rounded-full bg-white/20 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-white backdrop-blur-[6px]">
                     Preview
@@ -270,7 +158,7 @@ export function OrganizerCreateEventContent() {
                 </div>
 
                 <div className="space-y-4 p-6">
-                  <h3 className="max-w-[260px] text-2xl font-bold leading-8 text-zinc-900">{title.trim() || "Your Event Title Will Appear Here"}</h3>
+                  <h3 className="max-w-[260px] text-2xl font-bold leading-8 text-zinc-900">Your Event Title Will Appear Here</h3>
 
                   <div className="flex items-center gap-4 text-xs font-medium text-gray-700">
                     <span className="inline-flex items-center gap-1">
@@ -282,10 +170,21 @@ export function OrganizerCreateEventContent() {
                       Virtual or Physical
                     </span>
                   </div>
+
+                  <div className="flex items-center justify-between border-t border-zinc-200/30 pt-4">
+                    <div className="flex items-center">
+                      <div className="h-6 w-6 rounded-full border border-slate-50 bg-blue-100" />
+                      <div className="-ml-1 h-6 w-6 rounded-full border border-slate-50 bg-purple-200" />
+                      <div className="-ml-1 flex h-6 w-6 items-center justify-center rounded-full border border-slate-50 bg-zinc-200 text-[8px] font-bold text-zinc-900">
+                        +12
+                      </div>
+                    </div>
+                    <span className="text-xs font-bold text-sky-700">Live Preview</span>
+                  </div>
                 </div>
               </article>
 
-              <article className="rounded-3xl bg-gradient-to-br from-violet-100 to-purple-100/60 p-6 outline outline-1 outline-violet-700/10">
+              <article className="rounded-[32px] bg-gradient-to-br from-violet-100 to-purple-100/60 p-6 outline outline-1 outline-violet-700/10">
                 <div className="flex items-start gap-3">
                   <Info className="mt-0.5 h-5 w-5 text-violet-700" />
                   <div className="space-y-1">
@@ -295,6 +194,27 @@ export function OrganizerCreateEventContent() {
                     </p>
                   </div>
                 </div>
+              </article>
+
+              <article className="rounded-[32px] bg-white p-6 border border-slate-100">
+                <ul className="space-y-6">
+                  <li className="flex items-center gap-3">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-sky-700 text-[10px] font-bold text-white">1</span>
+                    <span className="text-sm font-bold text-zinc-900">Basic Information</span>
+                  </li>
+                  <li className="flex items-center gap-3 opacity-40">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-200 text-[10px] font-bold text-gray-700">2</span>
+                    <span className="text-sm font-medium text-zinc-900">Location &amp; Time</span>
+                  </li>
+                  <li className="flex items-center gap-3 opacity-40">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-200 text-[10px] font-bold text-gray-700">3</span>
+                    <span className="text-sm font-medium text-zinc-900">Ticket Pricing</span>
+                  </li>
+                  <li className="flex items-center gap-3 opacity-40">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-200 text-[10px] font-bold text-gray-700">4</span>
+                    <span className="text-sm font-medium text-zinc-900">Event Media</span>
+                  </li>
+                </ul>
               </article>
             </aside>
           </section>

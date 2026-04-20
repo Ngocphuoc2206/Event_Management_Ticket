@@ -2,6 +2,7 @@ import Image from "next/image";
 import { UserCircle2 } from "lucide-react";
 
 import { OrganizerDashboardIcon } from "./OrganizerDashboardIcons";
+import { OrganizerBrandLogo } from "../shared/OrganizerBrandLogo";
 import { OrganizerMetaFooter } from "../shared/OrganizerMetaFooter";
 import type { OrganizerOrderRow, OrganizerStatCard } from "../types";
 
@@ -68,7 +69,7 @@ function StatCard({ card }: { card: OrganizerStatCard }) {
   const toneStyle = KPI_TONE_STYLE[card.tone];
 
   return (
-    <article className="relative h-44 rounded-3xl bg-white p-[25px] outline outline-1 outline-slate-300/5 shadow-[0px_32px_64px_-12px_rgba(25,28,30,0.06)]">
+    <article className="relative h-44 rounded-[32px] bg-white p-[25px] border border-slate-100 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${toneStyle.iconBox}`}>
           <OrganizerDashboardIcon type={card.icon} className={`h-[18px] w-[18px] ${toneStyle.icon}`} />
@@ -99,7 +100,7 @@ function StatCard({ card }: { card: OrganizerStatCard }) {
 export function OrganizerDashboardContent({ statCards, recentOrders }: OrganizerDashboardContentProps) {
   return (
     <section className="flex-1">
-      <header className="flex h-20 items-center justify-between border-b border-slate-300/10 bg-slate-50/80 px-5 backdrop-blur-[6px] sm:px-8 lg:px-10 xl:px-10">
+      <header className="flex h-20 items-center justify-between border-b border-slate-100 bg-white/80 px-8 backdrop-blur-xl">
         <div className="flex-1 max-w-[576px]">
           <div className="relative">
             <div className="inline-flex h-11 w-full items-start justify-center overflow-hidden rounded-2xl bg-gray-100 py-3.5 pl-12 pr-4">
@@ -126,7 +127,7 @@ export function OrganizerDashboardContent({ statCards, recentOrders }: Organizer
             <OrganizerDashboardIcon type="settings" className="h-5 w-5" />
           </button>
           <div className="h-8 w-px bg-slate-300/30" />
-          <p className="text-sm font-bold tracking-wider text-gray-700">ORGANIZER DASHBOARD</p>
+          <OrganizerBrandLogo />
         </div>
       </header>
 
@@ -146,7 +147,7 @@ export function OrganizerDashboardContent({ statCards, recentOrders }: Organizer
             </button>
             <button
               type="button"
-              className="relative inline-flex h-12 min-w-[176px] items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-sky-700 to-violet-700 px-6 text-sm font-semibold leading-5 text-white shadow-[0px_32px_64px_-12px_rgba(25,28,30,0.06)] transition hover:brightness-105"
+              className="relative inline-flex h-12 min-w-[176px] items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-6 text-sm font-semibold leading-5 text-white shadow-sm transition hover:brightness-105"
             >
               <span className="flex h-4 w-4 items-center justify-center rounded-full border border-white/60 text-xs leading-none">+</span>
               Create New Event
@@ -163,7 +164,7 @@ export function OrganizerDashboardContent({ statCards, recentOrders }: Organizer
         </section>
 
         <section id="analytics" className="mt-12 grid gap-5 xl:grid-cols-[2fr_1fr]">
-          <article className="relative rounded-3xl bg-white p-8 outline outline-1 outline-slate-300/5 shadow-[0px_32px_64px_-12px_rgba(25,28,30,0.06)]">
+          <article className="relative rounded-[32px] bg-white p-8 border border-slate-100 shadow-sm">
             <div className="flex items-center justify-between">
               <h3 className="text-xl font-bold leading-7 text-zinc-900">Ticket Sales Trend</h3>
               <button
@@ -179,7 +180,7 @@ export function OrganizerDashboardContent({ statCards, recentOrders }: Organizer
               {TICKET_SALES_BARS.map((bar, index) => (
                 <div
                   key={`${bar.height}-${index}`}
-                  className={`flex-1 rounded-t-2xl bg-gradient-to-b from-sky-700 to-violet-700 ${bar.height} ${bar.opacity}`}
+                  className={`flex-1 rounded-t-2xl bg-indigo-600 ${bar.height} ${bar.opacity}`}
                 />
               ))}
             </div>
@@ -192,7 +193,7 @@ export function OrganizerDashboardContent({ statCards, recentOrders }: Organizer
             </div>
           </article>
 
-          <article className="relative rounded-3xl bg-white px-8 pb-10 pt-8 outline outline-1 outline-slate-300/5 shadow-[0px_32px_64px_-12px_rgba(25,28,30,0.06)]">
+          <article className="relative rounded-[32px] bg-white px-8 pb-10 pt-8 border border-slate-100 shadow-sm">
             <h3 className="text-xl font-bold leading-7 text-zinc-900">Monthly Revenue</h3>
 
             <div className="mt-10 space-y-6">
@@ -211,7 +212,7 @@ export function OrganizerDashboardContent({ statCards, recentOrders }: Organizer
           </article>
         </section>
 
-        <section id="orders" className="mt-12 overflow-hidden rounded-3xl bg-white shadow-[0px_32px_64px_-12px_rgba(25,28,30,0.06)] outline outline-1 outline-slate-300/5">
+        <section id="orders" className="mt-12 overflow-hidden rounded-[32px] bg-white shadow-sm border border-slate-100">
           <div className="flex items-center justify-between border-b border-slate-300/10 p-8">
             <h3 className="text-xl font-bold leading-7 text-zinc-900">Recent Orders</h3>
             <button type="button" className="text-sm font-semibold leading-5 text-sky-700">

@@ -3,7 +3,11 @@ import Image from "next/image";
 import { useRouter } from "next/router";
 
 import { useAuth } from "@/features/auth/hooks/useAuth";
-import { CustomerDashboardIcon, CustomerDashboardSidebar, customerProfile } from "@/features/customer";
+import {
+  CustomerDashboardIcon,
+  CustomerDashboardSidebar,
+  customerProfile,
+} from "@/features/customer";
 import type { CustomerNavItem } from "@/features/customer";
 
 type TicketStatus = "Selling Fast" | "Live Now" | "Completed" | "Cancelled";
@@ -24,10 +28,19 @@ type TicketRecord = {
 
 const customerTicketNavigationItems: CustomerNavItem[] = [
   { label: "Dashboard", href: "/customer", icon: "grid" },
-  { label: "My Tickets", href: "/customer/my-tickets", icon: "ticket", active: true },
+  {
+    label: "My Tickets",
+    href: "/customer/my-tickets",
+    icon: "ticket",
+    active: true,
+  },
   { label: "Order History", href: "/customer/order-history", icon: "history" },
   { label: "Notifications", href: "/customer/notifications", icon: "bell" },
-  { label: "Profile Settings", href: "/customer/profile-settings", icon: "settings" },
+  {
+    label: "Profile Settings",
+    href: "/customer/profile-settings",
+    icon: "settings",
+  },
 ];
 
 const UPCOMING_TICKETS: TicketRecord[] = [
@@ -41,7 +54,7 @@ const UPCOMING_TICKETS: TicketRecord[] = [
     type: "VIP Pass",
     status: "Selling Fast",
     code: "EVH-NPF-8240",
-    imageSrc: "/images/upc1.png",
+    imageSrc: "/images/upc1.png", // Thay bằng đường dẫn ảnh thực tế của bạn
     detailHref: "/event/neon-pulse",
   },
   {
@@ -54,7 +67,7 @@ const UPCOMING_TICKETS: TicketRecord[] = [
     type: "Standard Admission",
     status: "Live Now",
     code: "EVH-GTS-0912",
-    imageSrc: "/images/upc2.png",
+    imageSrc: "/images/upc2.png", // Thay bằng đường dẫn ảnh thực tế của bạn
     detailHref: "/event/global-tech",
   },
 ];
@@ -100,23 +113,14 @@ function getQrSrc(ticket: TicketRecord) {
   return `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(payload)}`;
 }
 
-function TicketInfoRow({
-  icon,
-  label,
-  value,
-}: {
-  icon: "calendar" | "pin" | "ticket";
-  label: string;
-  value: string;
-}) {
+function TicketInfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-start gap-2.5">
-      <div className="pt-0.5 text-blue-600">
-        <CustomerDashboardIcon type={icon} className="h-4 w-4" />
+    <div>
+      <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">
+        {label}
       </div>
-      <div>
-        <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">{label}</div>
-        <div className="mt-1 text-sm font-semibold leading-5 text-slate-700">{value}</div>
+      <div className="mt-1.5 text-sm font-semibold leading-5 text-slate-700">
+        {value}
       </div>
     </div>
   );
@@ -138,55 +142,89 @@ function TicketCard({ ticket }: { ticket: TicketRecord }) {
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/45 via-slate-950/10 to-transparent" />
         <div className="absolute right-4 top-4">
           <span
-            className={`inline-flex items-center rounded-full px-3 py-1 text-[9px] font-bold uppercase tracking-[0.26em] ${STATUS_STYLES[ticket.status]}`}
+            className={`inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] shadow-sm ${STATUS_STYLES[ticket.status]}`}
           >
             {ticket.status}
           </span>
         </div>
       </div>
 
-      <div className="p-5">
+      <div className="p-6">
         <div className="flex items-start justify-between gap-3">
-          <div>
-            <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-violet-600">{ticket.category}</div>
-            <h2 className="mt-2 text-[2rem] font-bold leading-[1.05] tracking-tight text-slate-900">{ticket.title}</h2>
+          <div className="flex-1">
+            <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-violet-600">
+              {ticket.category}
+            </div>
+            {/* ĐÃ FIX: Giảm size chữ xuống 24px (text-2xl) để nhỏ hơn Header "My Tickets" */}
+            <h2 className="mt-1.5 text-2xl font-bold leading-tight tracking-tight text-slate-900">
+              {ticket.title}
+            </h2>
           </div>
-          <div className="rounded-[22px] bg-slate-100 p-3 shadow-[inset_0_0_0_1px_rgba(226,232,240,0.9)]">
-            <Image src={getQrSrc(ticket)} alt={`QR for ${ticket.code}`} width={56} height={56} className="rounded-[10px]" />
+          <div className="rounded-[18px] bg-slate-50 p-2.5 ring-1 ring-slate-100">
+            <Image
+              src={getQrSrc(ticket)}
+              alt={`QR for ${ticket.code}`}
+              width={64}
+              height={64}
+              className="rounded-xl mix-blend-multiply"
+            />
           </div>
         </div>
 
-        <div className="mt-5 grid gap-4 sm:grid-cols-2">
-          <TicketInfoRow icon="calendar" label="Date" value={ticket.date} />
-          <TicketInfoRow icon="calendar" label="Time" value={ticket.time} />
-          <TicketInfoRow icon="pin" label="Venue" value={ticket.venue} />
-          <TicketInfoRow icon="ticket" label="Type" value={ticket.type} />
+        <div className="mt-6 grid gap-y-5 gap-x-4 sm:grid-cols-2">
+          <TicketInfoRow label="Date" value={ticket.date} />
+          <TicketInfoRow label="Time" value={ticket.time} />
+          <TicketInfoRow label="Venue" value={ticket.venue} />
+          <TicketInfoRow label="Type" value={ticket.type} />
         </div>
 
-        <div className="mt-4 rounded-2xl bg-slate-50 px-4 py-3">
-          <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">Ticket Code</div>
-          <div className="mt-1 text-sm font-semibold tracking-[0.24em] text-slate-700">{ticket.code}</div>
+        <div className="mt-6 rounded-2xl bg-slate-50 px-5 py-3.5 ring-1 ring-slate-100/60">
+          <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">
+            Ticket Code
+          </div>
+          <div className="mt-1 text-sm font-semibold tracking-[0.3em] text-slate-800">
+            {ticket.code}
+          </div>
         </div>
 
         <div className="mt-5 flex items-center gap-3">
           <button
             type="button"
-            className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-700 to-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_28px_rgba(76,92,193,0.24)] transition hover:translate-y-[-1px]"
+            className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-[#5238FF] px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-blue-700"
           >
-            <CustomerDashboardIcon type="download" className="h-4 w-4" />
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
             <span>Download Ticket</span>
           </button>
           <a
             href={ticket.detailHref}
-            className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-200 text-slate-600 transition hover:border-blue-200 hover:text-blue-700"
+            className="inline-flex h-[50px] w-[50px] items-center justify-center rounded-2xl border border-slate-200 text-slate-500 transition hover:border-slate-300 hover:text-slate-800 hover:bg-slate-50"
             aria-label={`View details for ${ticket.title}`}
-            title="View details"
           >
-            <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="1.8">
-              <path d="M7 12h10" strokeLinecap="round" />
-              <path d="m13.5 8.5 3.5 3.5-3.5 3.5" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M7 6.5h5" strokeLinecap="round" />
-              <path d="M7 17.5h5" strokeLinecap="round" />
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M5 12h14"></path>
+              <path d="m12 5 7 7-7 7"></path>
             </svg>
           </a>
         </div>
@@ -210,54 +248,138 @@ export default function CustomerMyTicketsPage() {
         <title>My Tickets | EventHub</title>
       </Head>
 
-      <main className="min-h-screen w-full bg-[#eef2f8] text-slate-900">
+      <main className="min-h-screen w-full bg-[#FDFDFF] text-slate-900 font-sans">
         <div className="flex min-h-screen w-full flex-col xl:flex-row">
+          {/* SIDEBAR */}
           <CustomerDashboardSidebar
             navigationItems={customerTicketNavigationItems}
             profile={customerProfile}
             onLogout={() => void handleLogout()}
           />
 
-          <section className="flex-1 px-5 py-6 sm:px-8 lg:px-10 xl:px-12">
-            <div className="text-xs font-medium text-slate-500">Dashboard &nbsp;&rsaquo;&nbsp; My Tickets</div>
-            <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <div className="text-xs font-bold uppercase tracking-[0.34em] text-blue-600">Customer Area</div>
-                <h1 className="mt-2 text-4xl font-bold tracking-tight text-slate-900 sm:text-[2.8rem]">My Tickets</h1>
-                <p className="mt-3 max-w-2xl text-lg text-slate-500">
-                  View your active passes, event details, and saved QR codes in one place.
-                </p>
+          <div className="flex flex-1 flex-col">
+            {/* TOP NAVIGATION BAR */}
+            <header className="flex h-20 items-center justify-between border-b border-slate-100 bg-white px-8">
+              <div className="text-[13px] font-medium text-slate-400">
+                Platform management system v2.0
+              </div>
+
+              <div className="flex w-full max-w-md items-center gap-2 rounded-full bg-slate-50/80 px-4 py-2.5 border border-slate-100 focus-within:border-blue-500 focus-within:bg-white transition-colors">
+                <svg
+                  className="h-4 w-4 text-slate-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+                <input
+                  type="text"
+                  placeholder="Global search..."
+                  className="w-full bg-transparent text-sm text-slate-700 placeholder-slate-400 outline-none"
+                />
+              </div>
+
+              <div className="flex items-center gap-6">
+                <button className="relative text-slate-400 hover:text-blue-600 transition">
+                  <svg
+                    width="22"
+                    height="22"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                  </svg>
+                  <span className="absolute right-[2px] top-[2px] block h-2 w-2 rounded-full bg-blue-500 ring-2 ring-white" />
+                </button>
+
+                <div className="flex items-center gap-3 border-l border-slate-100 pl-6">
+                  <div className="h-10 w-10 overflow-hidden rounded-full border border-slate-200">
+                    <Image
+                      src={
+                        customerProfile.avatarSrc ||
+                        "/images/avatar-placeholder.png"
+                      }
+                      alt="Profile"
+                      width={40}
+                      height={40}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[15px] font-bold text-slate-900 leading-none">
+                      {customerProfile.name || "Alex Phước"}
+                    </span>
+                    <span className="mt-1 text-[11px] font-bold uppercase tracking-wider text-blue-600">
+                      PRO MEMBER
+                    </span>
+                  </div>
+                </div>
               </div>
             </header>
 
-            <section className="mt-10">
-              <div className="flex items-center justify-between gap-4">
-                <h2 className="text-[2rem] font-bold tracking-tight text-slate-900">Upcoming Tickets</h2>
-                <span className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-[0_10px_24px_rgba(148,163,184,0.12)]">
-                  {UPCOMING_TICKETS.length} active
-                </span>
-              </div>
-              <div className="mt-6 grid gap-5 xl:grid-cols-2">
-                {UPCOMING_TICKETS.map((ticket) => (
-                  <TicketCard key={ticket.id} ticket={ticket} />
-                ))}
-              </div>
-            </section>
+            {/* MAIN CONTENT AREA */}
+            <section className="flex-1 p-8">
+              <div className="flex flex-col gap-8 animate-in fade-in duration-500 pb-10 max-w-6xl">
+                {/* PAGE HEADER */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <h1 className="text-[32px] font-bold text-[#0F172A] tracking-tight">
+                      My Tickets
+                    </h1>
+                    <p className="text-[15px] text-slate-400 font-medium mt-1.5">
+                      Reviewing {UPCOMING_TICKETS.length + PAST_TICKETS.length}{" "}
+                      registered event passes
+                    </p>
+                  </div>
+                </div>
 
-            <section className="mt-12">
-              <div className="flex items-center justify-between gap-4">
-                <h2 className="text-[2rem] font-bold tracking-tight text-slate-900">Past Tickets</h2>
-                <span className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-[0_10px_24px_rgba(148,163,184,0.12)]">
-                  {PAST_TICKETS.length} archived
-                </span>
-              </div>
-              <div className="mt-6 grid gap-5 xl:grid-cols-2">
-                {PAST_TICKETS.map((ticket) => (
-                  <TicketCard key={ticket.id} ticket={ticket} />
-                ))}
+                {/* UPCOMING TICKETS */}
+                <section>
+                  <div className="flex items-center justify-between gap-4 mb-5 mt-2">
+                    <h2 className="text-xl font-bold tracking-tight text-slate-900">
+                      Upcoming Tickets
+                    </h2>
+                    <span className="rounded-full bg-white px-3 py-1.5 text-xs font-bold tracking-wide text-slate-500 border border-slate-200 shadow-sm uppercase">
+                      {UPCOMING_TICKETS.length} Active
+                    </span>
+                  </div>
+                  <div className="grid gap-7 xl:grid-cols-2">
+                    {UPCOMING_TICKETS.map((ticket) => (
+                      <TicketCard key={ticket.id} ticket={ticket} />
+                    ))}
+                  </div>
+                </section>
+
+                {/* PAST TICKETS */}
+                <section className="mt-4">
+                  <div className="flex items-center justify-between gap-4 mb-5">
+                    <h2 className="text-xl font-bold tracking-tight text-slate-900">
+                      Past Tickets
+                    </h2>
+                    <span className="rounded-full bg-white px-3 py-1.5 text-xs font-bold tracking-wide text-slate-500 border border-slate-200 shadow-sm uppercase">
+                      {PAST_TICKETS.length} Archived
+                    </span>
+                  </div>
+                  <div className="grid gap-7 xl:grid-cols-2">
+                    {PAST_TICKETS.map((ticket) => (
+                      <TicketCard key={ticket.id} ticket={ticket} />
+                    ))}
+                  </div>
+                </section>
               </div>
             </section>
-          </section>
+          </div>
         </div>
       </main>
     </>

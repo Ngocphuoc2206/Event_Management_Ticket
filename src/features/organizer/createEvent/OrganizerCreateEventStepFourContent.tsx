@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Bell, ChevronDown, Pencil, Plus, Search, Settings } from "lucide-react";
 
+import { OrganizerBrandLogo } from "@/features/organizer/shared/OrganizerBrandLogo";
+
 type TicketTier = {
   name: string;
   badge: string;
@@ -20,7 +22,7 @@ const TICKET_TIERS: TicketTier[] = [
     price: "$49.00",
     quantity: "150",
     period: "Oct 01 - Oct 15",
-    stripe: "bg-gradient-to-b from-sky-700 to-violet-700",
+    stripe: "bg-indigo-600",
   },
   {
     name: "General Admission",
@@ -45,7 +47,7 @@ const TICKET_TIERS: TicketTier[] = [
 
 function TicketCard({ tier }: { tier: TicketTier }) {
   return (
-    <article className="inline-flex w-full overflow-hidden rounded-xl bg-white shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)] outline outline-1 outline-slate-300/20">
+    <article className="inline-flex w-full overflow-hidden rounded-xl bg-white shadow-sm outline outline-1 outline-slate-300/20">
       <div className={`w-2 shrink-0 ${tier.stripe}`} />
       <div className="grid flex-1 gap-6 p-8 md:grid-cols-[1.2fr_0.7fr_0.6fr_0.9fr_auto] md:items-start">
         <div className="space-y-1">
@@ -85,7 +87,7 @@ function TicketCard({ tier }: { tier: TicketTier }) {
 export function OrganizerCreateEventStepFourContent() {
   return (
     <section className="relative flex-1 overflow-hidden bg-slate-50">
-      <header className="flex h-20 items-center justify-between border-b border-slate-300/10 bg-slate-50/80 px-5 backdrop-blur-[6px] sm:px-8 lg:px-10 xl:px-10">
+      <header className="flex h-20 items-center justify-between border-b border-slate-100 bg-white/80 px-8 backdrop-blur-xl">
         <div className="flex-1 max-w-[576px]">
           <div className="relative">
             <div className="inline-flex h-11 w-full items-start justify-center overflow-hidden rounded-2xl bg-gray-100 py-3.5 pl-12 pr-4">
@@ -106,7 +108,7 @@ export function OrganizerCreateEventStepFourContent() {
             <Settings className="h-5 w-5" />
           </button>
           <div className="h-8 w-px bg-slate-300/30" />
-          <p className="text-sm font-bold tracking-wider text-gray-700">ORGANIZER DASHBOARD</p>
+          <OrganizerBrandLogo />
         </div>
       </header>
 
@@ -118,7 +120,7 @@ export function OrganizerCreateEventStepFourContent() {
               <p className="text-sm font-medium text-gray-700">80% Complete</p>
             </div>
             <div className="h-1.5 overflow-hidden rounded-full bg-gray-200">
-              <div className="h-full w-4/5 bg-gradient-to-b from-sky-700 to-violet-700" />
+              <div className="h-full w-4/5 bg-indigo-600" />
             </div>
             <p className="pt-2 text-sm font-medium text-gray-700">Current Step: Tickets &amp; Pricing</p>
           </section>
@@ -160,7 +162,7 @@ export function OrganizerCreateEventStepFourContent() {
                   </button>
                   <Link
                     href="/organizer/create-event/review-publish"
-                    className="rounded-lg bg-gradient-to-r from-sky-700 to-violet-700 px-10 py-3 text-base font-bold text-white shadow-[0px_4px_6px_-4px_rgba(0,0,0,0.10),0px_10px_15px_-3px_rgba(0,0,0,0.10)]"
+                    className="rounded-lg bg-indigo-600 px-10 py-3 text-base font-bold text-white shadow-[0px_4px_6px_-4px_rgba(0,0,0,0.10),0px_10px_15px_-3px_rgba(0,0,0,0.10)]"
                   >
                     Review &amp; Publish
                   </Link>
@@ -169,7 +171,7 @@ export function OrganizerCreateEventStepFourContent() {
             </div>
 
             <aside className="space-y-6">
-              <article className="space-y-4 rounded-3xl bg-white p-6 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
+              <article className="space-y-4 rounded-[32px] bg-white p-6 shadow-sm">
                 <h3 className="text-lg font-bold text-zinc-900">Pricing Snapshot</h3>
                 <div className="space-y-3 rounded-2xl bg-gray-100 p-4">
                   <div className="flex items-center justify-between text-sm">
@@ -190,7 +192,7 @@ export function OrganizerCreateEventStepFourContent() {
                 </p>
               </article>
 
-              <article className="rounded-3xl bg-gradient-to-br from-sky-50 to-violet-50 p-6 outline outline-1 outline-sky-700/10">
+              <article className="rounded-[32px] bg-gradient-to-br from-sky-50 to-violet-50 p-6 outline outline-1 outline-sky-700/10">
                 <h3 className="text-base font-bold text-zinc-900">Ready for final review</h3>
                 <p className="mt-2 text-sm leading-6 text-gray-700">
                   Step 5 will show a complete preview with publishing controls so you can go live confidently.
