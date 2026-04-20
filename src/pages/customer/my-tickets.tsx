@@ -5,7 +5,14 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
 import { useAuth } from "@/features/auth/hooks/useAuth";
+<<<<<<< Updated upstream
 import { CustomerDashboardIcon, CustomerDashboardSidebar, customerProfile, customerRecentOrders } from "@/features/customer";
+=======
+import {
+  CustomerDashboardSidebar,
+  customerProfile,
+} from "@/features/customer";
+>>>>>>> Stashed changes
 import type { CustomerNavItem } from "@/features/customer";
 
 type TicketTab = "upcoming" | "past";
@@ -177,10 +184,17 @@ function TicketInfoRow({
 
 function TicketCard({
   ticket,
+<<<<<<< Updated upstream
   onOpenQr,
 }: {
   ticket: TicketRecord;
   onOpenQr: (ticket: TicketRecord) => void;
+=======
+  onQrClick,
+}: {
+  ticket: TicketRecord;
+  onQrClick: (ticket: TicketRecord) => void;
+>>>>>>> Stashed changes
 }) {
   const isPast = ticket.status === "Completed" || ticket.status === "Cancelled";
 
@@ -204,11 +218,38 @@ function TicketCard({
 
       <div className="p-5">
         <div className="flex items-start justify-between gap-3">
+<<<<<<< Updated upstream
           <div>
             <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-violet-600">{ticket.category}</div>
             <h2 className="mt-2 text-[2rem] font-bold leading-[1.05] tracking-tight text-slate-900">{ticket.title}</h2>
           </div>
           <TicketMiniQr ticket={ticket} onOpen={onOpenQr} />
+=======
+          <div className="flex-1">
+            <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-violet-600">
+              {ticket.category}
+            </div>
+            {/* ĐÃ FIX: Giảm size chữ xuống 24px (text-2xl) để nhỏ hơn Header "My Tickets" */}
+            <h2 className="mt-1.5 text-2xl font-bold leading-tight tracking-tight text-slate-900">
+              {ticket.title}
+            </h2>
+          </div>
+          <button
+            type="button"
+            onClick={() => onQrClick(ticket)}
+            className="rounded-[18px] bg-slate-50 p-2.5 ring-1 ring-slate-100 transition hover:scale-[1.03] hover:bg-white hover:ring-blue-200"
+            aria-label={`Open QR code for ${ticket.title}`}
+            title="Open QR"
+          >
+            <Image
+              src={getQrSrc(ticket)}
+              alt={`QR for ${ticket.code}`}
+              width={64}
+              height={64}
+              className="rounded-xl mix-blend-multiply"
+            />
+          </button>
+>>>>>>> Stashed changes
         </div>
 
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
@@ -255,6 +296,7 @@ export default function CustomerMyTicketsPage() {
   const [selectedQrTicket, setSelectedQrTicket] = useState<TicketRecord | null>(null);
   const { logout } = useAuth();
   const router = useRouter();
+<<<<<<< Updated upstream
   const totalValueSaved = formatCurrencyAmount(
     customerRecentOrders
       .filter((order) => order.status === "Completed")
@@ -275,13 +317,34 @@ export default function CustomerMyTicketsPage() {
     window.addEventListener("keydown", handleEscape);
     return () => window.removeEventListener("keydown", handleEscape);
   }, [selectedQrTicket]);
+=======
+  const [selectedQrTicket, setSelectedQrTicket] =
+    useState<TicketRecord | null>(null);
+>>>>>>> Stashed changes
 
   const handleLogout = async () => {
     const result = await logout();
     void router.push(result.redirectTo);
   };
 
+<<<<<<< Updated upstream
   const tickets = activeTab === "upcoming" ? UPCOMING_TICKETS : PAST_TICKETS;
+=======
+  useEffect(() => {
+    if (!selectedQrTicket) {
+      return;
+    }
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setSelectedQrTicket(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [selectedQrTicket]);
+>>>>>>> Stashed changes
 
   return (
     <>
@@ -328,10 +391,71 @@ export default function CustomerMyTicketsPage() {
               </div>
             </header>
 
+<<<<<<< Updated upstream
             <section className="mt-8 grid gap-5 xl:grid-cols-2">
               {tickets.map((ticket) => (
                 <TicketCard key={ticket.id} ticket={ticket} onOpenQr={setSelectedQrTicket} />
               ))}
+=======
+            {/* MAIN CONTENT AREA */}
+            <section className="flex-1 p-8">
+              <div className="flex flex-col gap-8 animate-in fade-in duration-500 pb-10 max-w-6xl">
+                {/* PAGE HEADER */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <h1 className="text-[32px] font-bold text-[#0F172A] tracking-tight">
+                      My Tickets
+                    </h1>
+                    <p className="text-[15px] text-slate-400 font-medium mt-1.5">
+                      Reviewing {UPCOMING_TICKETS.length + PAST_TICKETS.length}{" "}
+                      registered event passes
+                    </p>
+                  </div>
+                </div>
+
+                {/* UPCOMING TICKETS */}
+                <section>
+                  <div className="flex items-center justify-between gap-4 mb-5 mt-2">
+                    <h2 className="text-xl font-bold tracking-tight text-slate-900">
+                      Upcoming Tickets
+                    </h2>
+                    <span className="rounded-full bg-white px-3 py-1.5 text-xs font-bold tracking-wide text-slate-500 border border-slate-200 shadow-sm uppercase">
+                      {UPCOMING_TICKETS.length} Active
+                    </span>
+                  </div>
+                  <div className="grid gap-7 xl:grid-cols-2">
+                    {UPCOMING_TICKETS.map((ticket) => (
+                      <TicketCard
+                        key={ticket.id}
+                        ticket={ticket}
+                        onQrClick={setSelectedQrTicket}
+                      />
+                    ))}
+                  </div>
+                </section>
+
+                {/* PAST TICKETS */}
+                <section className="mt-4">
+                  <div className="flex items-center justify-between gap-4 mb-5">
+                    <h2 className="text-xl font-bold tracking-tight text-slate-900">
+                      Past Tickets
+                    </h2>
+                    <span className="rounded-full bg-white px-3 py-1.5 text-xs font-bold tracking-wide text-slate-500 border border-slate-200 shadow-sm uppercase">
+                      {PAST_TICKETS.length} Archived
+                    </span>
+                  </div>
+                  <div className="grid gap-7 xl:grid-cols-2">
+                    {PAST_TICKETS.map((ticket) => (
+                      <TicketCard
+                        key={ticket.id}
+                        ticket={ticket}
+                        onQrClick={setSelectedQrTicket}
+                      />
+                    ))}
+                  </div>
+                </section>
+              </div>
+>>>>>>> Stashed changes
             </section>
 
             <section className="mt-9 grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
@@ -429,6 +553,67 @@ export default function CustomerMyTicketsPage() {
           </div>
         ) : null}
       </main>
+
+      {selectedQrTicket ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 px-4 backdrop-blur-sm transition-all"
+          onClick={() => setSelectedQrTicket(null)}
+        >
+          <div
+            className="w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="text-[10px] font-black uppercase tracking-widest text-indigo-600">
+                  Scan Ticket QR
+                </div>
+                <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-900">
+                  {selectedQrTicket.title}
+                </h2>
+                <p className="mt-1 text-sm font-bold text-slate-400">
+                  {selectedQrTicket.date} at {selectedQrTicket.time}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedQrTicket(null)}
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-50 text-slate-400 transition hover:bg-slate-100 hover:text-slate-900"
+                aria-label="Close QR code"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  className="h-4 w-4 fill-none stroke-current"
+                  strokeWidth="3"
+                >
+                  <path d="M6 6l12 12M18 6 6 18" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="mt-8 rounded-3xl border border-slate-100 bg-slate-50 p-6 text-center">
+              <div className="mx-auto flex w-fit rounded-2xl bg-white p-4 shadow-sm border border-slate-100">
+                <Image
+                  src={getQrSrc(selectedQrTicket)}
+                  alt={`Large QR for ${selectedQrTicket.code}`}
+                  width={240}
+                  height={240}
+                  className="rounded-xl"
+                />
+              </div>
+              <div className="mt-6 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                Ticket Code
+              </div>
+              <div className="mt-1 text-lg font-black tracking-widest text-slate-900">
+                {selectedQrTicket.code}
+              </div>
+              <p className="mt-4 inline-block rounded-full border border-slate-100 bg-white px-4 py-2 text-xs font-bold text-slate-500 shadow-sm">
+                Show this QR at the gate for scanning
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </>
   );
 }
