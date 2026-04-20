@@ -1,153 +1,40 @@
-# 🎟️ Event Management Ticket System
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
 
-A fullstack event management and ticketing system built with:
+## Getting Started
 
-- 🧩 Backend: Java Spring Boot
-- 🌐 Frontend: Next.js
-- 🐳 Docker & Docker Compose
-- ☁️ AWS (EC2, RDS, S3)
-- 🔄 CI/CD with GitHub Actions
-
----
-
-# 📁 Project Structure
-
-```
-repo/
-├── backend/ # Spring Boot API
-├── frontend/ # Next.js UI
-├── .github/ # CI/CD workflows
-└── README.md
-```
-
----
-
-# 🌿 Branch Strategy
-
-| Branch  | Purpose      |
-| ------- | ------------ |
-| develop | Staging/Test |
-| main    | Production   |
-
----
-
-# ⚙️ Backend Setup
-
-## 📌 Requirements
-
-- Java 21
-- Maven
-- MySQL (or AWS RDS)
-
----
-
-## 🔧 Environment Variables (`backend/.env`)
-
-```env
-SPRING_DATASOURCE_URL=jdbc:mysql://<DB_HOST>:3306/event_ticket_db
-SPRING_DATASOURCE_USERNAME=<DB_USERNAME>
-SPRING_DATASOURCE_PASSWORD=<DB_PASSWORD>
-
-JWT_SECRET=your_secret
-
-AWS_REGION=ap-southeast-1
-AWS_ACCESS_KEY_ID=your_key
-AWS_SECRET_ACCESS_KEY=your_secret
-AWS_S3_BUCKET=your_bucket
-```
-
----
-
-## 🚀 Run Backend with Docker
+First, run the development server:
 
 ```bash
-cd backend
-docker compose up -d --build
-```
-
----
-
-# 🌐 Frontend Setup
-
-## 📌 Requirements
-
-- Node.js 20+
-
-## 🔧 Environment Variables (frontend/.env.production)
-
-```env
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
-```
-
-## 🚀 Run Frontend
-
-````
-
-```bash
-cd frontend
-npm install
 npm run dev
-````
-
-Frontend runs at: `http://localhost:3000`
-
-# ☁️ AWS Deployment (EC2)
-
-## 🖥️ Server Structure
-
-```
-/home/ubuntu/apps/
-├── backend
-├── frontend
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
-## 🚀 Run on EC2
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-```bash
-cd ~/apps/backend
-docker compose up -d --build
-```
+You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
 
-# 🛢️ Database (RDS)
+[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
 
-- MySQL hosted on AWS RDS
-- Ensure Security Group allows EC2 access on port 3306
+The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
 
-# 🔐 AWS S3
+This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## Used for:
+## Learn More
 
-- Event images
-- Ticket QR codes
+To learn more about Next.js, take a look at the following resources:
 
-# 🔄 CI/CD Pipeline
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
 
-GitHub Actions is configured to:
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-- Backend
-- Build & test
-- Docker build
-- Deploy to EC2 (staging/prod)
-- Frontend
-- Lint & build
-- Docker build
-- Deploy to EC2
+## Deploy on Vercel
 
-# 🐳 Docker Overview
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-## Backend
-
-- Spring Boot container
-- Connects to RDS
-
-## Frontend (optional)
-
-- Next.js container
-
-🧪 Testing
-
-Use Postman to test API:
-
-```json
-http://<EC2_IP>:8080/api/...
-```
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.

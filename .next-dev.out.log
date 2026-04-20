@@ -1,0 +1,11 @@
+
+> event_management_ticket@0.1.0 dev
+> next dev
+
+▲ Next.js 16.1.7 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://26.233.59.64:3000
+
+✓ Starting...
+Creating turbopack project { dir: 'D:\\Learning\\DTDM\\Event_Management_Ticket', testMode: true }
+✓ Ready in 699ms
