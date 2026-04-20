@@ -2,7 +2,8 @@ import type { UserRole } from "@/features/auth/types";
 
 export const APP_NAME = "EventHub";
 export const DEFAULT_PAGE_TITLE = "Event Ticketing System";
-export const DEFAULT_API_BASE_URL = "http://localhost:8080";
+export const DEFAULT_API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
 
 export const AUTH_STORAGE_KEYS = {
   accessToken: "accessToken",
@@ -23,9 +24,11 @@ export const REGISTER_ENDPOINT =
 export const LOGOUT_ENDPOINT =
   process.env.NEXT_PUBLIC_LOGOUT_ENDPOINT || "/api/auth/logout";
 export const BACKEND_HEALTH_ENDPOINT = "/api/health";
-export const USER_PROFILE_ENDPOINT = process.env.NEXT_PUBLIC_USER_PROFILE_ENDPOINT || "/users";
+export const USER_PROFILE_ENDPOINT =
+  process.env.NEXT_PUBLIC_USER_PROFILE_ENDPOINT || "/users";
 export const CHANGE_PASSWORD_ENDPOINT =
-  process.env.NEXT_PUBLIC_CHANGE_PASSWORD_ENDPOINT || "/users/{id}/change-password";
+  process.env.NEXT_PUBLIC_CHANGE_PASSWORD_ENDPOINT ||
+  "/users/{id}/change-password";
 
 export const AUTH_FOOTER_LINKS = [
   { href: "/terms", label: "Terms of Service" },
