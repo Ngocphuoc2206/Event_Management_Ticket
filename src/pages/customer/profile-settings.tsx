@@ -302,6 +302,7 @@ export default function CustomerProfileSettingsPage() {
     defaultValues: INITIAL_PASSWORD_VALUES,
   });
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const watchedAvatar = watchProfile("avatar");
   const watchedPassword = watchPassword("newPassword");
 
