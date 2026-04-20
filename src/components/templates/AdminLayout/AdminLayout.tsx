@@ -1,5 +1,5 @@
 // src/components/templates/AdminLayout/AdminLayout.tsx
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { 
@@ -7,8 +7,6 @@ import {
   BarChart3, Settings, LogOut, Bell, Search, Zap,
   CalendarDays, HelpCircle 
 } from 'lucide-react';
-
-import SupportModal from './SupportModal';
 
 interface SidebarItemProps {
   icon: React.ElementType;
@@ -41,9 +39,8 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ icon: Icon, label, href, exac
   );
 };
 
-export default function AdminLayout({ children, title }: { children: React.ReactNode, title: string }) {
+export default function AdminLayout({ children, title = "" }: { children: React.ReactNode, title?: string }) {
   const router = useRouter();
-  const [isSupportOpen, setIsSupportOpen] = useState(false);
   
   // Kiểm tra xem trang hiện tại có phải là support không để làm sáng nút góc dưới
   const isSupportPageActive = router.pathname === '/admin/support';

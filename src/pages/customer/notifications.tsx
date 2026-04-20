@@ -1,10 +1,12 @@
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { CustomerDashboardIcon, CustomerDashboardSidebar, customerProfile } from "@/features/customer";
 import type { CustomerNavItem } from "@/features/customer";
+import type { CustomerNotification } from "@/features/customer/notifications.service";
+import { getMyNotifications, markNotificationAsRead } from "@/features/customer/notifications.service";
 
 type NotificationFilter = "all" | "unread";
 type NotificationTone = "info" | "ticket" | "success" | "vip" | "important" | "lineup";
@@ -32,73 +34,48 @@ const customerNotificationNavigationItems: CustomerNavItem[] = [
   { label: "Profile Settings", href: "/customer/profile-settings", icon: "settings" },
 ];
 
-const INITIAL_NOTIFICATIONS: NotificationItem[] = [
-  {
-    id: "neon-pulse-reminder",
-    group: "Event Reminders",
-    title: "Neon Pulse Music Festival starts in 2 hours!",
-    description: "Get your gear ready. Gates open at 6:00 PM. Don't forget to have your digital ticket ready at the entrance.",
-    time: "2 mins ago",
-    unread: true,
-    tone: "info",
-    layout: "list",
-    actionLabel: "View Entry Info",
-  },
-  {
-    id: "global-tech-reminder",
-    group: "Event Reminders",
-    title: "Don't forget your tickets for Global Tech Summit tomorrow.",
-    description: "The summit starts at 9:00 AM at the Metropolitan Center. We recommend arriving 30 minutes early for badge collection.",
-    time: "3 hours ago",
-    unread: true,
-    tone: "ticket",
-    layout: "list",
-  },
-  {
-    id: "order-confirmed",
-    group: "Ticket Confirmations",
-    title: "Order #ORD-9021-u1 Confirmed",
-    description: "Success! Your order for 'Midnight Jazz Collective' has been processed. You can find your tickets in the 'My Tickets' section.",
-    time: "Yesterday, 4:15 PM",
-    unread: true,
-    tone: "success",
-    layout: "list",
-  },
-  {
-    id: "vip-upgrade",
-    group: "Ticket Confirmations",
-    title: "Your VIP Upgrade for Designers Meetup is ready.",
-    description: "Your request for a VIP upgrade has been approved. Your new digital badge includes access to the Lounge and Speaker Meet-and-Greet.",
-    time: "Oct 12, 11:20 AM",
-    unread: false,
-    tone: "vip",
-    layout: "list",
-  },
-  {
-    id: "venue-change",
-    group: "Event Updates",
-    title: "Venue Change: Midnight Jazz Collective",
-    description: "The event has moved from 'The Blue Note' to 'The Grand Atrium' due to capacity demands. All existing tickets remain valid.",
-    time: "Oct 11, 2:45 PM",
-    unread: true,
-    tone: "important",
-    layout: "feature",
-    badgeLabel: "Important",
-    actionLabel: "View New Map",
-  },
-  {
-    id: "artist-lineup",
-    group: "Event Updates",
-    title: "Artist Lineup Update for Neon Pulse.",
-    description: "We've added two new surprise guests to the Saturday night stage. Check the updated schedule now.",
-    time: "Oct 10, 9:00 AM",
-    unread: false,
-    tone: "lineup",
-    layout: "feature",
-    badgeLabel: "Lineup",
-    collaborators: ["/images/avt.jpg", "/images/upc1.png", "/images/upc2.png"],
-  },
-];
+function getNotificationGroup(type?: string) {
+  if (type === "TICKET_PURCHASE_SUCCESS") return "Ticket Confirmations";
+  if (type?.includes("ORDER")) return "Order Updates";
+  if (type?.includes("EVENT")) return "Event Updates";
+  return "Notifications";
+}
+
+function getNotificationTone(type?: string): NotificationTone {
+  if (type === "TICKET_PURCHASE_SUCCESS") return "success";
+  if (type?.includes("TICKET")) return "ticket";
+  if (type?.includes("EVENT")) return "important";
+  return "info";
+}
+
+function getNotificationTime(createdAt?: string) {
+  if (!createdAt) return "";
+
+  const date = new Date(createdAt);
+  if (Number.isNaN(date.getTime())) return createdAt;
+
+  return new Intl.DateTimeFormat("vi-VN", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
+}
+
+function mapNotification(notification: CustomerNotification): NotificationItem {
+  const tone = getNotificationTone(notification.type);
+
+  return {
+    id: notification.id,
+    group: getNotificationGroup(notification.type),
+    title: notification.title,
+    description: notification.content,
+    time: getNotificationTime(notification.createdAt),
+    unread: !notification.read,
+    tone,
+    layout: tone === "important" ? "feature" : "list",
+    badgeLabel: tone === "important" ? "Important" : undefined,
+    actionLabel: notification.orderId ? "View order" : undefined,
+  };
+}
 
 const TONE_STYLES: Record<NotificationTone, { iconBg: string; iconColor: string; accent: string; badge?: string; featureBg?: string }> = {
   info: {
@@ -191,11 +168,9 @@ function NotificationGlyph({ tone }: { tone: NotificationTone }) {
 function NotificationListCard({
   item,
   onMarkAsRead,
-  onDelete,
 }: {
   item: NotificationItem;
   onMarkAsRead: (id: string) => void;
-  onDelete: (id: string) => void;
 }) {
   const toneStyle = TONE_STYLES[item.tone];
 
@@ -228,13 +203,6 @@ function NotificationListCard({
                   Mark as read
                 </button>
               ) : null}
-              <button
-                type="button"
-                onClick={() => onDelete(item.id)}
-                className="text-sm font-semibold text-rose-500 transition hover:text-rose-600"
-              >
-                Delete
-              </button>
             </div>
           </div>
         </div>
@@ -251,11 +219,9 @@ function NotificationListCard({
 function NotificationFeatureCard({
   item,
   onMarkAsRead,
-  onDelete,
 }: {
   item: NotificationItem;
   onMarkAsRead: (id: string) => void;
-  onDelete: (id: string) => void;
 }) {
   const toneStyle = TONE_STYLES[item.tone];
 
@@ -293,13 +259,6 @@ function NotificationFeatureCard({
             Mark as read
           </button>
         ) : null}
-        <button
-          type="button"
-          onClick={() => onDelete(item.id)}
-          className="text-sm font-semibold text-rose-500 transition hover:text-rose-600"
-        >
-          Delete
-        </button>
       </div>
 
       <div className="mt-8 flex items-center justify-between gap-4 border-t border-slate-200/70 pt-4">
@@ -354,7 +313,28 @@ export default function CustomerNotificationsPage() {
   const router = useRouter();
   const [filter, setFilter] = useState<NotificationFilter>("all");
   const [query, setQuery] = useState("");
-  const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [markingReadIds, setMarkingReadIds] = useState<Set<string>>(new Set());
+
+  const loadNotifications = async () => {
+    setIsLoading(true);
+    setErrorMessage("");
+
+    try {
+      const nextNotifications = await getMyNotifications();
+      setNotifications(nextNotifications.map(mapNotification));
+    } catch {
+      setErrorMessage("Cannot load notifications. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadNotifications();
+  }, []);
 
   const groupedNotifications = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -384,23 +364,33 @@ export default function CustomerNotificationsPage() {
     void router.push(result.redirectTo);
   };
 
-  const handleMarkAsRead = (id: string) => {
-    setNotifications((current) =>
-      current.map((item) => (item.id === id ? { ...item, unread: false } : item)),
-    );
+  const handleMarkAsRead = async (id: string) => {
+    setMarkingReadIds((current) => new Set(current).add(id));
+    setErrorMessage("");
+
+    try {
+      const updatedNotification = await markNotificationAsRead(id);
+      const mappedNotification = updatedNotification ? mapNotification(updatedNotification) : null;
+
+      setNotifications((current) =>
+        current.map((item) =>
+          item.id === id ? mappedNotification ?? { ...item, unread: false } : item,
+        ),
+      );
+    } catch {
+      setErrorMessage("Cannot mark notification as read. Please try again.");
+    } finally {
+      setMarkingReadIds((current) => {
+        const next = new Set(current);
+        next.delete(id);
+        return next;
+      });
+    }
   };
 
-  const handleMarkAllAsRead = () => {
-    setNotifications((current) => current.map((item) => ({ ...item, unread: false })));
-  };
-
-  const handleDeleteNotification = (id: string) => {
-    setNotifications((current) => current.filter((item) => item.id !== id));
-  };
-
-  const handleClearVisible = () => {
-    const visibleIds = new Set(groupedNotifications.flatMap(([, items]) => items.map((item) => item.id)));
-    setNotifications((current) => current.filter((item) => !visibleIds.has(item.id)));
+  const handleMarkAllAsRead = async () => {
+    const unreadIds = notifications.filter((item) => item.unread).map((item) => item.id);
+    await Promise.all(unreadIds.map((id) => handleMarkAsRead(id)));
   };
 
   const handleResetFilters = () => {
@@ -484,26 +474,23 @@ export default function CustomerNotificationsPage() {
 
                 <button
                   type="button"
-                  onClick={handleMarkAllAsRead}
-                  disabled={unreadCount === 0}
+                  onClick={() => void handleMarkAllAsRead()}
+                  disabled={unreadCount === 0 || markingReadIds.size > 0}
                   className="inline-flex items-center justify-center rounded-full border border-blue-200 bg-white px-5 py-3 text-sm font-semibold text-blue-600 shadow-[0_10px_24px_rgba(148,163,184,0.12)] transition hover:border-blue-300 disabled:cursor-not-allowed disabled:text-slate-300"
                 >
                   Mark all as read
                 </button>
 
-                <button
-                  type="button"
-                  onClick={handleClearVisible}
-                  disabled={!hasVisibleNotifications}
-                  className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-600 shadow-[0_10px_24px_rgba(148,163,184,0.12)] transition hover:border-rose-200 hover:text-rose-600 disabled:cursor-not-allowed disabled:text-slate-300"
-                >
-                  Clear visible
-                </button>
               </div>
               </div>
 
               {hasVisibleNotifications ? (
                 <div className="space-y-10">
+                  {errorMessage ? (
+                    <div className="rounded-2xl border border-rose-100 bg-rose-50 px-5 py-4 text-sm font-semibold text-rose-600">
+                      {errorMessage}
+                    </div>
+                  ) : null}
                   {groupedNotifications.map(([group, items]) => {
                     const listItems = items.filter((item) => item.layout === "list");
                     const featureItems = items.filter((item) => item.layout === "feature");
@@ -518,8 +505,7 @@ export default function CustomerNotificationsPage() {
                               <NotificationListCard
                                 key={item.id}
                                 item={item}
-                                onMarkAsRead={handleMarkAsRead}
-                                onDelete={handleDeleteNotification}
+                                onMarkAsRead={(notificationId) => void handleMarkAsRead(notificationId)}
                               />
                             ))}
                           </div>
@@ -531,8 +517,7 @@ export default function CustomerNotificationsPage() {
                               <NotificationFeatureCard
                                 key={item.id}
                                 item={item}
-                                onMarkAsRead={handleMarkAsRead}
-                                onDelete={handleDeleteNotification}
+                                onMarkAsRead={(notificationId) => void handleMarkAsRead(notificationId)}
                               />
                             ))}
                           </div>
@@ -542,7 +527,20 @@ export default function CustomerNotificationsPage() {
                   })}
                 </div>
               ) : (
-                <EmptyNotificationState onReset={handleResetFilters} />
+                isLoading ? (
+                  <div className="rounded-[30px] border border-slate-100 bg-white/70 px-6 py-16 text-center text-sm font-bold uppercase tracking-[0.28em] text-slate-400">
+                    Loading notifications...
+                  </div>
+                ) : (
+                  <>
+                    {errorMessage ? (
+                      <div className="mb-5 rounded-2xl border border-rose-100 bg-rose-50 px-5 py-4 text-sm font-semibold text-rose-600">
+                        {errorMessage}
+                      </div>
+                    ) : null}
+                    <EmptyNotificationState onReset={handleResetFilters} />
+                  </>
+                )
               )}
             </section>
           </section>

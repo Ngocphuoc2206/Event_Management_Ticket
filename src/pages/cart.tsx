@@ -6,6 +6,8 @@ export default function CartPage() {
   const [quantity, setQuantity] = useState(2);
   const price = 120; // Giá vé VIP
 
+  const ticketTypeId = "TICKET-2";
+
   return (
     <UserLayout title="Giỏ Hàng">
       <div className="bg-[#F9FAFB] min-h-screen py-16 px-6">
@@ -65,7 +67,7 @@ export default function CartPage() {
                   <span className="text-4xl font-black text-indigo-600">${(price * quantity + 18.50 + (price * quantity * 0.1)).toFixed(2)}</span>
                 </div>
 
-                <Link href="/checkout">
+                <Link href={`/checkout?ticketTypeId=${ticketTypeId}&quantity=${quantity}`}>
                   <button className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black text-lg hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200">
                     Tiến hành thanh toán
                   </button>
