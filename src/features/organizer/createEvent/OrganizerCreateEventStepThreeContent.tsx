@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { useRef, useState } from "react";
 import {
   Bell,
   ChevronDown,
@@ -11,7 +12,99 @@ import {
   Upload,
 } from "lucide-react";
 
+import { getApiErrorMessage } from "@/features/auth/utils";
+import {
+  uploadOrganizerMedia,
+  validateOrganizerImageFile,
+} from "@/features/organizer/events/services/upload-media.service";
+
+const CREATE_EVENT_BANNER_URL_KEY = "organizer_create_event_banner_url";
+
+type NoticeTone = "success" | "error";
+
 export function OrganizerCreateEventStepThreeContent() {
+  const bannerInputRef = useRef<HTMLInputElement | null>(null);
+  const galleryInputRef = useRef<HTMLInputElement | null>(null);
+  const [bannerUrl, setBannerUrl] = useState<string>("");
+  const [galleryUrls, setGalleryUrls] = useState<string[]>([]);
+  const [isUploadingBanner, setIsUploadingBanner] = useState(false);
+  const [isUploadingGallery, setIsUploadingGallery] = useState(false);
+  const [notice, setNotice] = useState<{ tone: NoticeTone; message: string } | null>(null);
+
+  const showNotice = (tone: NoticeTone, message: string) => {
+    setNotice({ tone, message });
+  };
+
+  const handleBannerUpload = async (file: File | null) => {
+    if (!file || isUploadingBanner) {
+      return;
+    }
+
+    const validation = validateOrganizerImageFile(file);
+    if (!validation.ok) {
+      showNotice("error", validation.message);
+      return;
+    }
+
+    setIsUploadingBanner(true);
+    setNotice(null);
+
+    try {
+      const uploaded = await uploadOrganizerMedia(file, "banner");
+      setBannerUrl(uploaded.url);
+
+      if (typeof window !== "undefined") {
+        localStorage.setItem(CREATE_EVENT_BANNER_URL_KEY, uploaded.url);
+      }
+
+      showNotice("success", "Upload banner thanh cong.");
+    } catch (error) {
+      showNotice("error", getApiErrorMessage(error, "Khong the upload banner. Vui long thu lai."));
+    } finally {
+      setIsUploadingBanner(false);
+      if (bannerInputRef.current) {
+        bannerInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleGalleryUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0 || isUploadingGallery) {
+      return;
+    }
+
+    const pickedFiles = Array.from(files);
+    const invalidFile = pickedFiles.find((file) => !validateOrganizerImageFile(file).ok);
+
+    if (invalidFile) {
+      const invalidReason = validateOrganizerImageFile(invalidFile);
+      if (!invalidReason.ok) {
+        showNotice("error", invalidReason.message);
+      }
+      return;
+    }
+
+    setIsUploadingGallery(true);
+    setNotice(null);
+
+    try {
+      const uploadedResults = await Promise.all(
+        pickedFiles.map((file) => uploadOrganizerMedia(file, "gallery")),
+      );
+
+      const uploadedUrls = uploadedResults.map((item) => item.url);
+      setGalleryUrls((prev) => [...uploadedUrls, ...prev].slice(0, 12));
+      showNotice("success", `Da upload ${uploadedUrls.length} hinh anh thanh cong.`);
+    } catch (error) {
+      showNotice("error", getApiErrorMessage(error, "Khong the upload gallery. Vui long thu lai."));
+    } finally {
+      setIsUploadingGallery(false);
+      if (galleryInputRef.current) {
+        galleryInputRef.current.value = "";
+      }
+    }
+  };
+
   return (
     <section className="relative flex-1 overflow-hidden bg-slate-50">
       <header className="flex h-20 items-center justify-between border-b border-slate-300/10 bg-slate-50/80 px-5 backdrop-blur-[6px] sm:px-8 lg:px-10 xl:px-10">
@@ -41,6 +134,18 @@ export function OrganizerCreateEventStepThreeContent() {
 
       <div className="px-5 py-8 sm:px-8 lg:px-10 xl:px-10">
         <div className="w-full space-y-12">
+          {notice ? (
+            <div
+              className={`rounded-2xl px-4 py-3 text-sm font-semibold ${
+                notice.tone === "success"
+                  ? "bg-emerald-100 text-emerald-700"
+                  : "bg-rose-100 text-rose-700"
+              }`}
+            >
+              {notice.message}
+            </div>
+          ) : null}
+
           <section className="space-y-4">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
               <div>
@@ -75,12 +180,33 @@ export function OrganizerCreateEventStepThreeContent() {
                     <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
                       <Upload className="h-6 w-6 text-sky-700" />
                     </div>
-                    <h3 className="pb-1 text-lg font-semibold text-zinc-900">Click or drag to upload banner</h3>
+                    <h3 className="pb-1 text-lg font-semibold text-zinc-900">Click to upload banner</h3>
                     <p className="max-w-80 text-sm leading-5 text-gray-700">
                       PNG, JPG or WebP (Max 10MB). High resolution
                       <br />
                       landscape images work best.
                     </p>
+                    <input
+                      ref={bannerInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      onChange={(event) => {
+                        const file = event.target.files?.[0] ?? null;
+                        void handleBannerUpload(file);
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => bannerInputRef.current?.click()}
+                      disabled={isUploadingBanner}
+                      className="mt-4 rounded-2xl bg-gradient-to-r from-sky-700 to-violet-700 px-6 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {isUploadingBanner ? "Dang upload..." : "Chon file banner"}
+                    </button>
+                    {bannerUrl ? (
+                      <p className="mt-3 max-w-full truncate text-xs text-gray-700">URL: {bannerUrl}</p>
+                    ) : null}
                   </div>
                 </div>
               </section>
@@ -94,11 +220,37 @@ export function OrganizerCreateEventStepThreeContent() {
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                   <button
                     type="button"
+                    onClick={() => galleryInputRef.current?.click()}
+                    disabled={isUploadingGallery}
                     className="inline-flex min-h-36 flex-col items-center justify-center rounded-2xl outline outline-2 outline-slate-300"
                   >
                     <Upload className="h-5 w-5 text-gray-500" />
-                    <span className="pt-2 text-xs font-medium text-gray-700">Add Media</span>
+                    <span className="pt-2 text-xs font-medium text-gray-700">
+                      {isUploadingGallery ? "Dang upload..." : "Add Media"}
+                    </span>
                   </button>
+
+                  <input
+                    ref={galleryInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    multiple
+                    className="hidden"
+                    onChange={(event) => {
+                      void handleGalleryUpload(event.target.files);
+                    }}
+                  />
+
+                  {galleryUrls.map((item) => (
+                    <div key={item} className="group relative overflow-hidden rounded-2xl bg-gray-100">
+                      <img src={item} alt="Uploaded media" className="h-36 w-full object-cover" />
+                      <div className="absolute inset-0 flex items-center justify-center bg-zinc-900/40 opacity-0 transition group-hover:opacity-100">
+                        <button type="button" className="flex h-8 w-8 items-center justify-center rounded-full bg-white/80 backdrop-blur-md">
+                          <SquareChevronRight className="h-3.5 w-3.5 text-zinc-900" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
 
                   {[1, 2, 3].map((item) => (
                     <div key={item} className="group relative overflow-hidden rounded-2xl bg-gray-100">

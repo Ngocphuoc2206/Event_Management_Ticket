@@ -13,6 +13,17 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { useEffect, useMemo, useRef, useState } from "react";
+
+import { getApiErrorMessage, getApiResultData } from "@/features/auth/utils";
+import {
+  getOrganizerEventById,
+  updateOrganizerEvent,
+} from "@/features/organizer/events/services/create-event.service";
+import {
+  uploadOrganizerMedia,
+  validateOrganizerImageFile,
+} from "@/features/organizer/events/services/upload-media.service";
 
 function getEventIdFromQuery(eventId: string | string[] | undefined) {
   if (Array.isArray(eventId)) {
@@ -29,10 +40,156 @@ const GALLERY_ITEMS = [
   "https://placehold.co/300x220?text=Gallery+04",
 ];
 
+type NoticeTone = "success" | "error";
+
 export function OrganizerEditEventStepThreeContent() {
   const router = useRouter();
   const eventId = getEventIdFromQuery(router.query.eventId);
   const basePath = `/organizer/events/edit/${eventId}`;
+  const bannerInputRef = useRef<HTMLInputElement | null>(null);
+  const galleryInputRef = useRef<HTMLInputElement | null>(null);
+  const [bannerUrl, setBannerUrl] = useState("https://placehold.co/900x360?text=Main+Event+Banner");
+  const [galleryUrls, setGalleryUrls] = useState<string[]>([]);
+  const [isLoadingEvent, setIsLoadingEvent] = useState(true);
+  const [isUploadingBanner, setIsUploadingBanner] = useState(false);
+  const [isUploadingGallery, setIsUploadingGallery] = useState(false);
+  const [notice, setNotice] = useState<{ tone: NoticeTone; message: string } | null>(null);
+
+  const galleryStorageKey = useMemo(() => `organizer_event_gallery_${eventId}`, [eventId]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadEvent = async () => {
+      setIsLoadingEvent(true);
+
+      try {
+        const response = await getOrganizerEventById(eventId);
+        const event = getApiResultData(response);
+
+        if (mounted && event?.bannerUrl) {
+          setBannerUrl(event.bannerUrl);
+        }
+      } catch {
+        if (mounted) {
+          setNotice({ tone: "error", message: "Khong the tai du lieu event." });
+        }
+      } finally {
+        if (mounted) {
+          setIsLoadingEvent(false);
+        }
+      }
+    };
+
+    void loadEvent();
+
+    if (typeof window !== "undefined") {
+      const savedGallery = localStorage.getItem(galleryStorageKey);
+      if (savedGallery) {
+        try {
+          const parsed = JSON.parse(savedGallery) as unknown;
+          if (Array.isArray(parsed)) {
+            setGalleryUrls(parsed.filter((item): item is string => typeof item === "string"));
+          }
+        } catch {
+          localStorage.removeItem(galleryStorageKey);
+        }
+      }
+    }
+
+    return () => {
+      mounted = false;
+    };
+  }, [eventId, galleryStorageKey]);
+
+  const showNotice = (tone: NoticeTone, message: string) => {
+    setNotice({ tone, message });
+  };
+
+  const handleUploadBanner = async (file: File | null) => {
+    if (!file || isUploadingBanner) {
+      return;
+    }
+
+    const validation = validateOrganizerImageFile(file);
+    if (!validation.ok) {
+      showNotice("error", validation.message);
+      return;
+    }
+
+    setIsUploadingBanner(true);
+    setNotice(null);
+
+    try {
+      const uploaded = await uploadOrganizerMedia(file, "banner");
+      await updateOrganizerEvent(eventId, { bannerUrl: uploaded.url });
+      setBannerUrl(uploaded.url);
+      showNotice("success", "Upload banner thanh cong.");
+    } catch (error) {
+      showNotice("error", getApiErrorMessage(error, "Khong the upload banner."));
+    } finally {
+      setIsUploadingBanner(false);
+      if (bannerInputRef.current) {
+        bannerInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleUploadGallery = async (files: FileList | null) => {
+    if (!files || files.length === 0 || isUploadingGallery) {
+      return;
+    }
+
+    const selectedFiles = Array.from(files);
+    const invalidFile = selectedFiles.find((file) => !validateOrganizerImageFile(file).ok);
+
+    if (invalidFile) {
+      const invalidReason = validateOrganizerImageFile(invalidFile);
+      if (!invalidReason.ok) {
+        showNotice("error", invalidReason.message);
+      }
+      return;
+    }
+
+    setIsUploadingGallery(true);
+    setNotice(null);
+
+    try {
+      const uploaded = await Promise.all(selectedFiles.map((file) => uploadOrganizerMedia(file, "gallery")));
+      const uploadedUrls = uploaded.map((item) => item.url);
+
+      setGalleryUrls((prev) => {
+        const merged = [...uploadedUrls, ...prev].slice(0, 20);
+        if (typeof window !== "undefined") {
+          localStorage.setItem(galleryStorageKey, JSON.stringify(merged));
+        }
+        return merged;
+      });
+
+      showNotice("success", `Da upload ${uploadedUrls.length} hinh anh thanh cong.`);
+    } catch (error) {
+      showNotice("error", getApiErrorMessage(error, "Khong the upload gallery."));
+    } finally {
+      setIsUploadingGallery(false);
+      if (galleryInputRef.current) {
+        galleryInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleRemoveBanner = async () => {
+    if (isUploadingBanner) {
+      return;
+    }
+
+    try {
+      await updateOrganizerEvent(eventId, { bannerUrl: "" });
+      setBannerUrl("https://placehold.co/900x360?text=Main+Event+Banner");
+      showNotice("success", "Da xoa banner khoi event.");
+    } catch (error) {
+      showNotice("error", getApiErrorMessage(error, "Khong the xoa banner."));
+    }
+  };
 
   return (
     <section className="relative flex-1 overflow-hidden bg-slate-50">
@@ -71,6 +228,16 @@ export function OrganizerEditEventStepThreeContent() {
       </header>
 
       <main className="mx-auto flex w-full max-w-[1104px] flex-col gap-10 px-5 py-8 sm:px-8 lg:px-10">
+        {notice ? (
+          <div
+            className={`rounded-2xl px-4 py-3 text-sm font-semibold ${
+              notice.tone === "success" ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"
+            }`}
+          >
+            {notice.message}
+          </div>
+        ) : null}
+
         <section className="space-y-4">
           <div className="flex items-center gap-2 text-sm text-gray-700">
             <span>Events</span>
@@ -100,7 +267,7 @@ export function OrganizerEditEventStepThreeContent() {
             <article className="rounded-3xl bg-white p-1 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]">
               <div className="relative overflow-hidden rounded-2xl">
                 <img
-                  src="https://placehold.co/900x360?text=Main+Event+Banner"
+                  src={bannerUrl}
                   alt="Main event banner"
                   className="h-64 w-full object-cover"
                 />
@@ -110,11 +277,31 @@ export function OrganizerEditEventStepThreeContent() {
                   <p className="text-gray-700">Recommended: 1920x800px</p>
                 </div>
                 <div className="absolute right-4 top-4 flex items-center gap-3">
-                  <button type="button" className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2 text-sm font-bold text-zinc-900 shadow-xl">
+                  <input
+                    ref={bannerInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0] ?? null;
+                      void handleUploadBanner(file);
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => bannerInputRef.current?.click()}
+                    disabled={isUploadingBanner || isLoadingEvent}
+                    className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2 text-sm font-bold text-zinc-900 shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
+                  >
                     <Upload className="h-4 w-4" />
-                    Change Banner
+                    {isUploadingBanner ? "Uploading..." : "Change Banner"}
                   </button>
-                  <button type="button" className="rounded-full bg-red-700 p-2 text-white shadow-xl" aria-label="Remove banner">
+                  <button
+                    type="button"
+                    onClick={() => void handleRemoveBanner()}
+                    className="rounded-full bg-red-700 p-2 text-white shadow-xl"
+                    aria-label="Remove banner"
+                  >
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
@@ -124,26 +311,51 @@ export function OrganizerEditEventStepThreeContent() {
             <article className="space-y-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold text-zinc-900">Event Gallery</h2>
-                <button type="button" className="inline-flex items-center gap-1 text-sm font-bold text-sky-700">
+                <input
+                  ref={galleryInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  multiple
+                  className="hidden"
+                  onChange={(event) => {
+                    void handleUploadGallery(event.target.files);
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => galleryInputRef.current?.click()}
+                  disabled={isUploadingGallery}
+                  className="inline-flex items-center gap-1 text-sm font-bold text-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
                   <Upload className="h-4 w-4" />
-                  Upload Multiple
+                  {isUploadingGallery ? "Uploading..." : "Upload Multiple"}
                 </button>
               </div>
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <button
                   type="button"
+                  onClick={() => galleryInputRef.current?.click()}
                   className="flex min-h-48 flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300/50 bg-gray-100 text-gray-700"
                 >
                   <ImagePlus className="h-6 w-6" />
                   <span className="mt-2 text-xs font-bold uppercase tracking-wider">Add Media</span>
                 </button>
 
-                {GALLERY_ITEMS.map((item) => (
+                {[...galleryUrls, ...GALLERY_ITEMS].map((item) => (
                   <div key={item} className="relative overflow-hidden rounded-2xl bg-white shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]">
                     <img src={item} alt="Gallery item" className="h-48 w-full object-cover" />
                     <button
                       type="button"
+                      onClick={() => {
+                        setGalleryUrls((prev) => {
+                          const next = prev.filter((url) => url !== item);
+                          if (typeof window !== "undefined") {
+                            localStorage.setItem(galleryStorageKey, JSON.stringify(next));
+                          }
+                          return next;
+                        });
+                      }}
                       className="absolute right-2 top-2 rounded-full bg-white p-1.5 text-red-700 shadow-md"
                       aria-label="Delete image"
                     >

@@ -1,14 +1,21 @@
 import {
+  AlertCircle,
   Bell,
-  CalendarDays,
+  CheckCircle2,
   ChevronDown,
   Search,
   Settings,
-  Sparkles,
-  Undo2,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { useCallback, useEffect, useMemo, useState } from "react";
+
+import { getApiErrorMessage, getApiResultData, isApiResponse } from "@/features/auth/utils";
+import {
+  getOrganizerEventById,
+  updateOrganizerEvent,
+} from "@/features/organizer/events/services/create-event.service";
+import type { OrganizerCreateEventPayload, OrganizerEvent } from "@/features/organizer/events/types";
 
 function getEventIdFromQuery(eventId: string | string[] | undefined) {
   if (Array.isArray(eventId)) {
@@ -18,10 +25,125 @@ function getEventIdFromQuery(eventId: string | string[] | undefined) {
   return eventId ?? "event";
 }
 
+function toIsoWithOffset(daysOffset: number, hoursOffset = 0) {
+  const date = new Date();
+  date.setDate(date.getDate() + daysOffset);
+  date.setHours(date.getHours() + hoursOffset);
+  return date.toISOString();
+}
+
 export function OrganizerEditEventStepOneContent() {
+  type ToastState = {
+    tone: "success" | "error";
+    message: string;
+  };
+
   const router = useRouter();
   const eventId = getEventIdFromQuery(router.query.eventId);
   const basePath = `/organizer/events/edit/${eventId}`;
+
+  const [eventData, setEventData] = useState<OrganizerEvent | null>(null);
+  const [title, setTitle] = useState("");
+  const [category, setCategory] = useState("");
+  const [description, setDescription] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [toast, setToast] = useState<ToastState | null>(null);
+
+  const showToast = useCallback((nextToast: ToastState) => {
+    setToast(nextToast);
+    window.setTimeout(() => {
+      setToast(null);
+    }, 2500);
+  }, []);
+
+  const canSave = useMemo(
+    () => title.trim() && category.trim() && description.trim(),
+    [title, category, description],
+  );
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadEvent = async () => {
+      setIsLoading(true);
+      setToast(null);
+
+      try {
+        const response = await getOrganizerEventById(eventId);
+        if (isApiResponse(response) && typeof response.code === "number" && response.code !== 0) {
+          throw new Error(response.message || "Khong the tai chi tiet su kien.");
+        }
+        const data = getApiResultData(response);
+
+        if (!mounted) {
+          return;
+        }
+
+        if (!data) {
+          throw new Error("Khong tim thay du lieu su kien.");
+        }
+
+        setEventData(data);
+        setTitle(data.title ?? "");
+        setCategory(data.category ?? "");
+        setDescription(data.description ?? "");
+      } catch (error) {
+        if (mounted) {
+          showToast({ tone: "error", message: getApiErrorMessage(error, "Khong the tai chi tiet su kien.") });
+        }
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    void loadEvent();
+
+    return () => {
+      mounted = false;
+    };
+  }, [eventId, showToast]);
+
+  const handleSave = async () => {
+    if (!canSave || isSaving) {
+      return;
+    }
+
+    setIsSaving(true);
+    setToast(null);
+
+    try {
+      const safeDescription = description.trim();
+      const payload: OrganizerCreateEventPayload = {
+        title: title.trim(),
+        shortDescription: safeDescription.slice(0, 140),
+        description: safeDescription,
+        category: category.trim(),
+        venueName: eventData?.venueName?.trim() || "TBD Venue",
+        address: eventData?.address?.trim() || "Updating soon",
+        city: eventData?.city?.trim() || "TBD",
+        bannerUrl: eventData?.bannerUrl?.trim() || "https://placehold.co/1200x675?text=Event+Banner",
+        startTime: eventData?.startTime || toIsoWithOffset(7),
+        endTime: eventData?.endTime || toIsoWithOffset(7, 4),
+        visibility: "PUBLIC",
+        minPrice: typeof eventData?.minPrice === "number" ? eventData.minPrice : 0,
+      };
+
+      const response = await updateOrganizerEvent(eventId, payload);
+
+      if (isApiResponse(response) && typeof response.code === "number" && response.code !== 0) {
+        throw new Error(response.message || "Cap nhat su kien that bai.");
+      }
+
+      showToast({ tone: "success", message: "Da cap nhat thong tin su kien." });
+    } catch (error) {
+      showToast({ tone: "error", message: getApiErrorMessage(error, "Khong the cap nhat su kien.") });
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <section className="relative flex-1 overflow-hidden bg-slate-50">
@@ -38,7 +160,7 @@ export function OrganizerEditEventStepOneContent() {
           <span className="text-slate-300">/</span>
 
           <div>
-            <p className="text-base font-medium leading-6 text-gray-700">Prism Flow Music Festival 2024</p>
+            <p className="text-base font-medium leading-6 text-gray-700">{title || "Edit Event"}</p>
             <p className="text-xs uppercase tracking-widest text-slate-500">Edit Event Draft</p>
           </div>
         </div>
@@ -67,170 +189,101 @@ export function OrganizerEditEventStepOneContent() {
           >
             <Settings className="h-5 w-5" />
           </button>
-
-          <div className="hidden items-center gap-3 border-l border-gray-100 pl-6 sm:flex">
-            <div className="h-8 w-8 rounded-full bg-zinc-300" />
-            <div className="text-sm font-semibold leading-5 text-zinc-900">
-              Alex
-              <br />
-              Rivera
-            </div>
-          </div>
         </div>
       </header>
 
       <div className="mx-auto w-full max-w-[1104px] px-5 py-8 sm:px-8 lg:px-10">
-        <div className="grid gap-10 xl:grid-cols-[1.65fr_0.95fr]">
-          <div className="space-y-10">
-            <section className="space-y-4">
-              <div className="flex items-end justify-between gap-4">
-                <div className="space-y-1">
-                  <p className="text-xs font-bold uppercase tracking-[2.4px] text-sky-700">Step 01 of 05</p>
-                  <h1 className="text-4xl font-bold leading-9 text-zinc-900">Basic Information</h1>
-                </div>
-                <p className="text-sm font-medium text-gray-700">20% Complete</p>
+        {toast ? (
+          <div className="fixed right-6 top-6 z-50">
+            <div
+              className={`inline-flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold shadow-lg ${
+                toast.tone === "success" ? "bg-emerald-600 text-white" : "bg-rose-600 text-white"
+              }`}
+            >
+              {toast.tone === "success" ? <CheckCircle2 className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
+              {toast.message}
+            </div>
+          </div>
+        ) : null}
+
+        <div className="space-y-8">
+          <section className="space-y-4">
+            <div className="flex items-end justify-between gap-4">
+              <div className="space-y-1">
+                <p className="text-xs font-bold uppercase tracking-[2.4px] text-sky-700">Step 01 of 05</p>
+                <h1 className="text-4xl font-bold leading-9 text-zinc-900">Basic Information</h1>
               </div>
+            </div>
 
-              <div className="h-1.5 overflow-hidden rounded-full bg-gray-200">
-                <div className="h-full w-1/5 rounded-full bg-gradient-to-r from-sky-700 to-violet-700" />
-              </div>
-            </section>
+            <div className="h-1.5 overflow-hidden rounded-full bg-gray-200">
+              <div className="h-full w-1/5 rounded-full bg-gradient-to-r from-sky-700 to-violet-700" />
+            </div>
+          </section>
 
-            <section className="space-y-10 pb-20">
-              <article className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-gray-700">Event Title</label>
-                <div className="rounded-xl bg-gray-100 p-5">
-                  <p className="text-2xl font-bold leading-8 text-zinc-900">Prism Flow Music Festival 2024</p>
-                </div>
-              </article>
+          <section className="space-y-8 pb-8">
+            {isLoading ? (
+              <div className="rounded-xl bg-white p-8 text-sm font-medium text-gray-700">Loading event details...</div>
+            ) : (
+              <>
+                <article className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-gray-700">Event Title</label>
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={(event) => setTitle(event.target.value)}
+                    className="w-full rounded-xl bg-gray-100 p-5 text-2xl font-bold leading-8 text-zinc-900"
+                  />
+                </article>
 
-              <article className="grid gap-6 lg:grid-cols-2">
-                <div className="space-y-2">
+                <article className="space-y-2">
                   <label className="text-xs font-bold uppercase tracking-wider text-gray-700">Category</label>
-                  <div className="relative rounded-xl bg-gray-100 px-4 py-4">
-                    <span className="text-base text-zinc-900">Music</span>
+                  <div className="relative rounded-xl bg-gray-100">
+                    <select
+                      value={category}
+                      onChange={(event) => setCategory(event.target.value)}
+                      className="h-[56px] w-full appearance-none rounded-xl bg-transparent px-4 pr-12 text-base text-zinc-900 outline-none"
+                    >
+                      <option value="">Select category</option>
+                      <option value="Music">Music</option>
+                      <option value="Technology">Technology</option>
+                      <option value="Business">Business</option>
+                      <option value="Sports">Sports</option>
+                      <option value="Education">Education</option>
+                    </select>
                     <ChevronDown className="absolute right-4 top-4 h-5 w-5 text-gray-700" />
                   </div>
-                </div>
+                </article>
 
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-gray-700">Event Visibility</label>
-                  <div className="inline-flex w-full items-center gap-2 rounded-xl bg-gray-100 p-1">
-                    <button
-                      type="button"
-                      className="flex-1 rounded-lg bg-white px-4 py-3 text-sm font-bold text-sky-700 shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]"
-                    >
-                      Public
-                    </button>
-                    <button type="button" className="flex-1 rounded-lg px-4 py-3 text-sm font-medium text-gray-700">
-                      Private
-                    </button>
-                  </div>
-                </div>
-              </article>
-
-              <article className="space-y-2">
-                <div className="flex items-center justify-between">
+                <article className="space-y-2">
                   <label className="text-xs font-bold uppercase tracking-wider text-gray-700">Event Description</label>
-                  <span className="text-[10px] leading-4 text-gray-500">Rich Text Enabled</span>
-                </div>
+                  <textarea
+                    value={description}
+                    onChange={(event) => setDescription(event.target.value)}
+                    rows={8}
+                    className="w-full rounded-xl bg-gray-100 p-6 text-base leading-6 text-zinc-900"
+                  />
+                </article>
+              </>
+            )}
 
-                <div className="rounded-xl bg-gray-100 p-6">
-                  <div className="space-y-6 text-base leading-6 text-zinc-900">
-                    <p>
-                      Prism Flow is the premier audiovisual music festival where digital art meets high-fidelity sound.
-                      For the 2024 edition, we are transforming the urban waterfront into a kinetic gallery of light and rhythm.
-                    </p>
-                    <p>
-                      Attendees can expect three main stages featuring international synth-pop icons, underground techno legends,
-                      and experimental ambient producers. Beyond the music, explore interactive VR installations and gourmet local
-                      food pairings designed to elevate the sensory experience.
-                    </p>
-                  </div>
-                </div>
-              </article>
-
-              <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
-                <button type="button" className="inline-flex items-center gap-2 text-base font-semibold text-gray-700">
-                  <Undo2 className="h-4 w-4" />
-                  Discard Draft
-                </button>
-
-                <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-                  <button type="button" className="rounded-xl px-8 py-4 text-base font-bold text-gray-700">
-                    Save as Draft
-                  </button>
-                  <Link
-                    href={`${basePath}/location-time`}
-                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-700 to-violet-700 px-10 py-4 text-base font-bold text-white shadow-[0px_4px_6px_-4px_rgba(0,88,190,0.20),0px_10px_15px_-3px_rgba(0,88,190,0.20)]"
-                  >
-                    Next Step
-                    <ChevronDown className="h-4 w-4 -rotate-90" />
-                  </Link>
-                </div>
-              </div>
-            </section>
-          </div>
-
-          <aside className="space-y-6 pb-20">
-            <article className="space-y-6 rounded-3xl bg-gray-100 p-8">
-              <h3 className="text-lg font-bold leading-7 text-zinc-900">Event Preview</h3>
-
-              <div className="overflow-hidden rounded-2xl bg-white shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]">
-                <div className="relative h-40 bg-gradient-to-br from-zinc-800 to-zinc-500">
-                  <div className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full bg-rose-700 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
-                    <span className="h-1.5 w-1.5 rounded-full bg-white" />
-                    Live Status
-                  </div>
-                </div>
-
-                <div className="space-y-2 p-5">
-                  <span className="inline-flex rounded-full bg-purple-200 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-violet-950">
-                    Music
-                  </span>
-                  <h4 className="text-base font-bold leading-6 text-zinc-900">Prism Flow Music Festival 2024</h4>
-                  <div className="flex items-center gap-2 text-xs text-gray-700">
-                    <CalendarDays className="h-3.5 w-3.5" />
-                    Aug 24-26, 2024
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-sky-700/10 bg-blue-100/30 p-5">
-                <div className="flex items-start gap-3">
-                  <Sparkles className="mt-0.5 h-5 w-5 text-sky-700" />
-                  <div className="space-y-1">
-                    <p className="text-xs font-bold uppercase tracking-wider text-zinc-900">Pro Tip</p>
-                    <p className="text-sm leading-5 text-sky-800">
-                      Adding a detailed description increases ticket conversion by up to 30%.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </article>
-
-            <article className="rounded-3xl border border-slate-300/10 bg-zinc-200/30 p-8">
-              <h3 className="text-xs font-bold uppercase tracking-[2.4px] text-gray-700">Checklist</h3>
-              <ul className="mt-4 space-y-4">
-                <li className="flex items-center gap-3 text-sm font-medium text-zinc-900">
-                  <span className="h-5 w-5 rounded-full bg-sky-700" />
-                  Event Identity
-                </li>
-                <li className="flex items-center gap-3 text-sm font-medium text-gray-500">
-                  <span className="h-5 w-5 rounded-full bg-gray-400" />
-                  Date &amp; Venue
-                </li>
-                <li className="flex items-center gap-3 text-sm font-medium text-gray-500">
-                  <span className="h-5 w-5 rounded-full bg-gray-400" />
-                  Ticket Tiers
-                </li>
-                <li className="flex items-center gap-3 text-sm font-medium text-gray-500">
-                  <span className="h-5 w-5 rounded-full bg-gray-400" />
-                  Team Access
-                </li>
-              </ul>
-            </article>
-          </aside>
+            <div className="flex flex-wrap items-center justify-end gap-3 sm:gap-4">
+              <button
+                type="button"
+                onClick={() => void handleSave()}
+                disabled={!canSave || isSaving || isLoading}
+                className="rounded-xl px-8 py-4 text-base font-bold text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isSaving ? "Saving..." : "Save as Draft"}
+              </button>
+              <Link
+                href={`${basePath}/location-time`}
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-700 to-violet-700 px-10 py-4 text-base font-bold text-white shadow-[0px_4px_6px_-4px_rgba(0,88,190,0.20),0px_10px_15px_-3px_rgba(0,88,190,0.20)]"
+              >
+                Next Step
+                <ChevronDown className="h-4 w-4 -rotate-90" />
+              </Link>
+            </div>
+          </section>
         </div>
       </div>
     </section>
