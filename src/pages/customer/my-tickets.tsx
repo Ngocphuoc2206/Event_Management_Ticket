@@ -185,15 +185,21 @@ function TicketInfoRow({
 function TicketCard({
   ticket,
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   onOpenQr,
 }: {
   ticket: TicketRecord;
   onOpenQr: (ticket: TicketRecord) => void;
 =======
+=======
+>>>>>>> Stashed changes
   onQrClick,
 }: {
   ticket: TicketRecord;
   onQrClick: (ticket: TicketRecord) => void;
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 }) {
   const isPast = ticket.status === "Completed" || ticket.status === "Cancelled";
@@ -249,6 +255,9 @@ function TicketCard({
               className="rounded-xl mix-blend-multiply"
             />
           </button>
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
         </div>
 
@@ -297,6 +306,7 @@ export default function CustomerMyTicketsPage() {
   const { logout } = useAuth();
   const router = useRouter();
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   const totalValueSaved = formatCurrencyAmount(
     customerRecentOrders
       .filter((order) => order.status === "Completed")
@@ -321,6 +331,10 @@ export default function CustomerMyTicketsPage() {
   const [selectedQrTicket, setSelectedQrTicket] =
     useState<TicketRecord | null>(null);
 >>>>>>> Stashed changes
+=======
+  const [selectedQrTicket, setSelectedQrTicket] =
+    useState<TicketRecord | null>(null);
+>>>>>>> Stashed changes
 
   const handleLogout = async () => {
     const result = await logout();
@@ -328,8 +342,11 @@ export default function CustomerMyTicketsPage() {
   };
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   const tickets = activeTab === "upcoming" ? UPCOMING_TICKETS : PAST_TICKETS;
 =======
+=======
+>>>>>>> Stashed changes
   useEffect(() => {
     if (!selectedQrTicket) {
       return;
@@ -344,6 +361,9 @@ export default function CustomerMyTicketsPage() {
     window.addEventListener("keydown", handleEscape);
     return () => window.removeEventListener("keydown", handleEscape);
   }, [selectedQrTicket]);
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
   return (
@@ -613,6 +633,70 @@ export default function CustomerMyTicketsPage() {
             </div>
           </div>
         </div>
+<<<<<<< Updated upstream
+=======
+      </main>
+
+      {selectedQrTicket ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 px-4 backdrop-blur-sm transition-all"
+          onClick={() => setSelectedQrTicket(null)}
+        >
+          <div
+            className="w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="text-[10px] font-black uppercase tracking-widest text-indigo-600">
+                  Scan Ticket QR
+                </div>
+                <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-900">
+                  {selectedQrTicket.title}
+                </h2>
+                <p className="mt-1 text-sm font-bold text-slate-400">
+                  {selectedQrTicket.date} at {selectedQrTicket.time}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedQrTicket(null)}
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-50 text-slate-400 transition hover:bg-slate-100 hover:text-slate-900"
+                aria-label="Close QR code"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  className="h-4 w-4 fill-none stroke-current"
+                  strokeWidth="3"
+                >
+                  <path d="M6 6l12 12M18 6 6 18" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="mt-8 rounded-3xl border border-slate-100 bg-slate-50 p-6 text-center">
+              <div className="mx-auto flex w-fit rounded-2xl bg-white p-4 shadow-sm border border-slate-100">
+                <Image
+                  src={getQrSrc(selectedQrTicket)}
+                  alt={`Large QR for ${selectedQrTicket.code}`}
+                  width={240}
+                  height={240}
+                  className="rounded-xl"
+                />
+              </div>
+              <div className="mt-6 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                Ticket Code
+              </div>
+              <div className="mt-1 text-lg font-black tracking-widest text-slate-900">
+                {selectedQrTicket.code}
+              </div>
+              <p className="mt-4 inline-block rounded-full border border-slate-100 bg-white px-4 py-2 text-xs font-bold text-slate-500 shadow-sm">
+                Show this QR at the gate for scanning
+              </p>
+            </div>
+          </div>
+        </div>
+>>>>>>> Stashed changes
       ) : null}
     </>
   );
