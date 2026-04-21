@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { useAuth } from "@/features/auth/hooks/useAuth";
 import {
   LayoutDashboard,
   Users,
@@ -66,7 +67,8 @@ export default function AdminLayout({
   title: string;
 }) {
   const router = useRouter();
-  const [isSupportOpen, setIsSupportOpen] = useState(false);
+  const { logout } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // Kiểm tra xem trang hiện tại có phải là support không để làm sáng nút góc dưới
   const isSupportPageActive = router.pathname === "/admin/support";
@@ -80,6 +82,21 @@ export default function AdminLayout({
     { icon: BarChart3, label: "Financial Reports", href: "/admin/finance" },
     { icon: Settings, label: "System Settings", href: "/admin/settings" },
   ];
+
+  const handleSignOut = async () => {
+    if (isLoggingOut) {
+      return;
+    }
+
+    setIsLoggingOut(true);
+
+    try {
+      const result = await logout(undefined, { redirectTo: "/auth/login" });
+      await router.push(result.redirectTo);
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#FDFDFF] flex font-sans text-slate-900">
@@ -131,12 +148,16 @@ export default function AdminLayout({
             </span>
           </div>
 
-          <button className="flex items-center gap-3.5 px-5 py-3 text-rose-500 font-bold hover:bg-rose-50 w-full rounded-full transition-all group">
+          <button
+            onClick={() => void handleSignOut()}
+            disabled={isLoggingOut}
+            className="flex items-center gap-3.5 px-5 py-3 text-rose-500 font-bold hover:bg-rose-50 w-full rounded-full transition-all group disabled:opacity-60"
+          >
             <LogOut
               size={20}
               className="group-hover:-translate-x-1 transition-transform"
             />
-            <span className="text-sm">Sign Out</span>
+            <span className="text-sm">{isLoggingOut ? "Signing Out..." : "Sign Out"}</span>
           </button>
         </div>
       </aside>
