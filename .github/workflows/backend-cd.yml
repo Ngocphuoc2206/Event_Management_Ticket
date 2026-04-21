@@ -1,9 +1,6 @@
 name: Backend CD
 
 on:
-  push:
-    branches:
-      - master
   pull_request:
     branches:
       - master
@@ -34,11 +31,10 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
-
           script: |
-            
+            set -e
             cd /home/ubuntu/apps/eventhub/backend-prod/source
-#            Create .env from git secrets
+
             cat > .env <<EOF
             SERVER_PORT=8080
             DB_HOST=${{ secrets.DB_HOST }}
@@ -58,4 +54,4 @@ jobs:
             docker compose up -d --build
             sleep 15
             curl -f http://localhost:8080/actuator/health || exit 1
-            docker image prune -af
+            docker image prune -af || true
