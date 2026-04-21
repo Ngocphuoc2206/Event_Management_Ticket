@@ -1,10 +1,13 @@
 import type { ApiResult } from "@/features/auth/types";
-import { ensureApiResultSuccess, getApiErrorMessage } from "@/features/auth/utils";
+import {
+  ensureApiResultSuccess,
+  getApiErrorMessage,
+} from "@/features/auth/utils";
 import axiosClient from "@/features/httpClient/axiosClient";
 
 const ORGANIZER_MEDIA_UPLOAD_ENDPOINT =
   process.env.NEXT_PUBLIC_ORGANIZER_MEDIA_UPLOAD_ENDPOINT ||
-  "http://localhost:8080/api/organizer/events/upload";
+  `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/media/upload`;
 
 type UploadResponseData = {
   url?: string;
@@ -41,7 +44,9 @@ export async function uploadOrganizerBanner(file: File) {
     ensureApiResultSuccess(data, "Upload that bai.");
 
     if (typeof data === "object" && data !== null && "data" in data) {
-      const fromEnvelope = extractUploadedUrl((data as { data?: unknown }).data);
+      const fromEnvelope = extractUploadedUrl(
+        (data as { data?: unknown }).data,
+      );
       if (fromEnvelope) {
         return fromEnvelope;
       }
@@ -52,11 +57,17 @@ export async function uploadOrganizerBanner(file: File) {
       return direct;
     }
 
-    throw new Error("Upload succeeded but no file URL was returned by backend.");
+    throw new Error(
+      "Upload succeeded but no file URL was returned by backend.",
+    );
   } catch (error) {
     throw new Error(getApiErrorMessage(error, "Upload that bai."));
   }
 }
 
-export const ORGANIZER_ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"];
+export const ORGANIZER_ALLOWED_IMAGE_TYPES = [
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+];
 export const ORGANIZER_MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
