@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { AlertCircle, CheckCircle2, Save } from "lucide-react";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
@@ -129,7 +130,9 @@ export function OrganizerCreateEventStepFiveContent() {
     }
 
     const draftPayload = resolveDraftPayload();
-    const draftResult = await saveOrganizerEventDraft(draftPayload);
+    const draftResult = await saveOrganizerEventDraft(
+      draftPayload as OrganizerCreateEventPayload,
+    );
     const draftData = getApiResultData(
       draftResult as ApiResult<OrganizerEvent>,
     );
@@ -153,8 +156,11 @@ export function OrganizerCreateEventStepFiveContent() {
     try {
       const id = await resolveEventId();
       const draftPayload = resolveDraftPayload();
-      await saveOrganizerEventDraft(draftPayload, id);
-      setReviewPayload(draftPayload);
+      await saveOrganizerEventDraft(
+        draftPayload as OrganizerCreateEventPayload,
+        id,
+      );
+      setReviewPayload(draftPayload as OrganizerCreateEventPayload);
       setStatus("DRAFT");
       showToast({ tone: "success", message: "Đã lưu draft thành công." });
     } catch (error) {
@@ -181,8 +187,8 @@ export function OrganizerCreateEventStepFiveContent() {
     try {
       const id = await resolveEventId();
       const latestPayload = resolveDraftPayload();
-      mergeOrganizerDraftPayload(latestPayload);
-      setReviewPayload(latestPayload);
+      mergeOrganizerDraftPayload(latestPayload as OrganizerCreateEventPayload);
+      setReviewPayload(latestPayload as OrganizerCreateEventPayload);
 
       if (canPublishDirectly) {
         await publishOrganizerEvent(id);
@@ -278,43 +284,78 @@ export function OrganizerCreateEventStepFiveContent() {
           </section>
 
           <section className="rounded-3xl bg-white p-8 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
-            <h2 className="text-xl font-bold text-zinc-900">Review Event Data</h2>
+            <h2 className="text-xl font-bold text-zinc-900">
+              Review Event Data
+            </h2>
             <p className="mt-2 text-sm text-gray-700">
-              Dữ liệu bên dưới được lấy từ state tổng (draft payload) của toàn bộ các bước.
+              Dữ liệu bên dưới được lấy từ state tổng (draft payload) của toàn
+              bộ các bước.
             </p>
 
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-gray-700">Title</p>
-                <p className="text-sm text-zinc-900">{reviewPayload.title || "-"}</p>
+                <p className="text-xs font-bold uppercase tracking-wide text-gray-700">
+                  Title
+                </p>
+                <p className="text-sm text-zinc-900">
+                  {reviewPayload.title || "-"}
+                </p>
               </div>
               <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-gray-700">Category</p>
-                <p className="text-sm text-zinc-900">{reviewPayload.category || "-"}</p>
+                <p className="text-xs font-bold uppercase tracking-wide text-gray-700">
+                  Category
+                </p>
+                <p className="text-sm text-zinc-900">
+                  {reviewPayload.category || "-"}
+                </p>
               </div>
               <div className="sm:col-span-2">
-                <p className="text-xs font-bold uppercase tracking-wide text-gray-700">Description</p>
-                <p className="text-sm text-zinc-900">{reviewPayload.description || "-"}</p>
+                <p className="text-xs font-bold uppercase tracking-wide text-gray-700">
+                  Description
+                </p>
+                <p className="text-sm text-zinc-900">
+                  {reviewPayload.description || "-"}
+                </p>
               </div>
               <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-gray-700">Venue Name</p>
-                <p className="text-sm text-zinc-900">{reviewPayload.venueName || "-"}</p>
+                <p className="text-xs font-bold uppercase tracking-wide text-gray-700">
+                  Venue Name
+                </p>
+                <p className="text-sm text-zinc-900">
+                  {reviewPayload.venueName || "-"}
+                </p>
               </div>
               <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-gray-700">Address</p>
-                <p className="text-sm text-zinc-900">{reviewPayload.address || "-"}</p>
+                <p className="text-xs font-bold uppercase tracking-wide text-gray-700">
+                  Address
+                </p>
+                <p className="text-sm text-zinc-900">
+                  {reviewPayload.address || "-"}
+                </p>
               </div>
               <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-gray-700">Start Time</p>
-                <p className="text-sm text-zinc-900">{reviewPayload.startTime || "-"}</p>
+                <p className="text-xs font-bold uppercase tracking-wide text-gray-700">
+                  Start Time
+                </p>
+                <p className="text-sm text-zinc-900">
+                  {reviewPayload.startTime || "-"}
+                </p>
               </div>
               <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-gray-700">End Time</p>
-                <p className="text-sm text-zinc-900">{reviewPayload.endTime || "-"}</p>
+                <p className="text-xs font-bold uppercase tracking-wide text-gray-700">
+                  End Time
+                </p>
+                <p className="text-sm text-zinc-900">
+                  {reviewPayload.endTime || "-"}
+                </p>
               </div>
               <div className="sm:col-span-2">
-                <p className="text-xs font-bold uppercase tracking-wide text-gray-700">Banner URL</p>
-                <p className="break-all text-sm text-zinc-900">{reviewPayload.bannerUrl || "-"}</p>
+                <p className="text-xs font-bold uppercase tracking-wide text-gray-700">
+                  Banner URL
+                </p>
+                <p className="break-all text-sm text-zinc-900">
+                  {reviewPayload.bannerUrl || "-"}
+                </p>
               </div>
             </div>
           </section>
