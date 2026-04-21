@@ -6,13 +6,21 @@ import type {
   CustomerTicketCard,
 } from "./types";
 
-export const customerNavigationItems = [
-  { label: "Dashboard", href: "/customer", icon: "grid", active: true },
+const CUSTOMER_NAVIGATION_ITEMS_BASE = [
+  { label: "Dashboard", href: "/customer", icon: "grid" },
+  { label: "Events", href: "/customer/events", icon: "search" },
   { label: "My Tickets", href: "/customer/my-tickets", icon: "ticket" },
   { label: "Order History", href: "/customer/order-history", icon: "history" },
   { label: "Notifications", href: "/customer/notifications", icon: "bell" },
   { label: "Profile Settings", href: "/customer/profile-settings", icon: "settings" },
 ] satisfies CustomerNavItem[];
+
+export function getCustomerNavigationItems(activeHref: string) {
+  return CUSTOMER_NAVIGATION_ITEMS_BASE.map((item) => ({
+    ...item,
+    active: item.href === activeHref,
+  })) satisfies CustomerNavItem[];
+}
 
 export const customerStatCards = [
   { label: "Total Tickets", value: "24", note: "+3 from last month", accent: "text-blue-600", icon: "ticket" },

@@ -24,8 +24,12 @@ import {
   getStoredAccessToken,
   resolveAuthPayload,
 } from "@/features/auth/utils";
-import { CustomerDashboardSidebar, customerProfile } from "@/features/customer";
-import type { CustomerNavItem, CustomerProfile } from "@/features/customer";
+import {
+  CustomerDashboardSidebar,
+  customerProfile,
+  getCustomerNavigationItems,
+} from "@/features/customer";
+import type { CustomerProfile } from "@/features/customer";
 
 type ProfileFormValues = {
   fullName: string;
@@ -48,19 +52,6 @@ type ToggleSetting = {
   description: string;
   enabled: boolean;
 };
-
-const customerProfileNavigationItems: CustomerNavItem[] = [
-  { label: "Dashboard", href: "/customer", icon: "grid" },
-  { label: "My Tickets", href: "/customer/my-tickets", icon: "ticket" },
-  { label: "Order History", href: "/customer/order-history", icon: "history" },
-  { label: "Notifications", href: "/customer/notifications", icon: "bell" },
-  {
-    label: "Profile Settings",
-    href: "/customer/profile-settings",
-    icon: "settings",
-    active: true,
-  },
-];
 
 const PHONE_PATTERN = /^[0-9+\s()-]{8,20}$/;
 
@@ -547,7 +538,7 @@ export default function CustomerProfileSettingsPage() {
       <main className="min-h-screen w-full bg-[#f4f7fb] text-slate-900">
         <div className="flex min-h-screen w-full flex-col xl:flex-row">
           <CustomerDashboardSidebar
-            navigationItems={customerProfileNavigationItems}
+            navigationItems={getCustomerNavigationItems("/customer/profile-settings")}
             profile={sidebarProfile}
             onLogout={() => void handleLogout()}
           />

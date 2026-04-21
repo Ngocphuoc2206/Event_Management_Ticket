@@ -1,11 +1,16 @@
+/* eslint-disable @next/next/no-img-element */
 import Head from "next/head";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
 import { useAuth } from "@/features/auth/hooks/useAuth";
-import { CustomerDashboardIcon, CustomerDashboardSidebar, customerProfile } from "@/features/customer";
-import type { CustomerNavItem } from "@/features/customer";
+import {
+  CustomerDashboardIcon,
+  CustomerDashboardSidebar,
+  customerProfile,
+  getCustomerNavigationItems,
+} from "@/features/customer";
 import type { CustomerTicketResponse } from "@/features/customer/tickets.service";
 import { getMyTickets } from "@/features/customer/tickets.service";
 
@@ -25,14 +30,6 @@ type TicketRecord = {
   imageSrc: string;
   detailHref: string;
 };
-
-const customerTicketNavigationItems: CustomerNavItem[] = [
-  { label: "Dashboard", href: "/customer", icon: "grid" },
-  { label: "My Tickets", href: "/customer/my-tickets", icon: "ticket", active: true },
-  { label: "Order History", href: "/customer/order-history", icon: "history" },
-  { label: "Notifications", href: "/customer/notifications", icon: "bell" },
-  { label: "Profile Settings", href: "/customer/profile-settings", icon: "settings" },
-];
 
 const STATUS_STYLES: Record<TicketStatus, string> = {
   Active: "bg-emerald-500 text-white",
@@ -137,7 +134,7 @@ function mapTicket(ticket: CustomerTicketResponse, index: number, group?: "upcom
     code,
     qrCodeSrc: "",
     imageSrc: index % 2 === 0 ? "/images/upc1.png" : "/images/upc2.png",
-    detailHref: ticket.eventId ? `/event/${ticket.eventId}` : "/events",
+    detailHref: ticket.eventId ? `/event/${ticket.eventId}` : "/customer/events",
   };
 
   return {
@@ -261,6 +258,11 @@ export default function CustomerMyTicketsPage() {
   const [selectedQrTicket, setSelectedQrTicket] = useState<TicketRecord | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const purchaseSuccess = router.query.purchase === "success";
+  const purchasedEventName =
+    typeof router.query.event === "string" ? router.query.event : "";
+  const purchasedOrderId =
+    typeof router.query.orderId === "string" ? router.query.orderId : "";
 
   useEffect(() => {
     let isMounted = true;
@@ -328,7 +330,7 @@ export default function CustomerMyTicketsPage() {
       <main className="min-h-screen w-full bg-[#eef2f8] text-slate-900">
         <div className="flex min-h-screen w-full flex-col xl:flex-row">
           <CustomerDashboardSidebar
-            navigationItems={customerTicketNavigationItems}
+            navigationItems={getCustomerNavigationItems("/customer/my-tickets")}
             profile={customerProfile}
             onLogout={() => void handleLogout()}
           />
@@ -345,6 +347,15 @@ export default function CustomerMyTicketsPage() {
                 </p>
               </div>
             </header>
+
+            {purchaseSuccess ? (
+              <div className="mt-6 rounded-[26px] border border-emerald-100 bg-emerald-50 px-5 py-4 text-sm font-semibold text-emerald-700 shadow-[0_18px_44px_rgba(148,163,184,0.12)]">
+                Payment success{purchasedEventName ? ` for ${purchasedEventName}` : ""}.
+                {purchasedOrderId
+                  ? ` Order ${purchasedOrderId} was completed and your QR ticket should appear below.`
+                  : ""}
+              </div>
+            ) : null}
 
             <section className="mt-10">
               <div className="flex items-center justify-between gap-4">
