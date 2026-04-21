@@ -5,6 +5,8 @@ import com.envenHub.backend.dto.request.CheckInRequest;
 import com.envenHub.backend.dto.request.EventRequest;
 import com.envenHub.backend.dto.request.TicketTypeRequest;
 import com.envenHub.backend.dto.response.*;
+import com.envenHub.backend.dto.response.AnalyticsResponse.AnalyticsResponse;
+import com.envenHub.backend.service.AnalyticsService;
 import com.envenHub.backend.service.EventService;
 import com.envenHub.backend.service.TicketTypeService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +21,9 @@ public class OrganizerController {
 
     @Autowired
     private TicketTypeService ticketTypeService;
+
+    @Autowired
+    private AnalyticsService analyticsService;
 
     @GetMapping("/events")
     public ApiResponse<PagedResponse<EventListResponse>> getOrganizerEvents(
@@ -77,6 +82,17 @@ public class OrganizerController {
         return ApiResponse.<PagedResponse<AttendeeResponse>>builder()
                 .results(eventService.getAttendees(id, search, status, page, size,
                         sortBy, sortDir, authentication))
+                .build();
+    }
+
+    @GetMapping("/analytics")
+    public ApiResponse<AnalyticsResponse> getAnalytics(
+            @RequestParam String eventId,
+            @RequestParam(defaultValue = "7d") String range,
+            Authentication authentication
+    ) {
+        return ApiResponse.<AnalyticsResponse>builder()
+                .results(analyticsService.getAnalytics(eventId, range, authentication))
                 .build();
     }
 
