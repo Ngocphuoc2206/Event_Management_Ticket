@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 // src/components/templates/AdminLayout/AdminLayout.tsx
 import React, { useState } from "react";
 import Link from "next/link";
@@ -82,10 +83,10 @@ export default function AdminLayout({
 
   return (
     <div className="min-h-screen bg-[#FDFDFF] flex font-sans text-slate-900">
-      <aside className="w-[280px] bg-white border-r border-slate-100 flex flex-col sticky top-0 h-screen z-40">
+      <aside className="w-70 bg-white border-r border-slate-100 flex flex-col sticky top-0 h-screen z-40">
         <div className="p-7">
           <div className="flex items-center gap-3 mb-10 px-1">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-100 rotate-3">
+            <div className="w-10 h-10 bg-linear-to-br from-blue-600 to-indigo-700 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-100 rotate-3">
               <Zap size={22} fill="white" />
             </div>
             <div>

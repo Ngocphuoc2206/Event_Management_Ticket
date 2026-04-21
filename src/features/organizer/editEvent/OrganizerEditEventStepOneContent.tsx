@@ -9,7 +9,10 @@ import {
   getOrganizerEventById,
   updateOrganizerEvent,
 } from "@/features/organizer/events/services/create-event.service";
-import type { OrganizerCreateEventPayload, OrganizerEvent } from "@/features/organizer/events/types";
+import type {
+  OrganizerCreateEventPayload,
+  OrganizerEvent,
+} from "@/features/organizer/events/types";
 
 type ToastState = {
   tone: "success" | "error";
@@ -54,12 +57,15 @@ export function OrganizerEditEventStepOneContent() {
       return;
     }
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsLoading(true);
 
     void (async () => {
       try {
         const apiResult = await getOrganizerEventById(eventId);
-        const eventData = getApiResultData(apiResult as ApiResult<OrganizerEvent>);
+        const eventData = getApiResultData(
+          apiResult as ApiResult<OrganizerEvent>,
+        );
 
         if (!eventData) {
           throw new Error("Không lấy được dữ liệu sự kiện.");
@@ -75,7 +81,10 @@ export function OrganizerEditEventStepOneContent() {
       } catch (error) {
         setToast({
           tone: "error",
-          message: getApiErrorMessage(error, "Không thể tải dữ liệu event để chỉnh sửa."),
+          message: getApiErrorMessage(
+            error,
+            "Không thể tải dữ liệu event để chỉnh sửa.",
+          ),
         });
       } finally {
         setIsLoading(false);
@@ -89,7 +98,11 @@ export function OrganizerEditEventStepOneContent() {
   };
 
   const canSave = useMemo(() => {
-    return form.title.trim().length > 0 && form.category.trim().length > 0 && form.description.trim().length > 0;
+    return (
+      form.title.trim().length > 0 &&
+      form.category.trim().length > 0 &&
+      form.description.trim().length > 0
+    );
   }, [form]);
 
   const handleSaveDraft = async () => {
@@ -116,7 +129,10 @@ export function OrganizerEditEventStepOneContent() {
       }
       showToast({ tone: "success", message: "Đã cập nhật draft thành công." });
     } catch (error) {
-      showToast({ tone: "error", message: getApiErrorMessage(error, "Không thể cập nhật event draft.") });
+      showToast({
+        tone: "error",
+        message: getApiErrorMessage(error, "Không thể cập nhật event draft."),
+      });
     } finally {
       setIsSaving(false);
     }
@@ -128,10 +144,16 @@ export function OrganizerEditEventStepOneContent() {
         <div className="fixed right-6 top-6 z-50">
           <div
             className={`inline-flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold shadow-lg ${
-              toast.tone === "success" ? "bg-emerald-600 text-white" : "bg-rose-600 text-white"
+              toast.tone === "success"
+                ? "bg-emerald-600 text-white"
+                : "bg-rose-600 text-white"
             }`}
           >
-            {toast.tone === "success" ? <CheckCircle2 className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
+            {toast.tone === "success" ? (
+              <CheckCircle2 className="h-4 w-4" />
+            ) : (
+              <AlertCircle className="h-4 w-4" />
+            )}
             {toast.message}
           </div>
         </div>
@@ -139,40 +161,61 @@ export function OrganizerEditEventStepOneContent() {
 
       <div className="mx-auto w-full max-w-[1104px] px-5 py-8 sm:px-8 lg:px-10">
         <section className="space-y-4">
-          <p className="text-xs font-bold uppercase tracking-[2.4px] text-sky-700">Step 01 of 05</p>
-          <h1 className="text-4xl font-bold leading-9 text-zinc-900">Basic Information</h1>
+          <p className="text-xs font-bold uppercase tracking-[2.4px] text-sky-700">
+            Step 01 of 05
+          </p>
+          <h1 className="text-4xl font-bold leading-9 text-zinc-900">
+            Basic Information
+          </h1>
           <p className="text-sm text-gray-700">Event ID: {eventId || "N/A"}</p>
         </section>
 
         <section className="mt-8 space-y-6 rounded-3xl bg-white p-8 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
-          {isLoading ? <p className="text-sm text-gray-700">Đang tải dữ liệu event...</p> : null}
+          {isLoading ? (
+            <p className="text-sm text-gray-700">Đang tải dữ liệu event...</p>
+          ) : null}
 
           <div className="space-y-2">
-            <label className="text-xs font-bold uppercase tracking-wider text-gray-700">Event Title</label>
+            <label className="text-xs font-bold uppercase tracking-wider text-gray-700">
+              Event Title
+            </label>
             <input
               type="text"
               value={form.title}
-              onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))}
+              onChange={(event) =>
+                setForm((prev) => ({ ...prev, title: event.target.value }))
+              }
               className="w-full rounded-2xl bg-gray-100 px-6 py-4 text-base text-zinc-900 outline-none ring-sky-500 transition focus:ring-2"
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-bold uppercase tracking-wider text-gray-700">Category</label>
+            <label className="text-xs font-bold uppercase tracking-wider text-gray-700">
+              Category
+            </label>
             <input
               type="text"
               value={form.category}
-              onChange={(event) => setForm((prev) => ({ ...prev, category: event.target.value }))}
+              onChange={(event) =>
+                setForm((prev) => ({ ...prev, category: event.target.value }))
+              }
               className="w-full rounded-2xl bg-gray-100 px-6 py-4 text-base text-zinc-900 outline-none ring-sky-500 transition focus:ring-2"
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-bold uppercase tracking-wider text-gray-700">Event Description</label>
+            <label className="text-xs font-bold uppercase tracking-wider text-gray-700">
+              Event Description
+            </label>
             <textarea
               rows={7}
               value={form.description}
-              onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))}
+              onChange={(event) =>
+                setForm((prev) => ({
+                  ...prev,
+                  description: event.target.value,
+                }))
+              }
               className="w-full resize-y rounded-2xl bg-gray-100 px-6 py-4 text-base leading-6 text-zinc-900 outline-none ring-sky-500 transition focus:ring-2"
             />
           </div>

@@ -15,7 +15,10 @@ import {
   saveOrganizerEventDraft,
   submitOrganizerEventForApproval,
 } from "@/features/organizer/events/services/create-event.service";
-import type { OrganizerCreateEventPayload, OrganizerEvent } from "@/features/organizer/events/types";
+import type {
+  OrganizerCreateEventPayload,
+  OrganizerEvent,
+} from "@/features/organizer/events/types";
 
 type ToastState = {
   tone: "success" | "error";
@@ -35,7 +38,8 @@ function buildFallbackDraftPayload(): OrganizerCreateEventPayload {
     venueName: "TBD Venue",
     address: "TBD Address",
     city: "Ho Chi Minh",
-    bannerUrl: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1200&q=80",
+    bannerUrl:
+      "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1200&q=80",
     startTime: start.toISOString(),
     endTime: end.toISOString(),
     visibility: "PUBLIC",
@@ -53,7 +57,8 @@ export function OrganizerCreateEventStepFiveContent() {
   const [toast, setToast] = useState<ToastState | null>(null);
 
   useEffect(() => {
-    const queryEventId = typeof router.query.eventId === "string" ? router.query.eventId : null;
+    const queryEventId =
+      typeof router.query.eventId === "string" ? router.query.eventId : null;
     const storedEventId = getOrganizerDraftEventId();
     const resolvedEventId = queryEventId || storedEventId;
 
@@ -61,13 +66,16 @@ export function OrganizerCreateEventStepFiveContent() {
       return;
     }
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setEventId(resolvedEventId);
     setOrganizerDraftEventId(resolvedEventId);
 
     void (async () => {
       try {
         const apiResult = await getOrganizerEventById(resolvedEventId);
-        const eventData = getApiResultData(apiResult as ApiResult<OrganizerEvent>);
+        const eventData = getApiResultData(
+          apiResult as ApiResult<OrganizerEvent>,
+        );
         if (eventData?.status) {
           setStatus(String(eventData.status));
         }
@@ -83,7 +91,10 @@ export function OrganizerCreateEventStepFiveContent() {
   };
 
   const resolveDraftPayload = () => {
-    return (getOrganizerDraftPayload() as OrganizerCreateEventPayload | null) ?? buildFallbackDraftPayload();
+    return (
+      (getOrganizerDraftPayload() as OrganizerCreateEventPayload | null) ??
+      buildFallbackDraftPayload()
+    );
   };
 
   const resolveEventId = async () => {
@@ -93,7 +104,9 @@ export function OrganizerCreateEventStepFiveContent() {
 
     const draftPayload = resolveDraftPayload();
     const draftResult = await saveOrganizerEventDraft(draftPayload);
-    const draftData = getApiResultData(draftResult as ApiResult<OrganizerEvent>);
+    const draftData = getApiResultData(
+      draftResult as ApiResult<OrganizerEvent>,
+    );
     const createdId = draftData?.id;
 
     if (!createdId) {
@@ -118,13 +131,19 @@ export function OrganizerCreateEventStepFiveContent() {
       setStatus("DRAFT");
       showToast({ tone: "success", message: "Đã lưu draft thành công." });
     } catch (error) {
-      showToast({ tone: "error", message: getApiErrorMessage(error, "Không thể lưu draft.") });
+      showToast({
+        tone: "error",
+        message: getApiErrorMessage(error, "Không thể lưu draft."),
+      });
     } finally {
       setIsSavingDraft(false);
     }
   };
 
-  const canPublishDirectly = useMemo(() => status.toUpperCase() === "APPROVED", [status]);
+  const canPublishDirectly = useMemo(
+    () => status.toUpperCase() === "APPROVED",
+    [status],
+  );
 
   const handleSubmitWorkflow = async () => {
     if (isSubmittingWorkflow) {
@@ -142,10 +161,16 @@ export function OrganizerCreateEventStepFiveContent() {
       } else {
         await submitOrganizerEventForApproval(id);
         setStatus("PENDING_APPROVAL");
-        showToast({ tone: "success", message: "Đã submit sự kiện để chờ duyệt." });
+        showToast({
+          tone: "success",
+          message: "Đã submit sự kiện để chờ duyệt.",
+        });
       }
     } catch (error) {
-      showToast({ tone: "error", message: getApiErrorMessage(error, "Không thể cập nhật workflow.") });
+      showToast({
+        tone: "error",
+        message: getApiErrorMessage(error, "Không thể cập nhật workflow."),
+      });
     } finally {
       setIsSubmittingWorkflow(false);
     }
@@ -157,10 +182,16 @@ export function OrganizerCreateEventStepFiveContent() {
         <div className="fixed right-6 top-6 z-50">
           <div
             className={`inline-flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold shadow-lg ${
-              toast.tone === "success" ? "bg-emerald-600 text-white" : "bg-rose-600 text-white"
+              toast.tone === "success"
+                ? "bg-emerald-600 text-white"
+                : "bg-rose-600 text-white"
             }`}
           >
-            {toast.tone === "success" ? <CheckCircle2 className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
+            {toast.tone === "success" ? (
+              <CheckCircle2 className="h-4 w-4" />
+            ) : (
+              <AlertCircle className="h-4 w-4" />
+            )}
             {toast.message}
           </div>
         </div>
@@ -169,16 +200,25 @@ export function OrganizerCreateEventStepFiveContent() {
       <div className="w-full px-5 py-8 sm:px-8 lg:px-10 xl:px-10">
         <div className="mx-auto w-full max-w-[1160px] space-y-8">
           <section className="space-y-2">
-            <p className="text-xs font-bold uppercase tracking-wide text-violet-700">Final Step</p>
-            <h1 className="text-4xl font-bold leading-10 text-zinc-900">Review &amp; Publish</h1>
-            <p className="text-base text-gray-700">Event ID: {eventId ?? "(chưa có - sẽ tạo khi save/submit)"}</p>
+            <p className="text-xs font-bold uppercase tracking-wide text-violet-700">
+              Final Step
+            </p>
+            <h1 className="text-4xl font-bold leading-10 text-zinc-900">
+              Review &amp; Publish
+            </h1>
+            <p className="text-base text-gray-700">
+              Event ID: {eventId ?? "(chưa có - sẽ tạo khi save/submit)"}
+            </p>
             <p className="text-base text-gray-700">Current Status: {status}</p>
           </section>
 
           <section className="rounded-3xl bg-white p-8 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
-            <h2 className="text-xl font-bold text-zinc-900">Workflow Actions</h2>
+            <h2 className="text-xl font-bold text-zinc-900">
+              Workflow Actions
+            </h2>
             <p className="mt-2 text-sm text-gray-700">
-              Save Draft dùng cho trạng thái DRAFT. Nút chính sẽ tự động Submit for Approval, hoặc Publish nếu event đã APPROVED.
+              Save Draft dùng cho trạng thái DRAFT. Nút chính sẽ tự động Submit
+              for Approval, hoặc Publish nếu event đã APPROVED.
             </p>
 
             <div className="mt-6 space-y-4">

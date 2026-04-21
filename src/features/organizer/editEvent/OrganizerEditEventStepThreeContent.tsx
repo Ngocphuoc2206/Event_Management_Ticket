@@ -1,4 +1,10 @@
-import { AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, Upload } from "lucide-react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Upload,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
@@ -45,18 +51,24 @@ export function OrganizerEditEventStepThreeContent() {
       return;
     }
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsLoading(true);
     void (async () => {
       try {
         const apiResult = await getOrganizerEventById(eventId);
-        const eventData = getApiResultData(apiResult as ApiResult<OrganizerEvent>);
+        const eventData = getApiResultData(
+          apiResult as ApiResult<OrganizerEvent>,
+        );
         if (eventData?.bannerUrl) {
           setBannerUrl(eventData.bannerUrl);
         }
       } catch (error) {
         setToast({
           tone: "error",
-          message: getApiErrorMessage(error, "Unable to load current banner image."),
+          message: getApiErrorMessage(
+            error,
+            "Unable to load current banner image.",
+          ),
         });
       } finally {
         setIsLoading(false);
@@ -95,11 +107,20 @@ export function OrganizerEditEventStepThreeContent() {
     setIsUploading(true);
     try {
       const uploadedUrl = await uploadOrganizerBanner(file);
-      await updateOrganizerEvent(eventId, { bannerUrl: uploadedUrl, status: "DRAFT" });
+      await updateOrganizerEvent(eventId, {
+        bannerUrl: uploadedUrl,
+        status: "DRAFT",
+      });
       setBannerUrl(uploadedUrl);
-      showToast({ tone: "success", message: "Banner uploaded successfully and URL saved." });
+      showToast({
+        tone: "success",
+        message: "Banner uploaded successfully and URL saved.",
+      });
     } catch (error) {
-      showToast({ tone: "error", message: getApiErrorMessage(error, "Banner upload failed.") });
+      showToast({
+        tone: "error",
+        message: getApiErrorMessage(error, "Banner upload failed."),
+      });
     } finally {
       setIsUploading(false);
     }
@@ -121,10 +142,16 @@ export function OrganizerEditEventStepThreeContent() {
         <div className="fixed right-6 top-6 z-50">
           <div
             className={`inline-flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold shadow-lg ${
-              toast.tone === "success" ? "bg-emerald-600 text-white" : "bg-rose-600 text-white"
+              toast.tone === "success"
+                ? "bg-emerald-600 text-white"
+                : "bg-rose-600 text-white"
             }`}
           >
-            {toast.tone === "success" ? <CheckCircle2 className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
+            {toast.tone === "success" ? (
+              <CheckCircle2 className="h-4 w-4" />
+            ) : (
+              <AlertCircle className="h-4 w-4" />
+            )}
             {toast.message}
           </div>
         </div>
@@ -132,14 +159,20 @@ export function OrganizerEditEventStepThreeContent() {
 
       <main className="mx-auto flex w-full max-w-[1104px] flex-col gap-8 px-5 py-8 sm:px-8 lg:px-10">
         <section className="space-y-2">
-          <h1 className="text-4xl font-black leading-10 text-zinc-900">Edit Event Media</h1>
+          <h1 className="text-4xl font-black leading-10 text-zinc-900">
+            Edit Event Media
+          </h1>
           <p className="text-sm text-gray-700">Event ID: {eventId || "N/A"}</p>
-          <p className="text-sm text-gray-700">Supports PNG/JPG/WEBP, maximum 10MB.</p>
+          <p className="text-sm text-gray-700">
+            Supports PNG/JPG/WEBP, maximum 10MB.
+          </p>
         </section>
 
         <section className="rounded-3xl bg-white p-8 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <h2 className="text-xl font-bold text-zinc-900">Main Event Banner</h2>
+            <h2 className="text-xl font-bold text-zinc-900">
+              Main Event Banner
+            </h2>
             <div className="flex items-center gap-3">
               <input
                 ref={fileInputRef}
@@ -162,7 +195,11 @@ export function OrganizerEditEventStepThreeContent() {
 
           <div className="mt-6 overflow-hidden rounded-2xl bg-gray-100">
             {bannerUrl ? (
-              <img src={bannerUrl} alt="Main event banner" className="h-72 w-full object-cover" />
+              <img
+                src={bannerUrl}
+                alt="Main event banner"
+                className="h-72 w-full object-cover"
+              />
             ) : (
               <div className="flex h-72 items-center justify-center text-sm text-gray-500">
                 {isLoading ? "Loading banner..." : "No banner yet"}
@@ -172,14 +209,23 @@ export function OrganizerEditEventStepThreeContent() {
 
           {bannerUrl ? (
             <div className="mt-4">
-              <label className="text-xs font-bold uppercase tracking-wide text-gray-700">Banner URL</label>
-              <input readOnly value={bannerUrl} className="mt-2 w-full rounded-2xl bg-gray-100 px-4 py-3 text-sm text-zinc-900" />
+              <label className="text-xs font-bold uppercase tracking-wide text-gray-700">
+                Banner URL
+              </label>
+              <input
+                readOnly
+                value={bannerUrl}
+                className="mt-2 w-full rounded-2xl bg-gray-100 px-4 py-3 text-sm text-zinc-900"
+              />
             </div>
           ) : null}
         </section>
 
         <footer className="flex flex-wrap items-center justify-between gap-4 border-t border-slate-300/10 pb-8 pt-10">
-          <Link href={`${basePath}/location-time`} className="inline-flex items-center gap-2 rounded-2xl px-6 py-3 text-base font-bold text-gray-700">
+          <Link
+            href={`${basePath}/location-time`}
+            className="inline-flex items-center gap-2 rounded-2xl px-6 py-3 text-base font-bold text-gray-700"
+          >
             <ChevronLeft className="h-4 w-4" />
             Previous Step
           </Link>

@@ -4,7 +4,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ApiResult } from "@/features/auth/types";
 import { getApiErrorMessage, getApiResultData } from "@/features/auth/utils";
 import { getOrganizerEvents } from "@/features/organizer/events/services/create-event.service";
-import type { OrganizerEvent, OrganizerEventsPageData } from "@/features/organizer/events/types";
+import type {
+  OrganizerEvent,
+  OrganizerEventsPageData,
+} from "@/features/organizer/events/types";
 import {
   checkInOrganizerAttendee,
   getOrganizerAttendees,
@@ -72,7 +75,8 @@ function normalizeAttendeesPayload(payload: unknown): OrganizerAttendee[] {
       (typeof obj.username === "string" && obj.username) ||
       "Unknown attendee";
 
-    const ticketType = typeof obj.ticketType === "string" ? obj.ticketType : "-";
+    const ticketType =
+      typeof obj.ticketType === "string" ? obj.ticketType : "-";
 
     const checkedInRaw = obj.checkedIn ?? obj.checkIn ?? obj.status;
     const checkedIn = checkedInRaw === true || checkedInRaw === "true";
@@ -99,7 +103,9 @@ export function OrganizerAttendeesContent() {
 
   const [isLoadingEvents, setIsLoadingEvents] = useState(false);
   const [isLoadingAttendees, setIsLoadingAttendees] = useState(false);
-  const [isCheckingInByOrderItemId, setIsCheckingInByOrderItemId] = useState<Record<string, boolean>>({});
+  const [isCheckingInByOrderItemId, setIsCheckingInByOrderItemId] = useState<
+    Record<string, boolean>
+  >({});
   const [toast, setToast] = useState<ToastState | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -119,7 +125,10 @@ export function OrganizerAttendeesContent() {
   const loadEvents = useCallback(async () => {
     setIsLoadingEvents(true);
     try {
-      const apiResult = await getOrganizerEvents({ page: 1, size: DEFAULT_PAGE_SIZE });
+      const apiResult = await getOrganizerEvents({
+        page: 1,
+        size: DEFAULT_PAGE_SIZE,
+      });
       const data = getApiResultData(apiResult as ApiResult<unknown>);
       const normalizedEvents = normalizeEventsPayload(data);
 
@@ -138,6 +147,7 @@ export function OrganizerAttendeesContent() {
   }, [selectedEventId]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadEvents();
   }, [loadEvents]);
 
@@ -160,7 +170,10 @@ export function OrganizerAttendeesContent() {
       const data = getApiResultData(apiResult as ApiResult<unknown>);
       setAttendees(normalizeAttendeesPayload(data));
     } catch (error) {
-      const message = getApiErrorMessage(error, "Unable to load attendees list.");
+      const message = getApiErrorMessage(
+        error,
+        "Unable to load attendees list.",
+      );
       setErrorMessage(message);
       setAttendees([]);
     } finally {
@@ -169,10 +182,14 @@ export function OrganizerAttendeesContent() {
   }, [selectedEventId, debouncedSearch, statusFilter, sortBy, sortDir]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadAttendees();
   }, [loadAttendees]);
 
-  const checkedInCount = useMemo(() => attendees.filter((item) => item.checkedIn).length, [attendees]);
+  const checkedInCount = useMemo(
+    () => attendees.filter((item) => item.checkedIn).length,
+    [attendees],
+  );
 
   const handleCheckIn = async (orderItemId: string) => {
     if (!orderItemId) {
@@ -199,7 +216,10 @@ export function OrganizerAttendeesContent() {
         message: getApiErrorMessage(error, "Check-in failed."),
       });
     } finally {
-      setIsCheckingInByOrderItemId((prev) => ({ ...prev, [orderItemId]: false }));
+      setIsCheckingInByOrderItemId((prev) => ({
+        ...prev,
+        [orderItemId]: false,
+      }));
     }
   };
 
@@ -209,10 +229,16 @@ export function OrganizerAttendeesContent() {
         <div className="fixed right-6 top-6 z-50">
           <div
             className={`inline-flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold shadow-lg ${
-              toast.tone === "success" ? "bg-emerald-600 text-white" : "bg-rose-600 text-white"
+              toast.tone === "success"
+                ? "bg-emerald-600 text-white"
+                : "bg-rose-600 text-white"
             }`}
           >
-            {toast.tone === "success" ? <CheckCircle2 className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
+            {toast.tone === "success" ? (
+              <CheckCircle2 className="h-4 w-4" />
+            ) : (
+              <AlertCircle className="h-4 w-4" />
+            )}
             {toast.message}
           </div>
         </div>
@@ -221,8 +247,12 @@ export function OrganizerAttendeesContent() {
       <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 p-5 sm:p-8">
         <section className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-zinc-900">Attendee Management</h1>
-            <p className="mt-1 text-sm text-gray-700">Manage attendees and perform check-in via organizer APIs.</p>
+            <h1 className="text-3xl font-bold text-zinc-900">
+              Attendee Management
+            </h1>
+            <p className="mt-1 text-sm text-gray-700">
+              Manage attendees and perform check-in via organizer APIs.
+            </p>
           </div>
 
           <button
@@ -237,14 +267,18 @@ export function OrganizerAttendeesContent() {
 
         <section className="grid gap-3 rounded-3xl bg-white p-6 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)] md:grid-cols-5">
           <label className="space-y-1 md:col-span-2">
-            <span className="text-xs font-bold uppercase tracking-wide text-gray-700">Event</span>
+            <span className="text-xs font-bold uppercase tracking-wide text-gray-700">
+              Event
+            </span>
             <select
               value={selectedEventId}
               onChange={(event) => setSelectedEventId(event.target.value)}
               disabled={isLoadingEvents}
               className="h-11 w-full rounded-2xl bg-gray-100 px-4 text-sm text-zinc-900"
             >
-              {events.length === 0 ? <option value="">No events available</option> : null}
+              {events.length === 0 ? (
+                <option value="">No events available</option>
+              ) : null}
               {events.map((event) => (
                 <option key={event.id} value={event.id}>
                   {event.title}
@@ -254,7 +288,9 @@ export function OrganizerAttendeesContent() {
           </label>
 
           <label className="space-y-1 md:col-span-3">
-            <span className="text-xs font-bold uppercase tracking-wide text-gray-700">Search</span>
+            <span className="text-xs font-bold uppercase tracking-wide text-gray-700">
+              Search
+            </span>
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-gray-500" />
               <input
@@ -268,10 +304,14 @@ export function OrganizerAttendeesContent() {
           </label>
 
           <label className="space-y-1">
-            <span className="text-xs font-bold uppercase tracking-wide text-gray-700">Status</span>
+            <span className="text-xs font-bold uppercase tracking-wide text-gray-700">
+              Status
+            </span>
             <select
               value={statusFilter}
-              onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}
+              onChange={(event) =>
+                setStatusFilter(event.target.value as StatusFilter)
+              }
               disabled={isLoadingAttendees}
               className="h-11 w-full rounded-2xl bg-gray-100 px-4 text-sm text-zinc-900"
             >
@@ -282,7 +322,9 @@ export function OrganizerAttendeesContent() {
           </label>
 
           <label className="space-y-1">
-            <span className="text-xs font-bold uppercase tracking-wide text-gray-700">Sort By</span>
+            <span className="text-xs font-bold uppercase tracking-wide text-gray-700">
+              Sort By
+            </span>
             <select
               value={sortBy}
               onChange={(event) => setSortBy(event.target.value as SortBy)}
@@ -296,7 +338,9 @@ export function OrganizerAttendeesContent() {
           </label>
 
           <label className="space-y-1">
-            <span className="text-xs font-bold uppercase tracking-wide text-gray-700">Sort Dir</span>
+            <span className="text-xs font-bold uppercase tracking-wide text-gray-700">
+              Sort Dir
+            </span>
             <select
               value={sortDir}
               onChange={(event) => setSortDir(event.target.value as SortDir)}
@@ -309,54 +353,88 @@ export function OrganizerAttendeesContent() {
           </label>
 
           <div className="rounded-2xl bg-gray-100 p-3 text-center">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-gray-700">Checked In</p>
+            <p className="text-[10px] font-bold uppercase tracking-wide text-gray-700">
+              Checked In
+            </p>
             <p className="text-lg font-bold text-zinc-900">{checkedInCount}</p>
           </div>
 
           <div className="rounded-2xl bg-gray-100 p-3 text-center">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-gray-700">Total</p>
-            <p className="text-lg font-bold text-zinc-900">{attendees.length}</p>
+            <p className="text-[10px] font-bold uppercase tracking-wide text-gray-700">
+              Total
+            </p>
+            <p className="text-lg font-bold text-zinc-900">
+              {attendees.length}
+            </p>
           </div>
         </section>
 
         <section className="overflow-hidden rounded-3xl bg-white shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
-          {errorMessage ? <div className="px-6 py-4 text-sm font-medium text-rose-700">{errorMessage}</div> : null}
+          {errorMessage ? (
+            <div className="px-6 py-4 text-sm font-medium text-rose-700">
+              {errorMessage}
+            </div>
+          ) : null}
 
           <div className="overflow-x-auto">
             <table className="min-w-[920px] w-full">
               <thead className="bg-gray-100/70">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wide text-gray-700">Full Name</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wide text-gray-700">Ticket Type</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wide text-gray-700">Check-in</th>
-                  <th className="px-6 py-4 text-right text-xs font-bold uppercase tracking-wide text-gray-700">Action</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wide text-gray-700">
+                    Full Name
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wide text-gray-700">
+                    Ticket Type
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wide text-gray-700">
+                    Check-in
+                  </th>
+                  <th className="px-6 py-4 text-right text-xs font-bold uppercase tracking-wide text-gray-700">
+                    Action
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {isLoadingAttendees ? (
                   <tr>
-                    <td colSpan={4} className="px-6 py-10 text-center text-sm text-gray-700">
+                    <td
+                      colSpan={4}
+                      className="px-6 py-10 text-center text-sm text-gray-700"
+                    >
                       Loading attendees...
                     </td>
                   </tr>
                 ) : attendees.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-6 py-10 text-center text-sm text-gray-700">
+                    <td
+                      colSpan={4}
+                      className="px-6 py-10 text-center text-sm text-gray-700"
+                    >
                       No attendees found.
                     </td>
                   </tr>
                 ) : (
                   attendees.map((attendee) => {
-                    const isCheckingIn = !!isCheckingInByOrderItemId[attendee.orderItemId];
+                    const isCheckingIn =
+                      !!isCheckingInByOrderItemId[attendee.orderItemId];
 
                     return (
-                      <tr key={attendee.orderItemId} className="border-t border-gray-100">
-                        <td className="px-6 py-4 text-sm font-semibold text-zinc-900">{attendee.fullName}</td>
-                        <td className="px-6 py-4 text-sm text-gray-700">{attendee.ticketType}</td>
+                      <tr
+                        key={attendee.orderItemId}
+                        className="border-t border-gray-100"
+                      >
+                        <td className="px-6 py-4 text-sm font-semibold text-zinc-900">
+                          {attendee.fullName}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-700">
+                          {attendee.ticketType}
+                        </td>
                         <td className="px-6 py-4">
                           <span
                             className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                              attendee.checkedIn ? "bg-emerald-100 text-emerald-700" : "bg-zinc-200 text-gray-700"
+                              attendee.checkedIn
+                                ? "bg-emerald-100 text-emerald-700"
+                                : "bg-zinc-200 text-gray-700"
                             }`}
                           >
                             {attendee.checkedIn ? "Checked In" : "Pending"}
@@ -365,11 +443,21 @@ export function OrganizerAttendeesContent() {
                         <td className="px-6 py-4 text-right">
                           <button
                             type="button"
-                            disabled={attendee.checkedIn || isCheckingIn || isLoadingAttendees}
-                            onClick={() => void handleCheckIn(attendee.orderItemId)}
+                            disabled={
+                              attendee.checkedIn ||
+                              isCheckingIn ||
+                              isLoadingAttendees
+                            }
+                            onClick={() =>
+                              void handleCheckIn(attendee.orderItemId)
+                            }
                             className="rounded-xl bg-gradient-to-r from-sky-700 to-violet-700 px-4 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
                           >
-                            {attendee.checkedIn ? "Done" : isCheckingIn ? "Checking..." : "Check-in"}
+                            {attendee.checkedIn
+                              ? "Done"
+                              : isCheckingIn
+                                ? "Checking..."
+                                : "Check-in"}
                           </button>
                         </td>
                       </tr>

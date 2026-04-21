@@ -1,4 +1,11 @@
-import { AlertCircle, CheckCircle2, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  Pencil,
+  Plus,
+  Search,
+  Trash2,
+} from "lucide-react";
 import Link from "next/link";
 import type { LinkProps } from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -56,7 +63,9 @@ function toDateTimeLocal(value?: string) {
     return "";
   }
 
-  const shifted = new Date(parsed.getTime() - parsed.getTimezoneOffset() * 60000);
+  const shifted = new Date(
+    parsed.getTime() - parsed.getTimezoneOffset() * 60000,
+  );
   return shifted.toISOString().slice(0, 16);
 }
 
@@ -80,13 +89,17 @@ export function OrganizerTicketTypesEditor({
   const [tickets, setTickets] = useState<OrganizerTicketType[]>([]);
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"ALL" | OrganizerTicketTypeStatus>("ALL");
+  const [statusFilter, setStatusFilter] = useState<
+    "ALL" | OrganizerTicketTypeStatus
+  >("ALL");
   const [form, setForm] = useState<TicketTypeFormState>(DEFAULT_FORM);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastState | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [isDeletingById, setIsDeletingById] = useState<Record<string, boolean>>({});
+  const [isDeletingById, setIsDeletingById] = useState<Record<string, boolean>>(
+    {},
+  );
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -114,7 +127,9 @@ export function OrganizerTicketTypesEditor({
         status: statusFilter === "ALL" ? undefined : statusFilter,
       });
 
-      const data = getApiResultData(apiResult as ApiResult<OrganizerTicketType[]>);
+      const data = getApiResultData(
+        apiResult as ApiResult<OrganizerTicketType[]>,
+      );
       setTickets(Array.isArray(data) ? data : []);
     } catch (error) {
       showToast({
@@ -128,12 +143,19 @@ export function OrganizerTicketTypesEditor({
   }, [eventId, debouncedSearch, statusFilter]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void refreshTickets();
   }, [refreshTickets]);
 
   const metrics = useMemo(() => {
-    const totalQuantity = tickets.reduce((sum, ticket) => sum + (ticket.quantity || 0), 0);
-    const minPrice = tickets.length > 0 ? Math.min(...tickets.map((ticket) => ticket.price || 0)) : 0;
+    const totalQuantity = tickets.reduce(
+      (sum, ticket) => sum + (ticket.quantity || 0),
+      0,
+    );
+    const minPrice =
+      tickets.length > 0
+        ? Math.min(...tickets.map((ticket) => ticket.price || 0))
+        : 0;
 
     return {
       totalQuantity,
@@ -171,8 +193,17 @@ export function OrganizerTicketTypesEditor({
     const saleStart = toIsoString(form.saleStart);
     const saleEnd = toIsoString(form.saleEnd);
 
-    if (!form.name.trim() || Number.isNaN(price) || Number.isNaN(quantity) || !saleStart || !saleEnd) {
-      showToast({ tone: "error", message: "Please provide valid name, price, quantity, and sales dates." });
+    if (
+      !form.name.trim() ||
+      Number.isNaN(price) ||
+      Number.isNaN(quantity) ||
+      !saleStart ||
+      !saleEnd
+    ) {
+      showToast({
+        tone: "error",
+        message: "Please provide valid name, price, quantity, and sales dates.",
+      });
       return;
     }
 
@@ -240,10 +271,16 @@ export function OrganizerTicketTypesEditor({
         <div className="fixed right-6 top-6 z-50">
           <div
             className={`inline-flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold shadow-lg ${
-              toast.tone === "success" ? "bg-emerald-600 text-white" : "bg-rose-600 text-white"
+              toast.tone === "success"
+                ? "bg-emerald-600 text-white"
+                : "bg-rose-600 text-white"
             }`}
           >
-            {toast.tone === "success" ? <CheckCircle2 className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
+            {toast.tone === "success" ? (
+              <CheckCircle2 className="h-4 w-4" />
+            ) : (
+              <AlertCircle className="h-4 w-4" />
+            )}
             {toast.message}
           </div>
         </div>
@@ -251,20 +288,29 @@ export function OrganizerTicketTypesEditor({
 
       <div className="mx-auto w-full max-w-[1104px] px-5 py-8 sm:px-8 lg:px-10">
         <section className="space-y-3">
-          <h1 className="text-4xl font-bold leading-10 text-zinc-900">{title}</h1>
+          <h1 className="text-4xl font-bold leading-10 text-zinc-900">
+            {title}
+          </h1>
           <p className="text-base text-gray-700">{description}</p>
-          <p className="text-sm text-gray-700">Event ID: {eventId ?? "(none - save draft first)"}</p>
+          <p className="text-sm text-gray-700">
+            Event ID: {eventId ?? "(none - save draft first)"}
+          </p>
         </section>
 
         {!eventId ? (
           <section className="mt-8 rounded-3xl bg-white p-6 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
-            <p className="text-sm text-gray-700">Please save draft at step 1 to generate eventId before creating ticket types.</p>
+            <p className="text-sm text-gray-700">
+              Please save draft at step 1 to generate eventId before creating
+              ticket types.
+            </p>
           </section>
         ) : (
           <>
             <section className="mt-8 grid gap-4 rounded-3xl bg-white p-6 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)] md:grid-cols-3">
               <label className="space-y-1">
-                <span className="text-xs font-bold uppercase tracking-wider text-gray-700">Search</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-gray-700">
+                  Search
+                </span>
                 <div className="relative">
                   <Search className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-gray-500" />
                   <input
@@ -277,10 +323,16 @@ export function OrganizerTicketTypesEditor({
               </label>
 
               <label className="space-y-1">
-                <span className="text-xs font-bold uppercase tracking-wider text-gray-700">Status Filter</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-gray-700">
+                  Status Filter
+                </span>
                 <select
                   value={statusFilter}
-                  onChange={(event) => setStatusFilter(event.target.value as "ALL" | OrganizerTicketTypeStatus)}
+                  onChange={(event) =>
+                    setStatusFilter(
+                      event.target.value as "ALL" | OrganizerTicketTypeStatus,
+                    )
+                  }
                   className="h-11 w-full rounded-2xl bg-gray-100 px-4 text-sm font-medium text-zinc-900"
                 >
                   <option value="ALL">ALL</option>
@@ -291,16 +343,28 @@ export function OrganizerTicketTypesEditor({
 
               <div className="grid grid-cols-3 gap-3 rounded-2xl bg-gray-100 p-3 text-center">
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-gray-700">Types</p>
-                  <p className="text-lg font-bold text-zinc-900">{tickets.length}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-gray-700">
+                    Types
+                  </p>
+                  <p className="text-lg font-bold text-zinc-900">
+                    {tickets.length}
+                  </p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-gray-700">Min</p>
-                  <p className="text-sm font-bold text-zinc-900">{formatPrice(metrics.minPrice)}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-gray-700">
+                    Min
+                  </p>
+                  <p className="text-sm font-bold text-zinc-900">
+                    {formatPrice(metrics.minPrice)}
+                  </p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-gray-700">Qty</p>
-                  <p className="text-sm font-bold text-zinc-900">{metrics.totalQuantity}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-gray-700">
+                    Qty
+                  </p>
+                  <p className="text-sm font-bold text-zinc-900">
+                    {metrics.totalQuantity}
+                  </p>
                 </div>
               </div>
             </section>
@@ -308,7 +372,9 @@ export function OrganizerTicketTypesEditor({
             <section className="mt-6 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
               <article className="space-y-4 rounded-3xl bg-white p-6 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-bold text-zinc-900">Ticket Types</h2>
+                  <h2 className="text-lg font-bold text-zinc-900">
+                    Ticket Types
+                  </h2>
                   <button
                     type="button"
                     onClick={openCreate}
@@ -320,23 +386,38 @@ export function OrganizerTicketTypesEditor({
                   </button>
                 </div>
 
-                {isLoading ? <p className="text-sm text-gray-700">Loading ticket types...</p> : null}
-                {!isLoading && tickets.length === 0 ? <p className="text-sm text-gray-700">No ticket types found.</p> : null}
+                {isLoading ? (
+                  <p className="text-sm text-gray-700">
+                    Loading ticket types...
+                  </p>
+                ) : null}
+                {!isLoading && tickets.length === 0 ? (
+                  <p className="text-sm text-gray-700">
+                    No ticket types found.
+                  </p>
+                ) : null}
 
                 <div className="space-y-3">
                   {tickets.map((ticket) => {
                     const isDeleting = Boolean(isDeletingById[ticket.id]);
 
                     return (
-                      <article key={ticket.id} className="rounded-2xl bg-gray-100 p-4">
+                      <article
+                        key={ticket.id}
+                        className="rounded-2xl bg-gray-100 p-4"
+                      >
                         <div className="flex items-start justify-between gap-3">
                           <div>
-                            <p className="text-base font-bold text-zinc-900">{ticket.name}</p>
+                            <p className="text-base font-bold text-zinc-900">
+                              {ticket.name}
+                            </p>
                             <p className="text-xs text-gray-700">
-                              {formatPrice(ticket.price)} • Qty {ticket.quantity} • {ticket.status ?? "ACTIVE"}
+                              {formatPrice(ticket.price)} • Qty{" "}
+                              {ticket.quantity} • {ticket.status ?? "ACTIVE"}
                             </p>
                             <p className="mt-1 text-xs text-gray-700">
-                              {new Date(ticket.saleStart).toLocaleString()} - {new Date(ticket.saleEnd).toLocaleString()}
+                              {new Date(ticket.saleStart).toLocaleString()} -{" "}
+                              {new Date(ticket.saleEnd).toLocaleString()}
                             </p>
                           </div>
                           <div className="flex items-center gap-1">
@@ -356,7 +437,13 @@ export function OrganizerTicketTypesEditor({
                               className="rounded-full p-2 text-rose-700 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
                               aria-label="Delete ticket type"
                             >
-                              {isDeleting ? <span className="text-[11px] font-semibold">...</span> : <Trash2 className="h-4 w-4" />}
+                              {isDeleting ? (
+                                <span className="text-[11px] font-semibold">
+                                  ...
+                                </span>
+                              ) : (
+                                <Trash2 className="h-4 w-4" />
+                              )}
                             </button>
                           </div>
                         </div>
@@ -367,36 +454,56 @@ export function OrganizerTicketTypesEditor({
               </article>
 
               <article className="space-y-4 rounded-3xl bg-white p-6 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
-                <h2 className="text-lg font-bold text-zinc-900">{editingId ? "Update Ticket Type" : "Create Ticket Type"}</h2>
+                <h2 className="text-lg font-bold text-zinc-900">
+                  {editingId ? "Update Ticket Type" : "Create Ticket Type"}
+                </h2>
 
                 <label className="block space-y-1">
-                  <span className="text-xs font-bold uppercase tracking-wider text-gray-700">Name</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-gray-700">
+                    Name
+                  </span>
                   <input
                     value={form.name}
-                    onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
+                    onChange={(event) =>
+                      setForm((prev) => ({ ...prev, name: event.target.value }))
+                    }
                     className="w-full rounded-2xl bg-gray-100 px-4 py-3 text-sm text-zinc-900"
                   />
                 </label>
 
                 <div className="grid gap-3 sm:grid-cols-2">
                   <label className="space-y-1">
-                    <span className="text-xs font-bold uppercase tracking-wider text-gray-700">Price</span>
+                    <span className="text-xs font-bold uppercase tracking-wider text-gray-700">
+                      Price
+                    </span>
                     <input
                       type="number"
                       min="0"
                       value={form.price}
-                      onChange={(event) => setForm((prev) => ({ ...prev, price: event.target.value }))}
+                      onChange={(event) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          price: event.target.value,
+                        }))
+                      }
                       className="w-full rounded-2xl bg-gray-100 px-4 py-3 text-sm text-zinc-900"
                     />
                   </label>
 
                   <label className="space-y-1">
-                    <span className="text-xs font-bold uppercase tracking-wider text-gray-700">Quantity</span>
+                    <span className="text-xs font-bold uppercase tracking-wider text-gray-700">
+                      Quantity
+                    </span>
                     <input
                       type="number"
                       min="1"
                       value={form.quantity}
-                      onChange={(event) => setForm((prev) => ({ ...prev, quantity: event.target.value }))}
+                      onChange={(event) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          quantity: event.target.value,
+                        }))
+                      }
                       className="w-full rounded-2xl bg-gray-100 px-4 py-3 text-sm text-zinc-900"
                     />
                   </label>
@@ -404,21 +511,35 @@ export function OrganizerTicketTypesEditor({
 
                 <div className="grid gap-3 sm:grid-cols-2">
                   <label className="space-y-1">
-                    <span className="text-xs font-bold uppercase tracking-wider text-gray-700">Sale Start</span>
+                    <span className="text-xs font-bold uppercase tracking-wider text-gray-700">
+                      Sale Start
+                    </span>
                     <input
                       type="datetime-local"
                       value={form.saleStart}
-                      onChange={(event) => setForm((prev) => ({ ...prev, saleStart: event.target.value }))}
+                      onChange={(event) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          saleStart: event.target.value,
+                        }))
+                      }
                       className="w-full rounded-2xl bg-gray-100 px-4 py-3 text-sm text-zinc-900"
                     />
                   </label>
 
                   <label className="space-y-1">
-                    <span className="text-xs font-bold uppercase tracking-wider text-gray-700">Sale End</span>
+                    <span className="text-xs font-bold uppercase tracking-wider text-gray-700">
+                      Sale End
+                    </span>
                     <input
                       type="datetime-local"
                       value={form.saleEnd}
-                      onChange={(event) => setForm((prev) => ({ ...prev, saleEnd: event.target.value }))}
+                      onChange={(event) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          saleEnd: event.target.value,
+                        }))
+                      }
                       className="w-full rounded-2xl bg-gray-100 px-4 py-3 text-sm text-zinc-900"
                     />
                   </label>
@@ -448,7 +569,10 @@ export function OrganizerTicketTypesEditor({
         )}
 
         <footer className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-gray-100 pt-8">
-          <Link href={previousHref} className="rounded-2xl px-8 py-3 text-base font-bold text-gray-700">
+          <Link
+            href={previousHref}
+            className="rounded-2xl px-8 py-3 text-base font-bold text-gray-700"
+          >
             Previous Step
           </Link>
 
