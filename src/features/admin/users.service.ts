@@ -43,3 +43,4 @@ export async function updateAdminUserStatus(
 
   return getApiResultData<AdminUser>(response.data);
 }
+ 
