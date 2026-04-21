@@ -3,10 +3,7 @@ import { AlertCircle, CheckCircle2, Save } from "lucide-react";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
 
-import {
-  getApiErrorMessage,
-  getApiResultData,
-} from "@/features/auth/utils";
+import { getApiErrorMessage, getApiResultData } from "@/features/auth/utils";
 import type { ApiResult } from "@/features/auth/types";
 import {
   getOrganizerDraftEventId,
@@ -42,7 +39,9 @@ function getStringField(source: Record<string, unknown>, keys: string[]) {
   return undefined;
 }
 
-function mapToCreatePayload(source: unknown): Partial<OrganizerCreateEventPayload> {
+function mapToCreatePayload(
+  source: unknown,
+): Partial<OrganizerCreateEventPayload> {
   if (!source || typeof source !== "object") {
     return {};
   }
@@ -51,20 +50,39 @@ function mapToCreatePayload(source: unknown): Partial<OrganizerCreateEventPayloa
 
   return {
     title: getStringField(data, ["title", "name", "eventName"]),
-    shortDescription: getStringField(data, ["shortDescription", "short_description", "summary"]),
+    shortDescription: getStringField(data, [
+      "shortDescription",
+      "short_description",
+      "summary",
+    ]),
     description: getStringField(data, ["description", "details", "content"]),
     category: getStringField(data, ["category", "eventCategory"]),
-    venueName: getStringField(data, ["venueName", "venue_name", "venue", "locationName"]),
-    address: getStringField(data, ["address", "venueAddress", "locationAddress"]),
+    venueName: getStringField(data, [
+      "venueName",
+      "venue_name",
+      "venue",
+      "locationName",
+    ]),
+    address: getStringField(data, [
+      "address",
+      "venueAddress",
+      "locationAddress",
+    ]),
     city: getStringField(data, ["city"]),
-    bannerUrl: getStringField(data, ["bannerUrl", "banner_url", "banner", "imageUrl"]),
-    startTime: getStringField(data, ["startTime", "start_time", "startDateTime"]),
+    bannerUrl: getStringField(data, [
+      "bannerUrl",
+      "banner_url",
+      "banner",
+      "imageUrl",
+    ]),
+    startTime: getStringField(data, [
+      "startTime",
+      "start_time",
+      "startDateTime",
+    ]),
     endTime: getStringField(data, ["endTime", "end_time", "endDateTime"]),
     visibility: "PUBLIC",
-    minPrice:
-      typeof data.minPrice === "number"
-        ? data.minPrice
-        : undefined,
+    minPrice: typeof data.minPrice === "number" ? data.minPrice : undefined,
     status:
       typeof data.status === "string"
         ? (data.status as OrganizerCreateEventPayload["status"])
@@ -180,8 +198,11 @@ export function OrganizerCreateEventStepFiveContent() {
 
   const buildCreatePayload = async (): Promise<OrganizerCreateEventPayload> => {
     const latestPayload = resolveDraftPayload();
-    mergeOrganizerDraftPayload(latestPayload);
-    setReviewPayload((prev) => ({ ...prev, ...mapToCreatePayload(latestPayload) }));
+    mergeOrganizerDraftPayload(latestPayload as OrganizerCreateEventPayload);
+    setReviewPayload((prev) => ({
+      ...prev,
+      ...mapToCreatePayload(latestPayload),
+    }));
 
     let ticketTypes: OrganizerTicketType[] = [];
     if (eventId) {
@@ -193,7 +214,10 @@ export function OrganizerCreateEventStepFiveContent() {
     }
 
     const totalTickets = Number(
-      ticketTypes.reduce((sum, ticket) => sum + toNumberOrZero(ticket.quantity), 0),
+      ticketTypes.reduce(
+        (sum, ticket) => sum + toNumberOrZero(ticket.quantity),
+        0,
+      ),
     );
     const minPriceFromTickets =
       ticketTypes.length > 0
@@ -208,13 +232,17 @@ export function OrganizerCreateEventStepFiveContent() {
         latestPayload.shortDescription?.trim() ||
         latestPayload.description?.trim().slice(0, 160) ||
         fallbackPayload.shortDescription,
-      description: latestPayload.description?.trim() || fallbackPayload.description,
+      description:
+        latestPayload.description?.trim() || fallbackPayload.description,
       category: latestPayload.category?.trim() || fallbackPayload.category,
       venueName: latestPayload.venueName?.trim() || fallbackPayload.venueName,
       address: latestPayload.address?.trim() || fallbackPayload.address,
       city: latestPayload.city?.trim() || fallbackPayload.city,
       bannerUrl: latestPayload.bannerUrl?.trim() || fallbackPayload.bannerUrl,
-      startTime: toIsoOrFallback(latestPayload.startTime, fallbackPayload.startTime),
+      startTime: toIsoOrFallback(
+        latestPayload.startTime,
+        fallbackPayload.startTime,
+      ),
       endTime: toIsoOrFallback(latestPayload.endTime, fallbackPayload.endTime),
       visibility: "PUBLIC",
       minPrice: Number(minPriceFromTickets),
@@ -280,7 +308,9 @@ export function OrganizerCreateEventStepFiveContent() {
     try {
       const createPayload = await buildCreatePayload();
       const createResult = await createOrganizerEvent(createPayload);
-      const createdEvent = getApiResultData(createResult as ApiResult<OrganizerEvent>);
+      const createdEvent = getApiResultData(
+        createResult as ApiResult<OrganizerEvent>,
+      );
       if (createdEvent?.id) {
         setEventId(createdEvent.id);
         setOrganizerDraftEventId(createdEvent.id);
@@ -344,7 +374,8 @@ export function OrganizerCreateEventStepFiveContent() {
             </h2>
             <p className="mt-2 text-sm text-gray-700">
               Save Draft dùng cho trạng thái DRAFT. Nút chính sẽ tạo sự kiện qua
-              POST /api/organizer/events, backend sẽ tự xử lý trạng thái chờ duyệt.
+              POST /api/organizer/events, backend sẽ tự xử lý trạng thái chờ
+              duyệt.
             </p>
 
             <div className="mt-6 space-y-4">
