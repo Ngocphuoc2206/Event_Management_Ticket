@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import AdminLayout from "@/components/templates/AdminLayout/AdminLayout";
 import type { AdminUser } from "@/features/admin/users.service";
 import { getAdminUsers } from "@/features/admin/users.service";
@@ -12,7 +13,7 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 function getRoleLabel(role?: string | null) {
-  return role ? ROLE_LABELS[role] ?? role : "Unknown";
+  return role ? (ROLE_LABELS[role] ?? role) : "Unknown";
 }
 
 function getUserName(user: AdminUser) {
@@ -49,6 +50,7 @@ export default function UserManagementPage() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadUsers();
   }, []);
 
@@ -67,7 +69,8 @@ export default function UserManagementPage() {
         user.email?.toLowerCase().includes(keyword) ||
         user.phone?.toLowerCase().includes(keyword) ||
         user.id.toLowerCase().includes(keyword);
-      const matchesRole = roleFilter === "All Roles" || roleLabel === roleFilter;
+      const matchesRole =
+        roleFilter === "All Roles" || roleLabel === roleFilter;
 
       return matchesSearch && matchesRole;
     });
@@ -78,7 +81,9 @@ export default function UserManagementPage() {
       <div className="flex flex-col gap-8 animate-in fade-in duration-500 pb-10">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-black text-slate-900 tracking-tight">User Management</h1>
+            <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+              User Management
+            </h1>
             <p className="text-sm text-slate-400 font-medium mt-1">
               Managing {users.length} registered platform members
             </p>
@@ -89,7 +94,11 @@ export default function UserManagementPage() {
               className="flex items-center gap-2 px-5 py-2.5 bg-white hover:bg-slate-50 text-slate-600 font-bold rounded-full transition-all text-sm border border-slate-100 active:scale-95"
               disabled={isLoading}
             >
-              <RefreshCcw size={17} strokeWidth={2.5} className={isLoading ? "animate-spin" : ""} />
+              <RefreshCcw
+                size={17}
+                strokeWidth={2.5}
+                className={isLoading ? "animate-spin" : ""}
+              />
               Refresh
             </button>
             <Link href="/admin/users/create">
@@ -103,7 +112,10 @@ export default function UserManagementPage() {
 
         <div className="bg-white p-4 rounded-[32px] border border-slate-100 shadow-sm flex flex-col md:flex-row gap-4 items-center">
           <div className="relative flex-1 w-full">
-            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <Search
+              className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400"
+              size={18}
+            />
             <input
               type="text"
               placeholder="Search by name, email, phone or ID..."
@@ -146,7 +158,10 @@ export default function UserManagementPage() {
               <tbody className="divide-y divide-slate-50">
                 {isLoading && (
                   <tr>
-                    <td colSpan={5} className="py-12 text-center text-xs font-black uppercase tracking-widest text-slate-400">
+                    <td
+                      colSpan={5}
+                      className="py-12 text-center text-xs font-black uppercase tracking-widest text-slate-400"
+                    >
                       Loading users...
                     </td>
                   </tr>
@@ -154,7 +169,10 @@ export default function UserManagementPage() {
 
                 {!isLoading && filteredUsers.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="py-12 text-center text-xs font-black uppercase tracking-widest text-slate-400">
+                    <td
+                      colSpan={5}
+                      className="py-12 text-center text-xs font-black uppercase tracking-widest text-slate-400"
+                    >
                       No users found
                     </td>
                   </tr>
@@ -167,38 +185,58 @@ export default function UserManagementPage() {
                     const status = getUserStatus(user);
 
                     return (
-                      <tr key={user.id} className="group hover:bg-slate-50/50 transition-all">
+                      <tr
+                        key={user.id}
+                        className="group hover:bg-slate-50/50 transition-all"
+                      >
                         <td className="py-6 px-4">
                           <div className="flex items-center gap-4">
                             <div className="w-14 h-14 rounded-2xl overflow-hidden shadow-sm border border-slate-100 shrink-0 bg-slate-50">
-                              <img src={getUserAvatar(user)} className="w-full h-full object-cover" alt={userName} />
+                              <img
+                                src={getUserAvatar(user)}
+                                className="w-full h-full object-cover"
+                                alt={userName}
+                              />
                             </div>
                             <div>
-                              <p className="font-black text-slate-900 group-hover:text-indigo-600 transition-colors leading-tight">{userName}</p>
-                              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1">{user.id} - {user.email}</p>
+                              <p className="font-black text-slate-900 group-hover:text-indigo-600 transition-colors leading-tight">
+                                {userName}
+                              </p>
+                              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1">
+                                {user.id} - {user.email}
+                              </p>
                             </div>
                           </div>
                         </td>
 
                         <td className="py-6 text-center">
-                          <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${
-                            roleLabel === "Admin" ? "bg-purple-50 text-purple-600 border-purple-100" :
-                            roleLabel === "Organizer" ? "bg-indigo-50 text-indigo-600 border-indigo-100" :
-                            "bg-slate-50 text-slate-600 border-slate-100"
-                          }`}>
+                          <span
+                            className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${
+                              roleLabel === "Admin"
+                                ? "bg-purple-50 text-purple-600 border-purple-100"
+                                : roleLabel === "Organizer"
+                                  ? "bg-indigo-50 text-indigo-600 border-indigo-100"
+                                  : "bg-slate-50 text-slate-600 border-slate-100"
+                            }`}
+                          >
                             * {roleLabel}
                           </span>
                         </td>
 
                         <td className="py-6 text-center">
-                          <p className="text-sm font-black text-slate-700">{user.phone || "N/A"}</p>
+                          <p className="text-sm font-black text-slate-700">
+                            {user.phone || "N/A"}
+                          </p>
                         </td>
 
                         <td className="py-6 text-center">
-                          <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${
-                            status === "ACTIVE" ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
-                            "bg-rose-50 text-rose-600 border-rose-100"
-                          }`}>
+                          <span
+                            className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${
+                              status === "ACTIVE"
+                                ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                                : "bg-rose-50 text-rose-600 border-rose-100"
+                            }`}
+                          >
                             * {status}
                           </span>
                         </td>
@@ -206,14 +244,24 @@ export default function UserManagementPage() {
                         <td className="py-6 px-4">
                           <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
                             <Link href={`/admin/users/${user.id}`}>
-                              <button title="View Details" className="w-9 h-9 flex items-center justify-center rounded-xl border border-slate-100 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-100 transition-all active:scale-90">
+                              <button
+                                title="View Details"
+                                className="w-9 h-9 flex items-center justify-center rounded-xl border border-slate-100 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-100 transition-all active:scale-90"
+                              >
                                 <Eye size={18} />
                               </button>
                             </Link>
-                            <button title="Edit User" className="w-9 h-9 flex items-center justify-center rounded-xl border border-slate-100 text-slate-400 hover:text-amber-600 hover:bg-amber-50 hover:border-amber-100 transition-all active:scale-90">
+                            <button
+                              title="Edit User"
+                              className="w-9 h-9 flex items-center justify-center rounded-xl border border-slate-100 text-slate-400 hover:text-amber-600 hover:bg-amber-50 hover:border-amber-100 transition-all active:scale-90"
+                            >
                               <Edit2 size={18} />
                             </button>
-                            <button onClick={handleDeleteUser} title="Delete User" className="w-9 h-9 flex items-center justify-center rounded-xl border border-slate-100 text-slate-400 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-100 transition-all active:scale-90">
+                            <button
+                              onClick={handleDeleteUser}
+                              title="Delete User"
+                              className="w-9 h-9 flex items-center justify-center rounded-xl border border-slate-100 text-slate-400 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-100 transition-all active:scale-90"
+                            >
                               <Trash2 size={18} />
                             </button>
                           </div>

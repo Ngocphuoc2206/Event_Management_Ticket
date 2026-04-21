@@ -2,8 +2,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import AdminLayout from "@/components/templates/AdminLayout/AdminLayout";
-import type { AdminUser, AdminUserStatus } from "@/features/admin/users.service";
-import { getAdminUser, updateAdminUserStatus } from "@/features/admin/users.service";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import {
@@ -24,7 +22,6 @@ import {
   Activity,
   Building2,
 } from "lucide-react";
-import { useEffect, useState } from "react";
 
 const USERS_STORAGE_KEY = "app_users_v1";
 
@@ -101,9 +98,8 @@ export default function UserDetailPage() {
 
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSavingStatus, setIsSavingStatus] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
 
+  // Đồng bộ dữ liệu với LocalStorage
   useEffect(() => {
     if (router.isReady && id) {
       const savedUsers = localStorage.getItem(USERS_STORAGE_KEY);
@@ -118,7 +114,6 @@ export default function UserDetailPage() {
       } else {
         usersData = JSON.parse(savedUsers);
       }
-    };
 
       const foundUser = usersData.find((u: any) => u.id === String(id));
       // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -127,7 +122,7 @@ export default function UserDetailPage() {
     }
   }, [router.isReady, id]);
 
-  const toggleUserStatus = async () => {
+  const toggleUserStatus = () => {
     if (!currentUser) return;
     const newStatus = currentUser.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
     const updatedUser = { ...currentUser, status: newStatus };
@@ -171,10 +166,6 @@ export default function UserDetailPage() {
     );
   }
 
-  const roleLabel = getRoleLabel(currentUser.role);
-  const status = getUserStatus(currentUser);
-  const userName = getUserName(currentUser);
-
   return (
     <AdminLayout title={"User Profile"}>
       <div className="flex flex-col gap-8 max-w-[1200px] mx-auto p-4 md:p-8 animate-in fade-in duration-500 pb-20">
@@ -189,7 +180,7 @@ export default function UserDetailPage() {
                 Users
               </Link>
               <ChevronRight size={12} strokeWidth={3} />
-              <span className="text-slate-900">{roleLabel} Profile</span>
+              <span className="text-slate-900">{currentUser.role} Profile</span>
             </div>
 
             <div className="flex items-center gap-4">
@@ -223,24 +214,16 @@ export default function UserDetailPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <a
-              href={`mailto:${currentUser.email}`}
-              className="flex-1 md:flex-none px-6 py-3 bg-white border border-slate-200 text-slate-700 font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
-            >
+            <button className="flex-1 md:flex-none px-6 py-3 bg-white border border-slate-200 text-slate-700 font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-slate-50 transition-all flex items-center justify-center gap-2">
               <Mail size={16} /> Contact User
-            </a>
+            </button>
             <button className="flex-1 md:flex-none px-6 py-3 bg-indigo-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-indigo-700 hover:shadow-xl hover:shadow-indigo-100 transition-all flex items-center justify-center gap-2">
               <Key size={16} /> Reset Password
             </button>
           </div>
         </div>
 
-        {errorMessage && (
-          <div className="rounded-2xl border border-rose-100 bg-rose-50 px-5 py-4 text-sm font-bold text-rose-600">
-            {errorMessage}
-          </div>
-        )}
-
+        {/* MAIN CONTENT GRID */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
           {/* CỘT TRÁI (LEFT COLUMN - Rộng hơn) */}
           <div className="xl:col-span-2 space-y-8">
@@ -281,6 +264,7 @@ export default function UserDetailPage() {
               </div>
             </div>
 
+            {/* Recent Activity */}
             <div className="bg-white rounded-[40px] p-8 border border-slate-100 shadow-sm">
               <div className="flex justify-between items-center mb-8">
                 <h3 className="text-[12px] font-black uppercase tracking-[0.2em] text-slate-900 flex items-center gap-2">
@@ -411,6 +395,7 @@ export default function UserDetailPage() {
             </div>
           </div>
 
+          {/* CỘT PHẢI (RIGHT COLUMN) */}
           <div className="space-y-6">
             {/* User Info Card */}
             <div className="bg-white rounded-[40px] p-8 border border-slate-100 shadow-sm">
@@ -438,7 +423,7 @@ export default function UserDetailPage() {
                 </div>
               </div>
 
-              <div className="bg-slate-50 rounded-3xl p-5 flex justify-between items-center border border-slate-100">
+              <div className="bg-slate-50 rounded-3xl p-5 mb-8 flex justify-between items-center border border-slate-100">
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">
                     Account Status
@@ -481,6 +466,7 @@ export default function UserDetailPage() {
               </div>
             </div>
 
+            {/* Risk Management Card */}
             <div className="bg-white rounded-[40px] p-8 border border-slate-100 shadow-sm">
               <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-6">
                 Risk Management

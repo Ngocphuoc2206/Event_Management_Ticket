@@ -335,7 +335,7 @@ export default function CustomerProfileSettingsPage() {
       setProfileNotice(null);
 
       try {
-        const response = await getUserProfile(userId);
+        const response = await getUserProfile();
         const profile = getApiResultData<UserProfileResponse>(response);
 
         if (!profile) {
@@ -475,8 +475,6 @@ export default function CustomerProfileSettingsPage() {
       const response = await updateUserProfile(userId, {
         fullName: values.fullName.trim(),
         phone: values.phone.trim(),
-        bio: values.bio.trim() || null,
-        avatar: values.avatar.trim() || null,
       });
 
       const nextProfile = (getApiResultData<UserProfileResponse>(response) ?? {

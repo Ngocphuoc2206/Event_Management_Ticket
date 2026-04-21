@@ -3,13 +3,26 @@ import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
 
 import { useAuth } from "@/features/auth/hooks/useAuth";
-import { CustomerDashboardIcon, CustomerDashboardSidebar, customerProfile } from "@/features/customer";
+import {
+  CustomerDashboardIcon,
+  CustomerDashboardSidebar,
+  customerProfile,
+} from "@/features/customer";
 import type { CustomerNavItem } from "@/features/customer";
 import type { CustomerNotification } from "@/features/customer/notifications.service";
-import { getMyNotifications, markNotificationAsRead } from "@/features/customer/notifications.service";
+import {
+  getMyNotifications,
+  markNotificationAsRead,
+} from "@/features/customer/notifications.service";
 
 type NotificationFilter = "all" | "unread";
-type NotificationTone = "info" | "ticket" | "success" | "vip" | "important" | "lineup";
+type NotificationTone =
+  | "info"
+  | "ticket"
+  | "success"
+  | "vip"
+  | "important"
+  | "lineup";
 type NotificationLayout = "list" | "feature";
 
 type NotificationItem = {
@@ -30,8 +43,17 @@ const customerNotificationNavigationItems: CustomerNavItem[] = [
   { label: "Dashboard", href: "/customer", icon: "grid" },
   { label: "My Tickets", href: "/customer/my-tickets", icon: "ticket" },
   { label: "Order History", href: "/customer/order-history", icon: "history" },
-  { label: "Notifications", href: "/customer/notifications", icon: "bell", active: true },
-  { label: "Profile Settings", href: "/customer/profile-settings", icon: "settings" },
+  {
+    label: "Notifications",
+    href: "/customer/notifications",
+    icon: "bell",
+    active: true,
+  },
+  {
+    label: "Profile Settings",
+    href: "/customer/profile-settings",
+    icon: "settings",
+  },
 ];
 
 function getNotificationGroup(type?: string) {
@@ -77,7 +99,16 @@ function mapNotification(notification: CustomerNotification): NotificationItem {
   };
 }
 
-const TONE_STYLES: Record<NotificationTone, { iconBg: string; iconColor: string; accent: string; badge?: string; featureBg?: string }> = {
+const TONE_STYLES: Record<
+  NotificationTone,
+  {
+    iconBg: string;
+    iconColor: string;
+    accent: string;
+    badge?: string;
+    featureBg?: string;
+  }
+> = {
   info: {
     iconBg: "bg-blue-100",
     iconColor: "text-blue-600",
@@ -117,19 +148,35 @@ const TONE_STYLES: Record<NotificationTone, { iconBg: string; iconColor: string;
 function NotificationGlyph({ tone }: { tone: NotificationTone }) {
   if (tone === "ticket") {
     return (
-      <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="1.9">
+      <svg
+        viewBox="0 0 24 24"
+        className="h-4 w-4 fill-none stroke-current"
+        strokeWidth="1.9"
+      >
         <path d="M7 7.25h10a2 2 0 0 0 2-2V5H5v.25a2 2 0 0 0 2 2Z" />
         <path d="M5 8.25h14v2.1a2.1 2.1 0 0 1 0 4.2v2.2H5v-2.2a2.1 2.1 0 0 1 0-4.2Z" />
-        <path d="M12 8.75v7.5" strokeDasharray="1.8 1.8" strokeLinecap="round" />
+        <path
+          d="M12 8.75v7.5"
+          strokeDasharray="1.8 1.8"
+          strokeLinecap="round"
+        />
       </svg>
     );
   }
 
   if (tone === "success") {
     return (
-      <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="1.9">
+      <svg
+        viewBox="0 0 24 24"
+        className="h-4 w-4 fill-none stroke-current"
+        strokeWidth="1.9"
+      >
         <circle cx="12" cy="12" r="6.5" />
-        <path d="m9.25 12 1.75 1.75 3.75-3.75" strokeLinecap="round" strokeLinejoin="round" />
+        <path
+          d="m9.25 12 1.75 1.75 3.75-3.75"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
       </svg>
     );
   }
@@ -148,16 +195,27 @@ function NotificationGlyph({ tone }: { tone: NotificationTone }) {
 
   if (tone === "lineup") {
     return (
-      <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="1.8">
+      <svg
+        viewBox="0 0 24 24"
+        className="h-4 w-4 fill-none stroke-current"
+        strokeWidth="1.8"
+      >
         <circle cx="8.5" cy="9" r="2.5" />
         <circle cx="15.5" cy="9" r="2.5" />
-        <path d="M4.75 17a3.75 3.75 0 0 1 7.5 0M11.75 17a3.75 3.75 0 0 1 7.5 0" strokeLinecap="round" />
+        <path
+          d="M4.75 17a3.75 3.75 0 0 1 7.5 0M11.75 17a3.75 3.75 0 0 1 7.5 0"
+          strokeLinecap="round"
+        />
       </svg>
     );
   }
 
   return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="1.8">
+    <svg
+      viewBox="0 0 24 24"
+      className="h-4 w-4 fill-none stroke-current"
+      strokeWidth="1.8"
+    >
       <circle cx="12" cy="12" r="7" />
       <path d="M12 9v4" strokeLinecap="round" />
       <circle cx="12" cy="16.5" r="0.8" fill="currentColor" stroke="none" />
@@ -175,22 +233,38 @@ function NotificationListCard({
   const toneStyle = TONE_STYLES[item.tone];
 
   return (
-    <article className="relative overflow-hidden rounded-[24px] border border-white/80 bg-white/95 p-5 shadow-[0_18px_42px_rgba(148,163,184,0.14)] sm:p-6">
-      <div className={`absolute inset-y-4 left-0 w-1 rounded-full ${toneStyle.accent}`} />
+    <article className="relative overflow-hidden rounded-3xl border border-white/80 bg-white/95 p-5 shadow-[0_18px_42px_rgba(148,163,184,0.14)] sm:p-6">
+      <div
+        className={`absolute inset-y-4 left-0 w-1 rounded-full ${toneStyle.accent}`}
+      />
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex gap-4">
-          <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${toneStyle.iconBg} ${toneStyle.iconColor}`}>
+          <div
+            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${toneStyle.iconBg} ${toneStyle.iconColor}`}
+          >
             <NotificationGlyph tone={item.tone} />
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-3">
-              <h3 className="text-base font-bold tracking-tight text-slate-900">{item.title}</h3>
-              {item.unread ? <span className="h-2.5 w-2.5 rounded-full bg-blue-500" aria-label="Unread notification" /> : null}
+              <h3 className="text-base font-bold tracking-tight text-slate-900">
+                {item.title}
+              </h3>
+              {item.unread ? (
+                <span
+                  className="h-2.5 w-2.5 rounded-full bg-blue-500"
+                  aria-label="Unread notification"
+                />
+              ) : null}
             </div>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">{item.description}</p>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">
+              {item.description}
+            </p>
             <div className="mt-4 flex flex-wrap items-center gap-3">
               {item.actionLabel ? (
-                <button type="button" className="text-sm font-semibold text-blue-600 transition hover:text-blue-700">
+                <button
+                  type="button"
+                  className="text-sm font-semibold text-blue-600 transition hover:text-blue-700"
+                >
                   {item.actionLabel} {"->"}
                 </button>
               ) : null}
@@ -209,7 +283,9 @@ function NotificationListCard({
 
         <div className="flex items-center justify-between gap-3 sm:block sm:text-right">
           <div className="text-xs font-medium text-slate-400">{item.time}</div>
-          {item.unread ? <div className="mt-3 hidden h-2.5 w-2.5 rounded-full bg-blue-500 sm:inline-flex" /> : null}
+          {item.unread ? (
+            <div className="mt-3 hidden h-2.5 w-2.5 rounded-full bg-blue-500 sm:inline-flex" />
+          ) : null}
         </div>
       </div>
     </article>
@@ -226,27 +302,45 @@ function NotificationFeatureCard({
   const toneStyle = TONE_STYLES[item.tone];
 
   return (
-    <article className={`overflow-hidden rounded-[26px] border border-white/80 p-5 shadow-[0_18px_42px_rgba(148,163,184,0.14)] ${toneStyle.featureBg ?? "bg-white"}`}>
+    <article
+      className={`overflow-hidden rounded-[26px] border border-white/80 p-5 shadow-[0_18px_42px_rgba(148,163,184,0.14)] ${toneStyle.featureBg ?? "bg-white"}`}
+    >
       <div className="flex items-start justify-between gap-4">
-        <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${toneStyle.iconBg} ${toneStyle.iconColor}`}>
+        <div
+          className={`flex h-11 w-11 items-center justify-center rounded-2xl ${toneStyle.iconBg} ${toneStyle.iconColor}`}
+        >
           <NotificationGlyph tone={item.tone} />
         </div>
         <div className="flex items-center gap-2">
           {item.badgeLabel ? (
-            <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.24em] ${toneStyle.badge ?? "bg-slate-100 text-slate-500"}`}>
+            <span
+              className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.24em] ${toneStyle.badge ?? "bg-slate-100 text-slate-500"}`}
+            >
               {item.badgeLabel}
             </span>
           ) : null}
-          {item.unread ? <span className="h-2.5 w-2.5 rounded-full bg-blue-500" aria-label="Unread notification" /> : null}
+          {item.unread ? (
+            <span
+              className="h-2.5 w-2.5 rounded-full bg-blue-500"
+              aria-label="Unread notification"
+            />
+          ) : null}
         </div>
       </div>
 
-      <h3 className="mt-5 text-xl font-bold tracking-tight text-slate-900">{item.title}</h3>
-      <p className="mt-3 text-sm leading-6 text-slate-500">{item.description}</p>
+      <h3 className="mt-5 text-xl font-bold tracking-tight text-slate-900">
+        {item.title}
+      </h3>
+      <p className="mt-3 text-sm leading-6 text-slate-500">
+        {item.description}
+      </p>
 
       <div className="mt-5 flex flex-wrap items-center gap-3">
         {item.actionLabel ? (
-          <button type="button" className="text-sm font-semibold text-rose-600 transition hover:text-rose-700">
+          <button
+            type="button"
+            className="text-sm font-semibold text-rose-600 transition hover:text-rose-700"
+          >
             {item.actionLabel}
           </button>
         ) : null}
@@ -263,7 +357,9 @@ function NotificationFeatureCard({
 
       <div className="mt-8 flex items-center justify-between gap-4 border-t border-slate-200/70 pt-4">
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-bold uppercase tracking-[0.28em] text-slate-400">Update</span>
+          <span className="text-[10px] font-bold uppercase tracking-[0.28em] text-slate-400">
+            Update
+          </span>
           {item.collaborators ? (
             <div className="flex -space-x-2">
               {item.collaborators.map((avatarSrc, index) => (
@@ -287,15 +383,30 @@ function EmptyNotificationState({ onReset }: { onReset: () => void }) {
   return (
     <div className="rounded-[30px] border border-dashed border-slate-200 bg-white/60 px-6 py-16 text-center shadow-[inset_0_0_0_1px_rgba(255,255,255,0.35)]">
       <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-slate-300">
-        <svg viewBox="0 0 24 24" className="h-8 w-8 fill-none stroke-current" strokeWidth="1.8">
-          <path d="M12 6.5v5l3 2" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3L4.5 9" strokeLinecap="round" strokeLinejoin="round" />
+        <svg
+          viewBox="0 0 24 24"
+          className="h-8 w-8 fill-none stroke-current"
+          strokeWidth="1.8"
+        >
+          <path
+            d="M12 6.5v5l3 2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3L4.5 9"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
           <path d="M4.5 4.5V9H9" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </div>
-      <h3 className="mt-6 text-2xl font-bold tracking-tight text-slate-700">All caught up</h3>
+      <h3 className="mt-6 text-2xl font-bold tracking-tight text-slate-700">
+        All caught up
+      </h3>
       <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-slate-500">
-        There are no notifications in this view right now. Switch back to all notifications to review your recent updates and ticket activity.
+        There are no notifications in this view right now. Switch back to all
+        notifications to review your recent updates and ticket activity.
       </p>
       <button
         type="button"
@@ -333,6 +444,7 @@ export default function CustomerNotificationsPage() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadNotifications();
   }, []);
 
@@ -348,11 +460,14 @@ export default function CustomerNotificationsPage() {
 
       return matchesFilter && matchesQuery;
     });
-    const groups = filteredItems.reduce<Record<string, NotificationItem[]>>((accumulator, item) => {
-      accumulator[item.group] ??= [];
-      accumulator[item.group].push(item);
-      return accumulator;
-    }, {});
+    const groups = filteredItems.reduce<Record<string, NotificationItem[]>>(
+      (accumulator, item) => {
+        accumulator[item.group] ??= [];
+        accumulator[item.group].push(item);
+        return accumulator;
+      },
+      {},
+    );
 
     return Object.entries(groups);
   }, [filter, notifications, query]);
@@ -370,11 +485,15 @@ export default function CustomerNotificationsPage() {
 
     try {
       const updatedNotification = await markNotificationAsRead(id);
-      const mappedNotification = updatedNotification ? mapNotification(updatedNotification) : null;
+      const mappedNotification = updatedNotification
+        ? mapNotification(updatedNotification)
+        : null;
 
       setNotifications((current) =>
         current.map((item) =>
-          item.id === id ? mappedNotification ?? { ...item, unread: false } : item,
+          item.id === id
+            ? (mappedNotification ?? { ...item, unread: false })
+            : item,
         ),
       );
     } catch {
@@ -389,7 +508,9 @@ export default function CustomerNotificationsPage() {
   };
 
   const handleMarkAllAsRead = async () => {
-    const unreadIds = notifications.filter((item) => item.unread).map((item) => item.id);
+    const unreadIds = notifications
+      .filter((item) => item.unread)
+      .map((item) => item.id);
     await Promise.all(unreadIds.map((id) => handleMarkAsRead(id)));
   };
 
@@ -415,10 +536,12 @@ export default function CustomerNotificationsPage() {
           />
 
           <section className="flex-1 px-5 py-6 sm:px-8 lg:px-10 xl:px-12">
-            <div className="text-xs font-medium text-slate-500">Dashboard &nbsp;&rsaquo;&nbsp; Notifications</div>
+            <div className="text-xs font-medium text-slate-500">
+              Dashboard &nbsp;&rsaquo;&nbsp; Notifications
+            </div>
             <header className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-end">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center xl:ml-auto">
-                <label className="flex h-12 min-w-[260px] items-center gap-3 rounded-full bg-slate-200/80 px-4 text-sm text-slate-500 shadow-[inset_0_0_0_1px_rgba(226,232,240,0.8)]">
+                <label className="flex h-12 min-w-65 items-center gap-3 rounded-full bg-slate-200/80 px-4 text-sm text-slate-500 shadow-[inset_0_0_0_1px_rgba(226,232,240,0.8)]">
                   <CustomerDashboardIcon type="search" className="h-4 w-4" />
                   <input
                     value={query}
@@ -427,7 +550,10 @@ export default function CustomerNotificationsPage() {
                     className="w-full bg-transparent outline-none placeholder:text-slate-400"
                   />
                 </label>
-                <button type="button" className="flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-slate-500 shadow-[0_10px_24px_rgba(148,163,184,0.12)]">
+                <button
+                  type="button"
+                  className="flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-slate-500 shadow-[0_10px_24px_rgba(148,163,184,0.12)]"
+                >
                   <CustomerDashboardIcon type="help" className="h-4 w-4" />
                 </button>
                 <button
@@ -442,46 +568,54 @@ export default function CustomerNotificationsPage() {
 
             <section className="mt-10">
               <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
-              <div>
-                <div className="text-xs font-bold uppercase tracking-[0.34em] text-blue-600">Customer Area</div>
-                <h1 className="mt-2 text-4xl font-bold tracking-tight text-slate-900 sm:text-[2.9rem]">Notifications</h1>
-                <p className="mt-3 max-w-3xl text-base leading-7 text-slate-500">
-                  Stay updated with your latest event activities, venue changes, and ticket status.
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                <div className="inline-flex rounded-full bg-white p-1 shadow-[0_10px_24px_rgba(148,163,184,0.12)]">
-                  <button
-                    type="button"
-                    onClick={() => setFilter("all")}
-                    className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                      filter === "all" ? "bg-slate-900 text-white" : "text-slate-500"
-                    }`}
-                  >
-                    All
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFilter("unread")}
-                    className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                      filter === "unread" ? "bg-slate-900 text-white" : "text-slate-500"
-                    }`}
-                  >
-                    Unread {unreadCount > 0 ? `(${unreadCount})` : ""}
-                  </button>
+                <div>
+                  <div className="text-xs font-bold uppercase tracking-[0.34em] text-blue-600">
+                    Customer Area
+                  </div>
+                  <h1 className="mt-2 text-4xl font-bold tracking-tight text-slate-900 sm:text-[2.9rem]">
+                    Notifications
+                  </h1>
+                  <p className="mt-3 max-w-3xl text-base leading-7 text-slate-500">
+                    Stay updated with your latest event activities, venue
+                    changes, and ticket status.
+                  </p>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => void handleMarkAllAsRead()}
-                  disabled={unreadCount === 0 || markingReadIds.size > 0}
-                  className="inline-flex items-center justify-center rounded-full border border-blue-200 bg-white px-5 py-3 text-sm font-semibold text-blue-600 shadow-[0_10px_24px_rgba(148,163,184,0.12)] transition hover:border-blue-300 disabled:cursor-not-allowed disabled:text-slate-300"
-                >
-                  Mark all as read
-                </button>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <div className="inline-flex rounded-full bg-white p-1 shadow-[0_10px_24px_rgba(148,163,184,0.12)]">
+                    <button
+                      type="button"
+                      onClick={() => setFilter("all")}
+                      className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                        filter === "all"
+                          ? "bg-slate-900 text-white"
+                          : "text-slate-500"
+                      }`}
+                    >
+                      All
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFilter("unread")}
+                      className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                        filter === "unread"
+                          ? "bg-slate-900 text-white"
+                          : "text-slate-500"
+                      }`}
+                    >
+                      Unread {unreadCount > 0 ? `(${unreadCount})` : ""}
+                    </button>
+                  </div>
 
-              </div>
+                  <button
+                    type="button"
+                    onClick={() => void handleMarkAllAsRead()}
+                    disabled={unreadCount === 0 || markingReadIds.size > 0}
+                    className="inline-flex items-center justify-center rounded-full border border-blue-200 bg-white px-5 py-3 text-sm font-semibold text-blue-600 shadow-[0_10px_24px_rgba(148,163,184,0.12)] transition hover:border-blue-300 disabled:cursor-not-allowed disabled:text-slate-300"
+                  >
+                    Mark all as read
+                  </button>
+                </div>
               </div>
 
               {hasVisibleNotifications ? (
@@ -492,12 +626,18 @@ export default function CustomerNotificationsPage() {
                     </div>
                   ) : null}
                   {groupedNotifications.map(([group, items]) => {
-                    const listItems = items.filter((item) => item.layout === "list");
-                    const featureItems = items.filter((item) => item.layout === "feature");
+                    const listItems = items.filter(
+                      (item) => item.layout === "list",
+                    );
+                    const featureItems = items.filter(
+                      (item) => item.layout === "feature",
+                    );
 
                     return (
                       <section key={group}>
-                        <div className="text-[11px] font-bold uppercase tracking-[0.34em] text-slate-500">{group}</div>
+                        <div className="text-[11px] font-bold uppercase tracking-[0.34em] text-slate-500">
+                          {group}
+                        </div>
 
                         {listItems.length > 0 ? (
                           <div className="mt-5 space-y-4">
@@ -505,7 +645,9 @@ export default function CustomerNotificationsPage() {
                               <NotificationListCard
                                 key={item.id}
                                 item={item}
-                                onMarkAsRead={(notificationId) => void handleMarkAsRead(notificationId)}
+                                onMarkAsRead={(notificationId) =>
+                                  void handleMarkAsRead(notificationId)
+                                }
                               />
                             ))}
                           </div>
@@ -517,7 +659,9 @@ export default function CustomerNotificationsPage() {
                               <NotificationFeatureCard
                                 key={item.id}
                                 item={item}
-                                onMarkAsRead={(notificationId) => void handleMarkAsRead(notificationId)}
+                                onMarkAsRead={(notificationId) =>
+                                  void handleMarkAsRead(notificationId)
+                                }
                               />
                             ))}
                           </div>
@@ -526,21 +670,19 @@ export default function CustomerNotificationsPage() {
                     );
                   })}
                 </div>
+              ) : isLoading ? (
+                <div className="rounded-[30px] border border-slate-100 bg-white/70 px-6 py-16 text-center text-sm font-bold uppercase tracking-[0.28em] text-slate-400">
+                  Loading notifications...
+                </div>
               ) : (
-                isLoading ? (
-                  <div className="rounded-[30px] border border-slate-100 bg-white/70 px-6 py-16 text-center text-sm font-bold uppercase tracking-[0.28em] text-slate-400">
-                    Loading notifications...
-                  </div>
-                ) : (
-                  <>
-                    {errorMessage ? (
-                      <div className="mb-5 rounded-2xl border border-rose-100 bg-rose-50 px-5 py-4 text-sm font-semibold text-rose-600">
-                        {errorMessage}
-                      </div>
-                    ) : null}
-                    <EmptyNotificationState onReset={handleResetFilters} />
-                  </>
-                )
+                <>
+                  {errorMessage ? (
+                    <div className="mb-5 rounded-2xl border border-rose-100 bg-rose-50 px-5 py-4 text-sm font-semibold text-rose-600">
+                      {errorMessage}
+                    </div>
+                  ) : null}
+                  <EmptyNotificationState onReset={handleResetFilters} />
+                </>
               )}
             </section>
           </section>

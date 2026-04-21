@@ -1,4 +1,7 @@
-import { CHANGE_PASSWORD_ENDPOINT, USER_PROFILE_ENDPOINT } from "@/features/auth/constants";
+import {
+  CHANGE_PASSWORD_ENDPOINT,
+  USER_PROFILE_ENDPOINT,
+} from "@/features/auth/constants";
 import type {
   ApiResult,
   ChangePasswordPayload,
@@ -13,16 +16,30 @@ function resolveChangePasswordEndpoint(userId: string) {
 }
 
 export async function getUserProfile() {
-  const response = await axiosClient.get<ApiResult<UserProfileResponse>>(USER_PROFILE_ENDPOINT);
+  const response = await axiosClient.get<ApiResult<UserProfileResponse>>(
+    USER_PROFILE_ENDPOINT,
+  );
   return response.data;
 }
 
-export async function updateUserProfile(payload: UpdateProfilePayload) {
-  const response = await axiosClient.put<ApiResult<UserProfileResponse>>(USER_PROFILE_ENDPOINT, payload);
+export async function updateUserProfile(
+  userId: string,
+  payload: UpdateProfilePayload,
+) {
+  const response = await axiosClient.put<ApiResult<UserProfileResponse>>(
+    USER_PROFILE_ENDPOINT,
+    payload,
+  );
   return response.data;
 }
 
-export async function changeUserPassword(userId: string, payload: ChangePasswordPayload) {
-  const response = await axiosClient.post<ApiResult<LogoutResponse>>(resolveChangePasswordEndpoint(userId), payload);
+export async function changeUserPassword(
+  userId: string,
+  payload: ChangePasswordPayload,
+) {
+  const response = await axiosClient.post<ApiResult<LogoutResponse>>(
+    resolveChangePasswordEndpoint(userId),
+    payload,
+  );
   return response.data;
 }
