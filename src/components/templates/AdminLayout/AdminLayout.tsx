@@ -2,7 +2,9 @@
 // src/components/templates/AdminLayout/AdminLayout.tsx
 import React, { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/router";
+import { useRouter } from "next/router"
+import { useCallback } from "react";
+import { useAuth } from "@/features/auth/hooks/useAuth";
 import {
   LayoutDashboard,
   Users,
@@ -66,7 +68,8 @@ export default function AdminLayout({
   title: string;
 }) {
   const router = useRouter();
-  const [isSupportOpen, setIsSupportOpen] = useState(false);
+  const { logout } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // Kiểm tra xem trang hiện tại có phải là support không để làm sáng nút góc dưới
   const isSupportPageActive = router.pathname === "/admin/support";
@@ -74,12 +77,27 @@ export default function AdminLayout({
   const menuItems = [
     { icon: LayoutDashboard, label: "Overview", href: "/admin", exact: true },
     { icon: Users, label: "User Management", href: "/admin/users" },
-    { icon: CalendarDays, label: "Event Management", href: "/admin/events" },
+    { icon: CalendarDays, label: "Event Approval", href: "/admin/events" },
+    { icon: CheckSquare, label: "Events Listing", href: "/admin/events-listing" },
     { icon: Ticket, label: "Ticket Platform", href: "/admin/tickets" },
-    { icon: CheckSquare, label: "Organizer Requests", href: "/admin/requests" },
     { icon: BarChart3, label: "Financial Reports", href: "/admin/finance" },
     { icon: Settings, label: "System Settings", href: "/admin/settings" },
   ];
+
+  const handleSignOut = async () => {
+    if (isLoggingOut) {
+      return;
+    }
+
+    setIsLoggingOut(true);
+
+    try {
+      const result = await logout(undefined, { redirectTo: "/auth/login" });
+      await router.push(result.redirectTo);
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#FDFDFF] flex font-sans text-slate-900">
@@ -131,12 +149,16 @@ export default function AdminLayout({
             </span>
           </div>
 
-          <button className="flex items-center gap-3.5 px-5 py-3 text-rose-500 font-bold hover:bg-rose-50 w-full rounded-full transition-all group">
+          <button
+            onClick={() => void handleSignOut()}
+            disabled={isLoggingOut}
+            className="flex items-center gap-3.5 px-5 py-3 text-rose-500 font-bold hover:bg-rose-50 w-full rounded-full transition-all group disabled:opacity-60"
+          >
             <LogOut
               size={20}
               className="group-hover:-translate-x-1 transition-transform"
             />
-            <span className="text-sm">Sign Out</span>
+            <span className="text-sm">{isLoggingOut ? "Signing Out..." : "Sign Out"}</span>
           </button>
         </div>
       </aside>
@@ -172,23 +194,25 @@ export default function AdminLayout({
               </button>
             </div>
 
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-100 border-2 border-white shadow-sm overflow-hidden">
-                <img
-                  src="https://i.pravatar.cc/150?u=admin-alex"
-                  className="w-full h-full object-cover"
-                  alt="avatar"
-                />
+            <Link href="/admin/profile">
+              <div className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity">
+                <div className="w-10 h-10 rounded-xl bg-blue-100 border-2 border-white shadow-sm overflow-hidden">
+                  <img
+                    src="https://i.pravatar.cc/150?u=admin-alex"
+                    className="w-full h-full object-cover"
+                    alt="avatar"
+                  />
+                </div>
+                <div className="text-left hidden sm:block">
+                  <p className="text-sm font-black text-slate-900 leading-none">
+                    Alex Phước
+                  </p>
+                  <p className="text-[10px] text-blue-500 font-bold uppercase tracking-tight mt-1">
+                    Super Admin
+                  </p>
+                </div>
               </div>
-              <div className="text-left hidden sm:block">
-                <p className="text-sm font-black text-slate-900 leading-none">
-                  Alex Phước
-                </p>
-                <p className="text-[10px] text-blue-500 font-bold uppercase tracking-tight mt-1">
-                  Super Admin
-                </p>
-              </div>
-            </div>
+            </Link>
           </div>
         </header>
 

@@ -1,8 +1,8 @@
 /* eslint-disable @next/next/no-img-element */
 import AdminLayout from "@/components/templates/AdminLayout/AdminLayout";
-import type { AdminUser } from "@/features/admin/users.service";
-import { getAdminUsers } from "@/features/admin/users.service";
-import { UserPlus, Search, Edit2, Trash2, Eye, RefreshCcw } from "lucide-react";
+import type { AdminUser, AdminUserStatus } from "@/features/admin/users.service";
+import { getAdminUsers, updateAdminUserStatus } from "@/features/admin/users.service";
+import { UserPlus, Search, Edit2, Trash2, Eye, RefreshCcw, Lock, Unlock } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
@@ -34,6 +34,8 @@ export default function UserManagementPage() {
   const [roleFilter, setRoleFilter] = useState("All Roles");
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [statusLoadingId, setStatusLoadingId] = useState<string | null>(null);
 
   const loadUsers = async () => {
     setIsLoading(true);
@@ -43,9 +45,34 @@ export default function UserManagementPage() {
       const nextUsers = await getAdminUsers();
       setUsers(nextUsers);
     } catch {
-      setErrorMessage("Cannot load users. Please try again.");
+      setErrorMessage("Không thể tải danh sách người dùng. Vui lòng thử lại.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleToggleUserStatus = async (user: AdminUser) => {
+    const currentStatus = (user.status as AdminUserStatus) || "ACTIVE";
+    const newStatus: AdminUserStatus = currentStatus === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+
+    setStatusLoadingId(user.id);
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    try {
+      const updatedUser = await updateAdminUserStatus(user.id, newStatus);
+      if (updatedUser) {
+        setUsers((prevUsers) =>
+          prevUsers.map((u) => (u.id === user.id ? updatedUser : u))
+        );
+        setSuccessMessage(`Cập nhật trạng thái người dùng thành công.`);
+      }
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Cập nhật trạng thái thất bại."
+      );
+    } finally {
+      setStatusLoadingId(null);
     }
   };
 
@@ -141,6 +168,12 @@ export default function UserManagementPage() {
           {errorMessage && (
             <div className="mb-6 rounded-2xl border border-rose-100 bg-rose-50 px-5 py-4 text-sm font-bold text-rose-600">
               {errorMessage}
+            </div>
+          )}
+
+          {successMessage && (
+            <div className="mb-6 rounded-2xl border border-emerald-100 bg-emerald-50 px-5 py-4 text-sm font-bold text-emerald-700">
+              {successMessage}
             </div>
           )}
 
@@ -252,17 +285,16 @@ export default function UserManagementPage() {
                               </button>
                             </Link>
                             <button
-                              title="Edit User"
-                              className="w-9 h-9 flex items-center justify-center rounded-xl border border-slate-100 text-slate-400 hover:text-amber-600 hover:bg-amber-50 hover:border-amber-100 transition-all active:scale-90"
+                              onClick={() => handleToggleUserStatus(user)}
+                              disabled={statusLoadingId === user.id}
+                              title={`${getUserStatus(user) === "ACTIVE" ? "Deactivate" : "Activate"} User`}
+                              className="w-9 h-9 flex items-center justify-center rounded-xl border border-slate-100 text-slate-400 hover:text-amber-600 hover:bg-amber-50 hover:border-amber-100 transition-all active:scale-90 disabled:opacity-50"
                             >
-                              <Edit2 size={18} />
-                            </button>
-                            <button
-                              onClick={handleDeleteUser}
-                              title="Delete User"
-                              className="w-9 h-9 flex items-center justify-center rounded-xl border border-slate-100 text-slate-400 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-100 transition-all active:scale-90"
-                            >
-                              <Trash2 size={18} />
+                              {getUserStatus(user) === "ACTIVE" ? (
+                                <Lock size={18} />
+                              ) : (
+                                <Unlock size={18} />
+                              )}
                             </button>
                           </div>
                         </td>
