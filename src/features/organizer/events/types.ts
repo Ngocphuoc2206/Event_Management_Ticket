@@ -4,7 +4,6 @@ export type OrganizerEventStatus =
   | "PENDING_APPROVAL"
   | "APPROVED"
   | "REJECTED"
-  | "PUBLISHED"
   | "CANCELLED";
 
 export type OrganizerCreateEventPayload = {
@@ -61,4 +60,9 @@ export type OrganizerEvent = OrganizerCreateEventPayload & {
 export type OrganizerEventsPageData = {
   items: OrganizerEvent[];
   hasNext: boolean;
+};
+
+export type OrganizerTicketTypesPageData = {
+  items: OrganizerTicketType[];
+  hasNext?: boolean;
 };

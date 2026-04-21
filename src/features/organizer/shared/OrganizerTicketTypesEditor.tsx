@@ -10,8 +10,7 @@ import Link from "next/link";
 import type { LinkProps } from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import type { ApiResult } from "@/features/auth/types";
-import { getApiErrorMessage, getApiResultData } from "@/features/auth/utils";
+import { getApiErrorMessage } from "@/features/auth/utils";
 import {
   createOrganizerTicketType,
   deleteOrganizerTicketType,
@@ -123,15 +122,11 @@ export function OrganizerTicketTypesEditor({
 
     setIsLoading(true);
     try {
-      const apiResult = await getOrganizerTicketTypes(eventId, {
+      const items = await getOrganizerTicketTypes(eventId, {
         search: debouncedSearch || undefined,
         status: statusFilter === "ALL" ? undefined : statusFilter,
       });
-
-      const data = getApiResultData(
-        apiResult as ApiResult<OrganizerTicketType[]>,
-      );
-      setTickets(Array.isArray(data) ? data : []);
+      setTickets(items);
     } catch (error) {
       showToast({
         tone: "error",

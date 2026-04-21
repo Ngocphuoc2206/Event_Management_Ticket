@@ -5,17 +5,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   getApiErrorMessage,
-  getApiResultData,
-  isApiResponse,
 } from "@/features/auth/utils";
-import type { ApiResult } from "@/features/auth/types";
 import {
   getOrganizerEvents,
-  submitOrganizerEventForApproval,
 } from "@/features/organizer/events/services/create-event.service";
 import type {
   OrganizerEvent,
-  OrganizerEventsPageData,
 } from "@/features/organizer/events/types";
 import { OrganizerDashboardIcon } from "@/features/organizer/dashboard/OrganizerDashboardIcons";
 import { OrganizerMetaFooter } from "@/features/organizer/shared/OrganizerMetaFooter";
@@ -23,11 +18,6 @@ import { OrganizerMetaFooter } from "@/features/organizer/shared/OrganizerMetaFo
 type ToastState = {
   tone: "success" | "error";
   message: string;
-};
-
-type NormalizedEventsData = {
-  items: OrganizerEvent[];
-  hasNext: boolean;
 };
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -40,42 +30,6 @@ const STATUS_STYLE: Record<string, string> = {
   REJECTED: "bg-rose-100 text-rose-700",
   CANCELLED: "bg-slate-200 text-slate-700",
 };
-
-function normalizeEventsPayload(payload: unknown): NormalizedEventsData {
-  if (Array.isArray(payload)) {
-    return {
-      items: payload as OrganizerEvent[],
-      hasNext: false,
-    };
-  }
-
-  if (!payload || typeof payload !== "object") {
-    return {
-      items: [],
-      hasNext: false,
-    };
-  }
-
-  const objectPayload = payload as Partial<OrganizerEventsPageData> & {
-    events?: OrganizerEvent[];
-    content?: OrganizerEvent[];
-    data?: OrganizerEvent[];
-    results?: OrganizerEvent[];
-    hasMore?: boolean;
-  };
-
-  const itemsCandidate =
-    objectPayload.items ??
-    objectPayload.events ??
-    objectPayload.content ??
-    objectPayload.data ??
-    objectPayload.results;
-
-  return {
-    items: Array.isArray(itemsCandidate) ? itemsCandidate : [],
-    hasNext: Boolean(objectPayload.hasNext ?? objectPayload.hasMore),
-  };
-}
 
 function formatDate(dateInput?: string) {
   if (!dateInput) {
@@ -112,9 +66,6 @@ export function OrganizerEventsContent() {
   const [page, setPage] = useState(1);
   const [hasNext, setHasNext] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSubmittingById, setIsSubmittingById] = useState<
-    Record<string, boolean>
-  >({});
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastState | null>(null);
 
@@ -130,15 +81,13 @@ export function OrganizerEventsContent() {
     setErrorMessage(null);
 
     try {
-      const apiResult = await getOrganizerEvents({
+      const pageData = await getOrganizerEvents({
         page: nextPage,
         size: DEFAULT_PAGE_SIZE,
       });
-      const data = getApiResultData(apiResult as ApiResult<unknown>);
-      const normalized = normalizeEventsPayload(data);
 
-      setEvents(normalized.items);
-      setHasNext(normalized.hasNext);
+      setEvents(pageData.items);
+      setHasNext(Boolean(pageData.hasNext));
     } catch (error) {
       setErrorMessage(
         getApiErrorMessage(
@@ -165,57 +114,6 @@ export function OrganizerEventsContent() {
       ).length,
     [events],
   );
-
-  const handleSubmitForApproval = async (event: OrganizerEvent) => {
-    const eventId = event.id;
-    if (!eventId) {
-      showToast({
-        tone: "error",
-        message: "Sự kiện không hợp lệ để gửi duyệt.",
-      });
-      return;
-    }
-
-    setIsSubmittingById((prev) => ({ ...prev, [eventId]: true }));
-
-    try {
-      const apiResult = await submitOrganizerEventForApproval(eventId);
-
-      if (
-        isApiResponse(apiResult) &&
-        typeof apiResult.code === "number" &&
-        apiResult.code !== 0
-      ) {
-        throw new Error(apiResult.message || "Gửi duyệt thất bại.");
-      }
-
-      setEvents((prev) =>
-        prev.map((item) =>
-          item.id === eventId
-            ? {
-                ...item,
-                status: "PENDING_APPROVAL",
-              }
-            : item,
-        ),
-      );
-
-      showToast({
-        tone: "success",
-        message: "Đã gửi yêu cầu phê duyệt thành công",
-      });
-    } catch (error) {
-      const fallback = "Không thể gửi duyệt sự kiện. Vui lòng thử lại.";
-      const message =
-        error instanceof Error && error.message
-          ? error.message
-          : getApiErrorMessage(error, fallback);
-
-      showToast({ tone: "error", message });
-    } finally {
-      setIsSubmittingById((prev) => ({ ...prev, [eventId]: false }));
-    }
-  };
 
   return (
     <section className="relative flex-1">
@@ -380,10 +278,6 @@ export function OrganizerEventsContent() {
                     const status = (item.status ?? "DRAFT").toUpperCase();
                     const statusClassName =
                       STATUS_STYLE[status] || "bg-slate-200 text-slate-700";
-                    const isDraft = status === "DRAFT";
-                    const isSubmitting = Boolean(
-                      eventId && isSubmittingById[eventId],
-                    );
 
                     return (
                       <tr
@@ -440,14 +334,6 @@ export function OrganizerEventsContent() {
                             >
                               Xem chi tiet
                             </Link>
-                            <button
-                              type="button"
-                              onClick={() => void handleSubmitForApproval(item)}
-                              disabled={!isDraft || isSubmitting || !eventId}
-                              className="rounded-xl bg-amber-100 px-3 py-2 text-xs font-semibold text-amber-700 transition hover:bg-amber-200 disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                              {isSubmitting ? "Dang gui..." : "Gui duyet"}
-                            </button>
                           </div>
                         </td>
                       </tr>

@@ -9,8 +9,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import type { ApiResult } from "@/features/auth/types";
-import { getApiErrorMessage, getApiResultData } from "@/features/auth/utils";
+import { getApiErrorMessage } from "@/features/auth/utils";
 import { getOrganizerEvents } from "@/features/organizer/events/services/create-event.service";
 import {
   createOrganizerTicketType,
@@ -20,7 +19,6 @@ import {
 } from "@/features/organizer/events/services/ticket-types.service";
 import type {
   OrganizerEvent,
-  OrganizerEventsPageData,
   OrganizerTicketType,
   OrganizerTicketTypeStatus,
   OrganizerUpdateTicketTypePayload,
@@ -72,30 +70,33 @@ function toIsoString(value: string) {
   return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
 }
 
-function normalizeEventsPayload(payload: unknown): OrganizerEvent[] {
-  if (Array.isArray(payload)) {
-    return payload as OrganizerEvent[];
+function normalizeOrganizerEvent(item: unknown): OrganizerEvent | null {
+  if (!item || typeof item !== "object") {
+    return null;
   }
 
-  if (!payload || typeof payload !== "object") {
-    return [];
+  const value = item as Record<string, unknown>;
+  const idCandidate =
+    (typeof value.id === "string" && value.id.trim()) ||
+    (typeof value.eventId === "string" && value.eventId.trim()) ||
+    (typeof value._id === "string" && value._id.trim()) ||
+    "";
+
+  if (!idCandidate) {
+    return null;
   }
 
-  const objectPayload = payload as Partial<OrganizerEventsPageData> & {
-    events?: OrganizerEvent[];
-    content?: OrganizerEvent[];
-    data?: OrganizerEvent[];
-    results?: OrganizerEvent[];
+  const titleCandidate =
+    (typeof value.title === "string" && value.title.trim()) ||
+    (typeof value.name === "string" && value.name.trim()) ||
+    (typeof value.eventName === "string" && value.eventName.trim()) ||
+    "Untitled Event";
+
+  return {
+    ...(value as OrganizerEvent),
+    id: idCandidate,
+    title: titleCandidate,
   };
-
-  const candidate =
-    objectPayload.items ??
-    objectPayload.events ??
-    objectPayload.content ??
-    objectPayload.data ??
-    objectPayload.results;
-
-  return Array.isArray(candidate) ? candidate : [];
 }
 
 export function OrganizerTicketsContent() {
@@ -123,9 +124,10 @@ export function OrganizerTicketsContent() {
 
   const loadEvents = useCallback(async () => {
     try {
-      const apiResult = await getOrganizerEvents({ page: 1, size: 100 });
-      const data = getApiResultData(apiResult as ApiResult<unknown>);
-      const eventItems = normalizeEventsPayload(data);
+      const pageData = await getOrganizerEvents({ page: 1, size: 100 });
+      const eventItems = pageData.items
+        .map((eventItem) => normalizeOrganizerEvent(eventItem))
+        .filter((eventItem): eventItem is OrganizerEvent => Boolean(eventItem));
       setEvents(eventItems);
 
       if (!selectedEventId && eventItems[0]?.id) {
@@ -147,14 +149,11 @@ export function OrganizerTicketsContent() {
 
     setIsLoading(true);
     try {
-      const apiResult = await getOrganizerTicketTypes(selectedEventId, {
+      const items = await getOrganizerTicketTypes(selectedEventId, {
         search: searchTerm.trim() || undefined,
         status: statusFilter === "ALL" ? undefined : statusFilter,
       });
-      const data = getApiResultData(
-        apiResult as ApiResult<OrganizerTicketType[]>,
-      );
-      setTickets(Array.isArray(data) ? data : []);
+      setTickets(items);
     } catch (error) {
       setTickets([]);
       showToast({
