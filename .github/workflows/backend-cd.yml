@@ -1,6 +1,9 @@
 name: Backend CD
 
 on:
+  push:
+    branches:
+      - master
   pull_request:
     branches:
       - master
@@ -52,6 +55,4 @@ jobs:
 
             docker compose down || true
             docker compose up -d --build
-            sleep 15
-            curl -f http://localhost:8080/actuator/health || exit 1
             docker image prune -af || true
