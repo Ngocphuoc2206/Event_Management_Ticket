@@ -33,6 +33,7 @@ public class QrCodeService {
             return storageService.uploadBytes(pngBytes, ticketCode + ".png",
                     "image/png", "tickets/qr");
         } catch (Exception e){
+            log.error("Upload QR failed", e);
             throw new AppException(ErrorCode.FILE_UPLOAD_FAILED);
         }
     }

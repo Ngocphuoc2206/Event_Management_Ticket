@@ -19,4 +19,19 @@ public interface TicketTypeRepository extends JpaRepository<TicketType, String>,
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select t from TicketType t where t.id = :id")
     Optional<TicketType> findByIdForUpdate(@Param("id") String id);
+
+    @Query("""
+        SELECT COUNT(it)
+        FROM IssuedTicket it
+        WHERE it.event.id = :eventId AND it.used = true
+        """)
+    Long countCheckedIn(String eventId);
+
+    @Query("""
+        SELECT COUNT(it)
+        FROM IssuedTicket it
+        WHERE it.event.id = :eventId
+        """)
+    Long countTotalTickets(String eventId);
+
 }
