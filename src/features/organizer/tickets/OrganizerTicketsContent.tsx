@@ -1,572 +1,491 @@
+import { AlertCircle, CheckCircle2, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+
+import type { ApiResult } from "@/features/auth/types";
+import { getApiErrorMessage, getApiResultData } from "@/features/auth/utils";
+import { getOrganizerEvents } from "@/features/organizer/events/services/create-event.service";
 import {
-  Bell,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  Download,
-  Filter,
-  Pencil,
-  Plus,
-  Search,
-  Settings,
-  Trash2,
-  TriangleAlert,
-  TrendingUp,
-} from "lucide-react";
-import { useMemo, useState } from "react";
+  createOrganizerTicketType,
+  deleteOrganizerTicketType,
+  getOrganizerTicketTypes,
+  updateOrganizerTicketType,
+} from "@/features/organizer/events/services/ticket-types.service";
+import type {
+  OrganizerEvent,
+  OrganizerEventsPageData,
+  OrganizerTicketType,
+  OrganizerTicketTypeStatus,
+  OrganizerUpdateTicketTypePayload,
+} from "@/features/organizer/events/types";
 
-type TicketStatus = "Active" | "Sold Out" | "Paused";
-
-type TicketRow = {
-  id: string;
-  name: string;
-  ref: string;
-  event: string;
-  category: string;
-  price: number;
-  sold: number;
-  total: number;
-  status: TicketStatus;
+type ToastState = {
+  tone: "success" | "error";
+  message: string;
 };
-
-const TICKET_ROWS: TicketRow[] = [
-  {
-    id: "tkt-001-nnf",
-    name: "Main Stage VIP",
-    ref: "TKT-001-NNF",
-    event: "Neon Nights Festival 2024",
-    category: "VIP",
-    price: 299,
-    sold: 480,
-    total: 500,
-    status: "Active",
-  },
-  {
-    id: "tkt-004-tec",
-    name: "Early Bird Pass",
-    ref: "TKT-004-TEC",
-    event: "Tech Summit Global",
-    category: "Early Bird",
-    price: 150,
-    sold: 1000,
-    total: 1000,
-    status: "Sold Out",
-  },
-  {
-    id: "tkt-012-acs",
-    name: "General Admission",
-    ref: "TKT-012-ACS",
-    event: "Acoustic Soul Sessions",
-    category: "GA",
-    price: 45,
-    sold: 156,
-    total: 300,
-    status: "Paused",
-  },
-  {
-    id: "tkt-098-nnf",
-    name: "Backstage Discovery",
-    ref: "TKT-098-NNF",
-    event: "Neon Nights Festival 2024",
-    category: "Add-On",
-    price: 500,
-    sold: 12,
-    total: 20,
-    status: "Active",
-  },
-];
 
 type TicketFormState = {
   name: string;
-  event: string;
-  category: string;
   price: string;
-  sold: string;
-  total: string;
-  status: TicketStatus;
+  quantity: string;
+  saleStart: string;
+  saleEnd: string;
 };
 
-const DEFAULT_TICKET_FORM: TicketFormState = {
+const DEFAULT_FORM: TicketFormState = {
   name: "",
-  event: "",
-  category: "",
   price: "",
-  sold: "0",
-  total: "100",
-  status: "Active",
+  quantity: "",
+  saleStart: "",
+  saleEnd: "",
 };
-
-const STATUS_FILTER_OPTIONS = ["Any Status", "Active", "Sold Out", "Paused"] as const;
-const ALL_CATEGORIES_OPTION = "All Categories";
-
-function truncateText(value: string, maxLength: number) {
-  if (value.length <= maxLength) {
-    return value;
-  }
-
-  return `${value.slice(0, maxLength - 1)}...`;
-}
 
 function formatCurrency(value: number) {
   return `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-function getDerivedStatus(sold: number, total: number, status: TicketStatus) {
-  if (total > 0 && sold >= total) {
-    return "Sold Out";
+function toDateTimeLocal(value?: string) {
+  if (!value) {
+    return "";
   }
 
-  return status;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return "";
+  }
+
+  const shifted = new Date(parsed.getTime() - parsed.getTimezoneOffset() * 60000);
+  return shifted.toISOString().slice(0, 16);
+}
+
+function toIsoString(value: string) {
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+}
+
+function normalizeEventsPayload(payload: unknown): OrganizerEvent[] {
+  if (Array.isArray(payload)) {
+    return payload as OrganizerEvent[];
+  }
+
+  if (!payload || typeof payload !== "object") {
+    return [];
+  }
+
+  const objectPayload = payload as Partial<OrganizerEventsPageData> & {
+    events?: OrganizerEvent[];
+    content?: OrganizerEvent[];
+    data?: OrganizerEvent[];
+    results?: OrganizerEvent[];
+  };
+
+  const candidate =
+    objectPayload.items ??
+    objectPayload.events ??
+    objectPayload.content ??
+    objectPayload.data ??
+    objectPayload.results;
+
+  return Array.isArray(candidate) ? candidate : [];
 }
 
 export function OrganizerTicketsContent() {
-  const [tickets, setTickets] = useState<TicketRow[]>(TICKET_ROWS);
+  const [events, setEvents] = useState<OrganizerEvent[]>([]);
+  const [selectedEventId, setSelectedEventId] = useState<string>("");
+  const [tickets, setTickets] = useState<OrganizerTicketType[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedEvent, setSelectedEvent] = useState("All Events");
-  const [selectedCategory, setSelectedCategory] = useState(ALL_CATEGORIES_OPTION);
-  const [selectedStatus, setSelectedStatus] = useState<(typeof STATUS_FILTER_OPTIONS)[number]>("Any Status");
+  const [statusFilter, setStatusFilter] = useState<"ALL" | OrganizerTicketTypeStatus>("ALL");
   const [editingTicketId, setEditingTicketId] = useState<string | null>(null);
-  const [form, setForm] = useState<TicketFormState>(DEFAULT_TICKET_FORM);
+  const [form, setForm] = useState<TicketFormState>(DEFAULT_FORM);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeletingById, setIsDeletingById] = useState<Record<string, boolean>>({});
+  const [toast, setToast] = useState<ToastState | null>(null);
 
-  const eventOptions = useMemo(() => {
-    const uniqueEvents = Array.from(new Set(tickets.map((ticket) => ticket.event)));
-    return ["All Events", ...uniqueEvents];
-  }, [tickets]);
+  const showToast = useCallback((nextToast: ToastState) => {
+    setToast(nextToast);
+    window.setTimeout(() => setToast(null), 2500);
+  }, []);
 
-  const categoryOptions = useMemo(() => {
-    const uniqueCategories = Array.from(new Set(tickets.map((ticket) => ticket.category)));
-    return [ALL_CATEGORIES_OPTION, ...uniqueCategories];
-  }, [tickets]);
+  const loadEvents = useCallback(async () => {
+    try {
+      const apiResult = await getOrganizerEvents({ page: 1, size: 100 });
+      const data = getApiResultData(apiResult as ApiResult<unknown>);
+      const eventItems = normalizeEventsPayload(data);
+      setEvents(eventItems);
 
-  const filteredTickets = useMemo(() => {
-    const normalizedSearch = searchTerm.trim().toLowerCase();
+      if (!selectedEventId && eventItems[0]?.id) {
+        setSelectedEventId(eventItems[0].id);
+      }
+    } catch (error) {
+      showToast({ tone: "error", message: getApiErrorMessage(error, "Cannot load organizer events.") });
+    }
+  }, [selectedEventId, showToast]);
 
-    return tickets.filter((ticket) => {
-      const matchesEvent = selectedEvent === "All Events" || ticket.event === selectedEvent;
-      const matchesCategory = selectedCategory === ALL_CATEGORIES_OPTION || ticket.category === selectedCategory;
-      const matchesStatus = selectedStatus === "Any Status" || ticket.status === selectedStatus;
-      const matchesSearch =
-        !normalizedSearch
-        || ticket.name.toLowerCase().includes(normalizedSearch)
-        || ticket.event.toLowerCase().includes(normalizedSearch)
-        || ticket.ref.toLowerCase().includes(normalizedSearch);
-
-      return matchesEvent && matchesCategory && matchesStatus && matchesSearch;
-    });
-  }, [tickets, searchTerm, selectedEvent, selectedCategory, selectedStatus]);
-
-  const totals = useMemo(() => {
-    const totalRevenue = filteredTickets.reduce((sum, ticket) => sum + (ticket.sold * ticket.price), 0);
-    const totalSold = filteredTickets.reduce((sum, ticket) => sum + ticket.sold, 0);
-    const totalCapacity = filteredTickets.reduce((sum, ticket) => sum + ticket.total, 0);
-    const soldPercent = totalCapacity === 0 ? 0 : Math.round((totalSold / totalCapacity) * 100);
-    const activeEvents = new Set(filteredTickets.map((ticket) => ticket.event)).size;
-    const soldOutCount = filteredTickets.filter((ticket) => ticket.status === "Sold Out").length;
-
-    return {
-      totalRevenue,
-      totalSold,
-      totalCapacity,
-      soldPercent,
-      activeEvents,
-      soldOutCount,
-    };
-  }, [filteredTickets]);
-
-  const openCreateForm = () => {
-    setEditingTicketId(null);
-    setForm(DEFAULT_TICKET_FORM);
-    setIsFormOpen(true);
-  };
-
-  const openEditForm = (ticket: TicketRow) => {
-    setEditingTicketId(ticket.id);
-    setForm({
-      name: ticket.name,
-      event: ticket.event,
-      category: ticket.category,
-      price: String(ticket.price),
-      sold: String(ticket.sold),
-      total: String(ticket.total),
-      status: ticket.status,
-    });
-    setIsFormOpen(true);
-  };
-
-  const closeForm = () => {
-    setIsFormOpen(false);
-    setEditingTicketId(null);
-    setForm(DEFAULT_TICKET_FORM);
-  };
-
-  const handleSubmitTicket = () => {
-    const nextPrice = Number(form.price);
-    const nextSold = Number(form.sold);
-    const nextTotal = Number(form.total);
-
-    if (!form.name.trim() || !form.event.trim() || !form.category.trim() || Number.isNaN(nextPrice) || Number.isNaN(nextSold) || Number.isNaN(nextTotal)) {
+  const loadTickets = useCallback(async () => {
+    if (!selectedEventId) {
+      setTickets([]);
       return;
     }
 
-    const safeSold = Math.max(0, nextSold);
-    const safeTotal = Math.max(1, nextTotal);
-    const resolvedStatus = getDerivedStatus(safeSold, safeTotal, form.status);
+    setIsLoading(true);
+    try {
+      const apiResult = await getOrganizerTicketTypes(selectedEventId, {
+        search: searchTerm.trim() || undefined,
+        status: statusFilter === "ALL" ? undefined : statusFilter,
+      });
+      const data = getApiResultData(apiResult as ApiResult<OrganizerTicketType[]>);
+      setTickets(Array.isArray(data) ? data : []);
+    } catch (error) {
+      setTickets([]);
+      showToast({ tone: "error", message: getApiErrorMessage(error, "Cannot load ticket types.") });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [searchTerm, selectedEventId, showToast, statusFilter]);
 
-    if (editingTicketId) {
-      setTickets((prev) => prev.map((ticket) => {
-        if (ticket.id !== editingTicketId) {
-          return ticket;
-        }
+  useEffect(() => {
+    void loadEvents();
+  }, [loadEvents]);
 
-        return {
-          ...ticket,
-          name: form.name.trim(),
-          event: form.event.trim(),
-          category: form.category.trim(),
-          price: nextPrice,
-          sold: safeSold,
-          total: safeTotal,
-          status: resolvedStatus,
-        };
-      }));
-    } else {
-      const numericRef = 100 + tickets.length + 1;
-      const eventCode = (form.event.trim().split(" ").map((word) => word.charAt(0)).join("") || "EVT").slice(0, 3).toUpperCase();
-      const ref = `TKT-${numericRef}-${eventCode}`;
+  useEffect(() => {
+    void loadTickets();
+  }, [loadTickets]);
 
-      setTickets((prev) => [
-        {
-          id: `${ref.toLowerCase()}-${Date.now()}`,
-          ref,
-          name: form.name.trim(),
-          event: form.event.trim(),
-          category: form.category.trim(),
-          price: nextPrice,
-          sold: safeSold,
-          total: safeTotal,
-          status: resolvedStatus,
-        },
-        ...prev,
-      ]);
+  const selectedEventName = useMemo(() => {
+    const found = events.find((event) => event.id === selectedEventId);
+    return found?.title ?? "-";
+  }, [events, selectedEventId]);
+
+  const resetForm = () => {
+    setEditingTicketId(null);
+    setForm(DEFAULT_FORM);
+    setIsFormOpen(false);
+  };
+
+  const openCreateForm = () => {
+    setEditingTicketId(null);
+    setForm(DEFAULT_FORM);
+    setIsFormOpen(true);
+  };
+
+  const openEditForm = (ticket: OrganizerTicketType) => {
+    setEditingTicketId(ticket.id);
+    setForm({
+      name: ticket.name,
+      price: String(ticket.price),
+      quantity: String(ticket.quantity),
+      saleStart: toDateTimeLocal(ticket.saleStart),
+      saleEnd: toDateTimeLocal(ticket.saleEnd),
+    });
+    setIsFormOpen(true);
+  };
+
+  const handleSave = async () => {
+    if (!selectedEventId || isSaving) {
+      return;
     }
 
-    closeForm();
+    const price = Number(form.price);
+    const quantity = Number(form.quantity);
+    const saleStart = toIsoString(form.saleStart);
+    const saleEnd = toIsoString(form.saleEnd);
+    const name = form.name.trim();
+
+    if (!name || Number.isNaN(price) || Number.isNaN(quantity) || !saleStart || !saleEnd) {
+      showToast({ tone: "error", message: "Please provide valid name, price, quantity, and sales dates." });
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      if (editingTicketId) {
+        const existing = tickets.find((ticket) => ticket.id === editingTicketId);
+        if (!existing) {
+          throw new Error("Ticket type no longer exists.");
+        }
+
+        const payload: OrganizerUpdateTicketTypePayload = {};
+        if (name !== existing.name) {
+          payload.name = name;
+        }
+        if (price !== existing.price) {
+          payload.price = price;
+        }
+        if (quantity !== existing.quantity) {
+          payload.quantity = quantity;
+        }
+        if (saleStart !== existing.saleStart) {
+          payload.saleStart = saleStart;
+        }
+        if (saleEnd !== existing.saleEnd) {
+          payload.saleEnd = saleEnd;
+        }
+
+        if (Object.keys(payload).length > 0) {
+          await updateOrganizerTicketType(editingTicketId, payload);
+          showToast({ tone: "success", message: "Ticket type updated." });
+        } else {
+          showToast({ tone: "success", message: "No changes to update." });
+        }
+      } else {
+        await createOrganizerTicketType(selectedEventId, {
+          name,
+          price,
+          quantity,
+          saleStart,
+          saleEnd,
+        });
+        showToast({ tone: "success", message: "Ticket type created." });
+      }
+
+      resetForm();
+      await loadTickets();
+    } catch (error) {
+      showToast({ tone: "error", message: getApiErrorMessage(error, "Unable to save ticket type.") });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleDeleteTicket = (ticketId: string) => {
-    setTickets((prev) => prev.filter((ticket) => ticket.id !== ticketId));
+  const handleDelete = async (ticketId: string) => {
+    if (isDeletingById[ticketId]) {
+      return;
+    }
+
+    if (!window.confirm("Delete this ticket type?")) {
+      return;
+    }
+
+    setIsDeletingById((prev) => ({ ...prev, [ticketId]: true }));
+    try {
+      await deleteOrganizerTicketType(ticketId);
+      showToast({ tone: "success", message: "Ticket type deleted." });
+      await loadTickets();
+    } catch (error) {
+      showToast({ tone: "error", message: getApiErrorMessage(error, "Unable to delete ticket type.") });
+    } finally {
+      setIsDeletingById((prev) => ({ ...prev, [ticketId]: false }));
+    }
   };
+
+  const totalQuantity = useMemo(() => tickets.reduce((sum, ticket) => sum + (ticket.quantity || 0), 0), [tickets]);
+  const minPrice = useMemo(() => (tickets.length > 0 ? Math.min(...tickets.map((ticket) => ticket.price || 0)) : 0), [tickets]);
 
   return (
     <section className="relative flex-1 overflow-hidden bg-slate-50">
-      <header className="flex h-20 items-center justify-between bg-slate-50 px-5 sm:px-8 lg:px-10">
-        <div className="relative w-full max-w-[620px]">
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
-            placeholder="Search tickets, events or buyers..."
-            className="inline-flex w-full items-center rounded-full bg-gray-100 py-3 pl-12 pr-6 text-sm text-gray-700 placeholder:text-gray-500"
-          />
-          <Search className="absolute left-4 top-3.5 h-4 w-4 text-gray-700" />
-        </div>
-
-        <div className="ml-8 flex items-center gap-6">
-          <button type="button" className="relative rounded-full p-2 text-gray-700 transition hover:bg-gray-100" aria-label="Notifications">
-            <Bell className="h-5 w-5" />
-            <span className="absolute right-2 top-2 h-2 w-2 rounded-full border-2 border-slate-50 bg-rose-700" />
-          </button>
-          <button type="button" className="rounded-full p-2 text-gray-700 transition hover:bg-gray-100" aria-label="Settings">
-            <Settings className="h-5 w-5" />
-          </button>
-          <div className="h-10 w-px bg-slate-300/30" />
-          <div className="hidden items-center gap-3 sm:flex">
-            <div className="text-right">
-              <p className="text-sm font-semibold text-zinc-900">Giang Đẹp Zai Ahihi</p>
-              <p className="text-xs text-gray-700">Lead Organizer</p>
-            </div>
-            <img src="https://placehold.co/40x40" alt="Organizer profile" className="h-10 w-10 rounded-full border-2 border-gray-100" />
+      {toast ? (
+        <div className="fixed right-6 top-6 z-50">
+          <div
+            className={`inline-flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold shadow-lg ${
+              toast.tone === "success" ? "bg-emerald-600 text-white" : "bg-rose-600 text-white"
+            }`}
+          >
+            {toast.tone === "success" ? <CheckCircle2 className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
+            {toast.message}
           </div>
         </div>
-      </header>
+      ) : null}
 
-      <div className="mx-auto flex w-full max-w-[1104px] flex-col gap-8 px-5 pb-12 pt-8 sm:px-8 lg:px-10">
-        <section className="grid items-end gap-6 lg:grid-cols-[minmax(0,1fr)_auto]">
-          <div className="max-w-[650px]">
-            <h1 className="text-4xl font-bold leading-10 text-zinc-900">Tickets Management</h1>
-            <p className="mt-2 max-w-[620px] text-lg leading-7 text-gray-700">
-              Monitor sales performance, adjust pricing strategies, and manage inventory across all your live experiences.
-            </p>
-          </div>
+      <div className="mx-auto w-full max-w-[1104px] px-5 py-8 sm:px-8 lg:px-10">
+        <section className="space-y-3">
+          <h1 className="text-4xl font-bold leading-10 text-zinc-900">Tickets Management</h1>
+          <p className="text-base text-gray-700">Manage ticket types with organizer APIs directly on this page.</p>
+        </section>
 
-          <div className="flex items-center justify-end gap-3 lg:justify-self-end">
-            <button type="button" className="inline-flex items-center gap-3 rounded-2xl bg-zinc-200 px-6 py-3 text-base font-semibold text-zinc-900">
-              <Download className="h-4 w-4" />
-              Export CSV
-            </button>
-            <button
-              type="button"
-              onClick={openCreateForm}
-              className="inline-flex items-center gap-3 rounded-2xl bg-gradient-to-r from-sky-700 to-violet-700 px-6 py-3 text-base font-semibold text-white shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]"
+        <section className="mt-8 grid gap-4 rounded-3xl bg-white p-6 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)] md:grid-cols-4">
+          <label className="space-y-1 md:col-span-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-gray-700">Event</span>
+            <select
+              value={selectedEventId}
+              onChange={(event) => setSelectedEventId(event.target.value)}
+              className="h-11 w-full rounded-2xl bg-gray-100 px-4 text-sm font-medium text-zinc-900"
             >
-              <Plus className="h-4 w-4" />
-              New Ticket Type
-            </button>
-          </div>
-        </section>
+              <option value="">Select event</option>
+              {events.map((eventItem) => (
+                <option key={eventItem.id} value={eventItem.id}>
+                  {eventItem.title}
+                </option>
+              ))}
+            </select>
+          </label>
 
-        {isFormOpen ? (
-          <section className="rounded-3xl bg-white p-6 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)] outline outline-1 outline-slate-300/10">
-            <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 pb-4">
-              <div>
-                <h3 className="text-lg font-bold text-zinc-900">{editingTicketId ? "Edit Ticket Type" : "Create Ticket Type"}</h3>
-                <p className="text-xs text-gray-700">Set pricing, inventory, and status for this ticket type.</p>
-              </div>
-              <button type="button" onClick={closeForm} className="rounded-xl bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-700">Cancel</button>
+          <label className="space-y-1">
+            <span className="text-xs font-bold uppercase tracking-wider text-gray-700">Search</span>
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-gray-500" />
+              <input
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Search by name"
+                className="w-full rounded-2xl bg-gray-100 py-3 pl-10 pr-4 text-sm text-zinc-900"
+              />
             </div>
+          </label>
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <label className="space-y-1">
-                <span className="text-xs font-semibold uppercase tracking-wide text-gray-700">Ticket Name</span>
-                <input value={form.name} onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))} placeholder="Main Stage VIP" className="w-full rounded-xl bg-gray-100 px-4 py-3 text-sm text-zinc-900" />
-              </label>
-              <label className="space-y-1">
-                <span className="text-xs font-semibold uppercase tracking-wide text-gray-700">Event</span>
-                <input value={form.event} onChange={(event) => setForm((prev) => ({ ...prev, event: event.target.value }))} placeholder="Neon Nights Festival 2024" className="w-full rounded-xl bg-gray-100 px-4 py-3 text-sm text-zinc-900" />
-              </label>
-              <label className="space-y-1">
-                <span className="text-xs font-semibold uppercase tracking-wide text-gray-700">Category</span>
-                <input value={form.category} onChange={(event) => setForm((prev) => ({ ...prev, category: event.target.value }))} placeholder="VIP" className="w-full rounded-xl bg-gray-100 px-4 py-3 text-sm text-zinc-900" />
-              </label>
-              <label className="space-y-1">
-                <span className="text-xs font-semibold uppercase tracking-wide text-gray-700">Price (USD)</span>
-                <input value={form.price} onChange={(event) => setForm((prev) => ({ ...prev, price: event.target.value }))} placeholder="299" className="w-full rounded-xl bg-gray-100 px-4 py-3 text-sm text-zinc-900" />
-              </label>
-              <label className="space-y-1">
-                <span className="text-xs font-semibold uppercase tracking-wide text-gray-700">Sold</span>
-                <input value={form.sold} onChange={(event) => setForm((prev) => ({ ...prev, sold: event.target.value }))} placeholder="480" className="w-full rounded-xl bg-gray-100 px-4 py-3 text-sm text-zinc-900" />
-              </label>
-              <label className="space-y-1">
-                <span className="text-xs font-semibold uppercase tracking-wide text-gray-700">Total Inventory</span>
-                <input value={form.total} onChange={(event) => setForm((prev) => ({ ...prev, total: event.target.value }))} placeholder="500" className="w-full rounded-xl bg-gray-100 px-4 py-3 text-sm text-zinc-900" />
-              </label>
-              <label className="space-y-1 md:col-span-2">
-                <span className="text-xs font-semibold uppercase tracking-wide text-gray-700">Status</span>
-                <select
-                  value={form.status}
-                  onChange={(event) => setForm((prev) => ({ ...prev, status: event.target.value as TicketStatus }))}
-                  className="w-full rounded-xl bg-gray-100 px-4 py-3 text-sm text-zinc-900"
-                >
-                  <option value="Active">Active</option>
-                  <option value="Paused">Paused</option>
-                  <option value="Sold Out">Sold Out</option>
-                </select>
-              </label>
-            </div>
-
-            <div className="mt-5 flex justify-end">
-              <button type="button" onClick={handleSubmitTicket} className="rounded-xl bg-sky-700 px-5 py-3 text-sm font-semibold text-white">
-                {editingTicketId ? "Update Ticket Type" : "Create Ticket Type"}
-              </button>
-            </div>
-          </section>
-        ) : null}
-
-        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <article className="rounded-3xl bg-white p-6 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
-            <p className="text-xs font-bold uppercase tracking-wider text-gray-700">Total Revenue</p>
-            <p className="mt-4 text-3xl font-bold text-zinc-900">{formatCurrency(totals.totalRevenue)}</p>
-            <p className="mt-4 inline-flex items-center gap-2 text-xs font-medium text-sky-700"><TrendingUp className="h-3.5 w-3.5" />+12.5% from last month</p>
-          </article>
-
-          <article className="rounded-3xl bg-white p-6 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
-            <p className="text-xs font-bold uppercase tracking-wider text-gray-700">Tickets Sold</p>
-            <p className="mt-4 text-3xl font-bold text-zinc-900">{totals.totalSold.toLocaleString()}</p>
-            <p className="mt-4 text-xs font-medium text-sky-700">{totals.soldPercent}% total capacity sold</p>
-          </article>
-
-          <article className="rounded-3xl border-l-4 border-violet-700 bg-white p-6 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
-            <p className="text-xs font-bold uppercase tracking-wider text-gray-700">Active Events</p>
-            <p className="mt-4 text-3xl font-bold text-zinc-900">{totals.activeEvents}</p>
-            <p className="mt-4 inline-flex items-center gap-2 text-xs text-gray-700"><span className="h-2 w-2 rounded-full bg-rose-700" />{totals.activeEvents} events in current view</p>
-          </article>
-
-          <article className="rounded-3xl border-l-4 border-rose-700 bg-white p-6 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
-            <p className="text-xs font-bold uppercase tracking-wider text-gray-700">Waitlisted</p>
-            <p className="mt-4 text-3xl font-bold text-zinc-900">{totals.soldOutCount}</p>
-            <p className="mt-4 text-xs text-gray-700">Sold-out categories in filtered result</p>
-          </article>
-        </section>
-
-        <section className="rounded-2xl bg-gray-100 p-4 outline outline-1 outline-slate-300/10">
-          <div className="grid gap-3 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-end">
-            <label className="space-y-1">
-              <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-700"><Filter className="h-3.5 w-3.5" />Event</span>
-              <div className="relative">
-                <select value={selectedEvent} onChange={(event) => setSelectedEvent(event.target.value)} className="w-full appearance-none rounded-2xl bg-white px-4 py-2.5 pr-10 text-sm font-semibold text-zinc-900 outline outline-1 outline-slate-300/10">
-                {eventOptions.map((eventName) => (
-                  <option key={eventName} value={eventName}>{truncateText(eventName, 28)}</option>
-                ))}
-              </select>
-                <ChevronDown className="pointer-events-none absolute right-3 top-2.5 h-4 w-4 text-gray-500" />
-              </div>
-            </label>
-
-            <label className="space-y-1">
-              <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-700">Category</span>
-              <div className="relative">
-                <select value={selectedCategory} onChange={(event) => setSelectedCategory(event.target.value)} className="w-full appearance-none rounded-2xl bg-white px-4 py-2.5 pr-10 text-sm font-semibold text-zinc-900 outline outline-1 outline-slate-300/10">
-                {categoryOptions.map((category) => (
-                  <option key={category} value={category}>{category}</option>
-                ))}
-              </select>
-                <ChevronDown className="pointer-events-none absolute right-3 top-2.5 h-4 w-4 text-gray-500" />
-              </div>
-            </label>
-
-            <label className="space-y-1">
-              <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-700">Status</span>
-              <div className="relative">
-                <select value={selectedStatus} onChange={(event) => setSelectedStatus(event.target.value as (typeof STATUS_FILTER_OPTIONS)[number])} className="w-full appearance-none rounded-2xl bg-white px-4 py-2.5 pr-10 text-sm font-semibold text-zinc-900 outline outline-1 outline-slate-300/10">
-                {STATUS_FILTER_OPTIONS.map((statusOption) => (
-                  <option key={statusOption} value={statusOption}>{statusOption}</option>
-                ))}
-              </select>
-                <ChevronDown className="pointer-events-none absolute right-3 top-2.5 h-4 w-4 text-gray-500" />
-              </div>
-            </label>
-
-            <button
-              type="button"
-              onClick={() => {
-                setSelectedEvent("All Events");
-                setSelectedCategory(ALL_CATEGORIES_OPTION);
-                setSelectedStatus("Any Status");
-                setSearchTerm("");
-              }}
-              className="justify-self-end rounded-xl px-3 py-2 text-sm font-bold text-sky-700 hover:bg-white/60"
+          <label className="space-y-1">
+            <span className="text-xs font-bold uppercase tracking-wider text-gray-700">Status</span>
+            <select
+              value={statusFilter}
+              onChange={(event) => setStatusFilter(event.target.value as "ALL" | OrganizerTicketTypeStatus)}
+              className="h-11 w-full rounded-2xl bg-gray-100 px-4 text-sm font-medium text-zinc-900"
             >
-              Clear All Filters
-            </button>
+              <option value="ALL">ALL</option>
+              <option value="ACTIVE">ACTIVE</option>
+              <option value="INACTIVE">INACTIVE</option>
+            </select>
+          </label>
+        </section>
+
+        <section className="mt-4 grid gap-4 rounded-3xl bg-white p-6 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)] sm:grid-cols-3">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wide text-gray-700">Event</p>
+            <p className="text-sm font-semibold text-zinc-900">{selectedEventName}</p>
+          </div>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wide text-gray-700">Types</p>
+            <p className="text-lg font-bold text-zinc-900">{tickets.length}</p>
+          </div>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wide text-gray-700">Min Price</p>
+            <p className="text-sm font-bold text-zinc-900">{formatCurrency(minPrice)}</p>
+            <p className="text-xs text-gray-700">Total quantity: {totalQuantity}</p>
           </div>
         </section>
 
-        <section className="overflow-hidden rounded-3xl bg-white shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
-          <div className="overflow-x-auto">
-            <table className="min-w-[980px] w-full">
-              <thead className="border-b border-gray-100 bg-gray-100/50">
-                <tr>
-                  <th className="px-6 py-5 text-left text-[10px] font-bold uppercase tracking-wide text-gray-700">Ticket Name</th>
-                  <th className="px-6 py-5 text-left text-[10px] font-bold uppercase tracking-wide text-gray-700">Event Name</th>
-                  <th className="px-6 py-5 text-left text-[10px] font-bold uppercase tracking-wide text-gray-700">Category</th>
-                  <th className="px-6 py-5 text-left text-[10px] font-bold uppercase tracking-wide text-gray-700">Price</th>
-                  <th className="px-6 py-5 text-left text-[10px] font-bold uppercase tracking-wide text-gray-700">Sold / Remaining</th>
-                  <th className="px-6 py-5 text-left text-[10px] font-bold uppercase tracking-wide text-gray-700">Status</th>
-                  <th className="px-6 py-5 text-right text-[10px] font-bold uppercase tracking-wide text-gray-700">Actions</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {filteredTickets.map((row, index) => {
-                  const remaining = Math.max(0, row.total - row.sold);
-                  const percent = row.total === 0 ? 0 : Math.round((row.sold / row.total) * 100);
-                  const statusColor = row.status === "Active" ? "text-sky-700" : row.status === "Sold Out" ? "text-rose-700" : "text-gray-500";
-                  const dotColor = row.status === "Active" ? "bg-sky-700" : row.status === "Sold Out" ? "bg-rose-700" : "bg-gray-500";
-                  const barColor = row.status === "Sold Out" ? "bg-rose-700" : row.status === "Paused" ? "bg-violet-700" : "bg-sky-700";
-
-                  return (
-                    <tr key={row.ref} className={index > 0 ? "border-t border-gray-100" : ""}>
-                      <td className="px-6 py-6">
-                        <p className="text-base font-bold text-zinc-900">{row.name}</p>
-                        <p className="mt-1 text-xs text-gray-700">Ref: {row.ref}</p>
-                      </td>
-                      <td className="px-6 py-6 text-sm font-medium text-zinc-900" title={row.event}>{truncateText(row.event, 30)}</td>
-                      <td className="px-6 py-6">
-                        <span className="inline-flex rounded-full bg-zinc-200 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-gray-700">{row.category}</span>
-                      </td>
-                      <td className="px-6 py-6 text-base font-bold text-zinc-900">{formatCurrency(row.price)}</td>
-                      <td className="px-6 py-6">
-                        <div className="w-40 space-y-2">
-                          <div className="flex justify-between text-[10px] font-bold text-zinc-900">
-                            <span>{row.sold} sold / {remaining} remaining</span>
-                            <span>{percent}%</span>
-                          </div>
-                          <div className="h-1.5 overflow-hidden rounded-full bg-gray-200">
-                            <div className={`h-full ${barColor}`} style={{ width: `${percent}%` }} />
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-6">
-                        <span className={`inline-flex items-center gap-2 text-sm font-medium ${statusColor}`}>
-                          <span className={`h-1.5 w-1.5 rounded-full ${dotColor}`} />
-                          {row.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-6">
-                        <div className="flex justify-end gap-2">
-                          <button type="button" onClick={() => openEditForm(row)} className="rounded-2xl p-2 text-gray-700 transition hover:bg-gray-100" aria-label="Edit ticket type">
-                            <Pencil className="h-4 w-4" />
-                          </button>
-                          <button type="button" onClick={() => handleDeleteTicket(row.id)} className="rounded-2xl p-2 text-rose-700 transition hover:bg-rose-50" aria-label="Delete ticket type">
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="flex items-center justify-between border-t border-gray-100 px-8 py-5">
-            <p className="text-xs text-gray-700">Showing {filteredTickets.length} ticket types</p>
-            <div className="flex items-center gap-2">
-              <button type="button" className="rounded-2xl bg-gray-100 p-2 text-zinc-900/30" aria-label="Previous page">
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <button type="button" className="rounded-2xl bg-gray-100 p-2 text-zinc-900" aria-label="Next page">
-                <ChevronRight className="h-4 w-4" />
+        <section className="mt-6 grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+          <article className="space-y-4 rounded-3xl bg-white p-6 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-zinc-900">Ticket Types</h2>
+              <button
+                type="button"
+                onClick={openCreateForm}
+                disabled={!selectedEventId}
+                className="inline-flex items-center gap-2 rounded-full bg-blue-100 px-4 py-2 text-sm font-semibold text-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <Plus className="h-4 w-4" />
+                New
               </button>
             </div>
-          </div>
-        </section>
 
-        <section className="grid gap-4 lg:grid-cols-2 lg:items-stretch">
-          <article className="rounded-3xl bg-white/80 p-8 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)] outline outline-1 outline-white/40 backdrop-blur-md">
-            <div className="mb-6 flex items-center justify-between">
-              <h3 className="text-xl font-bold text-zinc-900">Inventory Alerts</h3>
-              <TriangleAlert className="h-5 w-5 text-rose-700" />
-            </div>
-            <div className="space-y-4">
-              <div className="flex items-center gap-4 rounded-2xl bg-rose-200/20 p-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-200 text-red-700"><TriangleAlert className="h-4 w-4" /></div>
-                <div className="flex-1">
-                  <p className="text-sm font-bold text-zinc-900">Almost Sold Out</p>
-                  <p className="text-xs text-gray-700">Neon Nights VIP has only 4 tickets remaining.</p>
-                </div>
-                <button type="button" className="text-xs font-bold text-sky-700">Add Stock</button>
-              </div>
+            {!selectedEventId ? <p className="text-sm text-gray-700">Select an event to load ticket types.</p> : null}
+            {selectedEventId && isLoading ? <p className="text-sm text-gray-700">Loading ticket types...</p> : null}
+            {selectedEventId && !isLoading && tickets.length === 0 ? <p className="text-sm text-gray-700">No ticket types found.</p> : null}
 
-              <div className="flex items-center gap-4 rounded-2xl bg-gray-100 p-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-200 text-zinc-900"><TriangleAlert className="h-4 w-4" /></div>
-                <div className="flex-1">
-                  <p className="text-sm font-bold text-zinc-900">Stagnant Sales</p>
-                  <p className="text-xs text-gray-700">Early Bird tickets for Indie Fest haven&apos;t moved in 48h.</p>
-                </div>
-                <button type="button" className="text-xs font-bold text-sky-700">Run Promo</button>
-              </div>
+            <div className="space-y-3">
+              {tickets.map((ticket) => {
+                const isDeleting = Boolean(isDeletingById[ticket.id]);
+                return (
+                  <article key={ticket.id} className="rounded-2xl bg-gray-100 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-base font-bold text-zinc-900">{ticket.name}</p>
+                        <p className="text-xs text-gray-700">
+                          {formatCurrency(ticket.price)} • Qty {ticket.quantity} • {ticket.status ?? "ACTIVE"}
+                        </p>
+                        <p className="mt-1 text-xs text-gray-700">
+                          {new Date(ticket.saleStart).toLocaleString()} - {new Date(ticket.saleEnd).toLocaleString()}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => openEditForm(ticket)}
+                          className="rounded-full p-2 text-gray-700 transition hover:bg-white"
+                          aria-label="Edit ticket type"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void handleDelete(ticket.id)}
+                          disabled={isDeleting}
+                          className="rounded-full p-2 text-rose-700 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
+                          aria-label="Delete ticket type"
+                        >
+                          {isDeleting ? <span className="text-[11px] font-semibold">...</span> : <Trash2 className="h-4 w-4" />}
+                        </button>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           </article>
 
-          <article className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-sky-700 to-violet-700 p-8 text-white shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
-            <div className="absolute -right-10 -top-10 h-56 w-56 rounded-full bg-white/10 blur-2xl" />
-            <h3 className="text-2xl font-bold">Automated Dynamic Pricing</h3>
-            <p className="mt-2 max-w-xl text-base text-white/80">Boost your revenue by enabling AI-driven price adjustments based on demand velocity.</p>
-            <div className="mt-8 flex flex-wrap items-center gap-4">
-              <button type="button" className="rounded-2xl bg-white px-6 py-3 text-base font-bold text-sky-700">Configure AI Rules</button>
-              <button type="button" className="rounded-2xl border border-white/30 px-6 py-3 text-base font-bold text-white">Learn More</button>
+          <article className="space-y-4 rounded-3xl bg-white p-6 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
+            <h2 className="text-lg font-bold text-zinc-900">{editingTicketId ? "Update Ticket Type" : "Create Ticket Type"}</h2>
+
+            <label className="block space-y-1">
+              <span className="text-xs font-bold uppercase tracking-wider text-gray-700">Name</span>
+              <input
+                value={form.name}
+                onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
+                className="w-full rounded-2xl bg-gray-100 px-4 py-3 text-sm text-zinc-900"
+              />
+            </label>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="space-y-1">
+                <span className="text-xs font-bold uppercase tracking-wider text-gray-700">Price</span>
+                <input
+                  type="number"
+                  min="0"
+                  value={form.price}
+                  onChange={(event) => setForm((prev) => ({ ...prev, price: event.target.value }))}
+                  className="w-full rounded-2xl bg-gray-100 px-4 py-3 text-sm text-zinc-900"
+                />
+              </label>
+              <label className="space-y-1">
+                <span className="text-xs font-bold uppercase tracking-wider text-gray-700">Quantity</span>
+                <input
+                  type="number"
+                  min="1"
+                  value={form.quantity}
+                  onChange={(event) => setForm((prev) => ({ ...prev, quantity: event.target.value }))}
+                  className="w-full rounded-2xl bg-gray-100 px-4 py-3 text-sm text-zinc-900"
+                />
+              </label>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="space-y-1">
+                <span className="text-xs font-bold uppercase tracking-wider text-gray-700">Sale Start</span>
+                <input
+                  type="datetime-local"
+                  value={form.saleStart}
+                  onChange={(event) => setForm((prev) => ({ ...prev, saleStart: event.target.value }))}
+                  className="w-full rounded-2xl bg-gray-100 px-4 py-3 text-sm text-zinc-900"
+                />
+              </label>
+              <label className="space-y-1">
+                <span className="text-xs font-bold uppercase tracking-wider text-gray-700">Sale End</span>
+                <input
+                  type="datetime-local"
+                  value={form.saleEnd}
+                  onChange={(event) => setForm((prev) => ({ ...prev, saleEnd: event.target.value }))}
+                  className="w-full rounded-2xl bg-gray-100 px-4 py-3 text-sm text-zinc-900"
+                />
+              </label>
+            </div>
+
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => void handleSave()}
+                disabled={!selectedEventId || isSaving || isLoading}
+                className="rounded-2xl bg-gradient-to-r from-sky-700 to-violet-700 px-6 py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isSaving ? "Saving..." : editingTicketId ? "Update" : "Create"}
+              </button>
+
+              <button
+                type="button"
+                onClick={resetForm}
+                className="rounded-2xl bg-gray-200 px-6 py-3 text-sm font-bold text-zinc-900"
+              >
+                Reset
+              </button>
             </div>
           </article>
         </section>

@@ -31,8 +31,28 @@ function getStoredAuthToken() {
   return null;
 }
 
+function normalizeApiBaseUrl() {
+  const rawBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
+  if (!rawBaseUrl) {
+    return DEFAULT_API_BASE_URL;
+  }
+
+  try {
+    const parsed = new URL(rawBaseUrl);
+
+    // FE often runs on :3000 while BE runs on :8080.
+    if (parsed.port === "3000") {
+      parsed.port = "8080";
+    }
+
+    return parsed.toString().replace(/\/$/, "");
+  } catch {
+    return DEFAULT_API_BASE_URL;
+  }
+}
+
 const axiosClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || DEFAULT_API_BASE_URL,
+  baseURL: normalizeApiBaseUrl(),
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",

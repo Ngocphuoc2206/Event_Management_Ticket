@@ -14,6 +14,8 @@ type UploadResponseData = {
   fileUrl?: string;
   secureUrl?: string;
   objectKey?: string;
+  results?: UploadResponseData;
+  data?: UploadResponseData;
 };
 
 function extractUploadedUrl(payload: unknown): string | null {
@@ -22,7 +24,19 @@ function extractUploadedUrl(payload: unknown): string | null {
   }
 
   const candidate = payload as UploadResponseData;
-  return candidate.url || candidate.fileUrl || candidate.secureUrl || null;
+  if (candidate.url || candidate.fileUrl || candidate.secureUrl) {
+    return candidate.url || candidate.fileUrl || candidate.secureUrl || null;
+  }
+
+  if (candidate.results) {
+    return extractUploadedUrl(candidate.results);
+  }
+
+  if (candidate.data) {
+    return extractUploadedUrl(candidate.data);
+  }
+
+  return null;
 }
 
 export async function uploadOrganizerBanner(file: File) {
@@ -42,15 +56,6 @@ export async function uploadOrganizerBanner(file: File) {
 
     const data = response.data as ApiResult<UploadResponseData>;
     ensureApiResultSuccess(data, "Upload that bai.");
-
-    if (typeof data === "object" && data !== null && "data" in data) {
-      const fromEnvelope = extractUploadedUrl(
-        (data as { data?: unknown }).data,
-      );
-      if (fromEnvelope) {
-        return fromEnvelope;
-      }
-    }
 
     const direct = extractUploadedUrl(data);
     if (direct) {

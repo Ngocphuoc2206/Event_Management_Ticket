@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   Bell,
   CalendarDays,
@@ -9,18 +9,151 @@ import {
   Search,
   Settings,
   Sparkles,
+  AlertCircle,
+  CheckCircle2,
 } from "lucide-react";
+import { useRouter } from "next/router";
+
+import { getApiErrorMessage } from "@/features/auth/utils";
+import { updateOrganizerEvent } from "@/features/organizer/events/services/create-event.service";
+import {
+  getOrganizerDraftEventId,
+  getOrganizerDraftPayload,
+  mergeOrganizerDraftPayload,
+} from "@/features/organizer/events/services/draft-storage";
+
+type ToastState = {
+  tone: "success" | "error";
+  message: string;
+};
+
+function toDateTimeLocal(value?: string) {
+  if (!value) {
+    return "";
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return "";
+  }
+
+  const shifted = new Date(parsed.getTime() - parsed.getTimezoneOffset() * 60000);
+  return shifted.toISOString().slice(0, 16);
+}
+
+function toIsoString(value: string) {
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? undefined : parsed.toISOString();
+}
 
 export function OrganizerCreateEventStepTwoContent() {
+  const router = useRouter();
   const [venueName, setVenueName] = useState("");
   const [address, setAddress] = useState("");
   const [startDateTime, setStartDateTime] = useState("");
   const [endDateTime, setEndDateTime] = useState("");
+  const [isSavingStep, setIsSavingStep] = useState(false);
+  const [toast, setToast] = useState<ToastState | null>(null);
+
+  const eventId = useMemo(() => {
+    const fromQuery = router.query.eventId;
+    if (typeof fromQuery === "string" && fromQuery.trim()) {
+      return fromQuery;
+    }
+
+    return getOrganizerDraftEventId() ?? "";
+  }, [router.query.eventId]);
+
+  useEffect(() => {
+    const draftPayload = getOrganizerDraftPayload();
+    if (!draftPayload) {
+      return;
+    }
+
+    if (draftPayload.venueName) {
+      setVenueName(draftPayload.venueName);
+    }
+
+    if (draftPayload.address) {
+      setAddress(draftPayload.address);
+    }
+
+    if (draftPayload.startTime) {
+      setStartDateTime(toDateTimeLocal(draftPayload.startTime));
+    }
+
+    if (draftPayload.endTime) {
+      setEndDateTime(toDateTimeLocal(draftPayload.endTime));
+    }
+  }, []);
+
+  const showToast = (nextToast: ToastState) => {
+    setToast(nextToast);
+    window.setTimeout(() => setToast(null), 2500);
+  };
+
+  const mergeCurrentStepPayload = () => {
+    const payload = {
+      venueName: venueName.trim() || "TBD Venue",
+      address: address.trim() || "TBD Address",
+      startTime: toIsoString(startDateTime),
+      endTime: toIsoString(endDateTime),
+    };
+
+    mergeOrganizerDraftPayload(payload);
+    return payload;
+  };
+
+  const handleContinue = async () => {
+    if (isSavingStep) {
+      return;
+    }
+
+    setIsSavingStep(true);
+    try {
+      const payload = mergeCurrentStepPayload();
+      if (eventId) {
+        await updateOrganizerEvent(eventId, {
+          ...payload,
+          status: "DRAFT",
+        });
+      }
+
+      await router.push(
+        eventId
+          ? {
+              pathname: "/organizer/create-event/visuals",
+              query: { eventId },
+            }
+          : "/organizer/create-event/visuals",
+      );
+    } catch (error) {
+      showToast({
+        tone: "error",
+        message: getApiErrorMessage(error, "Không thể lưu thông tin Location & Time."),
+      });
+    } finally {
+      setIsSavingStep(false);
+    }
+  };
 
   const minEndDateTime = useMemo(() => startDateTime || undefined, [startDateTime]);
 
   return (
     <section className="relative flex-1 overflow-hidden bg-slate-50">
+      {toast ? (
+        <div className="fixed right-6 top-6 z-50">
+          <div
+            className={`inline-flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold shadow-lg ${
+              toast.tone === "success" ? "bg-emerald-600 text-white" : "bg-rose-600 text-white"
+            }`}
+          >
+            {toast.tone === "success" ? <CheckCircle2 className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
+            {toast.message}
+          </div>
+        </div>
+      ) : null}
+
       <header className="flex h-20 items-center justify-between border-b border-slate-300/10 bg-slate-50/80 px-5 backdrop-blur-[6px] sm:px-8 lg:px-10 xl:px-10">
         <div className="flex-1 max-w-[576px]">
           <div className="relative">
@@ -152,15 +285,27 @@ export function OrganizerCreateEventStepTwoContent() {
               </article>
 
               <div className="flex items-center justify-between pt-4">
-                <Link href="/organizer/create-event" className="rounded-2xl px-8 py-3 text-base font-bold text-sky-700">
+                <Link
+                  href={
+                    eventId
+                      ? {
+                          pathname: "/organizer/create-event",
+                          query: { eventId },
+                        }
+                      : "/organizer/create-event"
+                  }
+                  className="rounded-2xl px-8 py-3 text-base font-bold text-sky-700"
+                >
                   Back
                 </Link>
-                <Link
-                  href="/organizer/create-event/visuals"
+                <button
+                  type="button"
+                  onClick={() => void handleContinue()}
+                  disabled={isSavingStep}
                   className="rounded-2xl bg-gradient-to-r from-sky-700 to-violet-700 px-10 py-4 text-base font-bold text-white shadow-[0px_8px_10px_-6px_rgba(0,88,190,0.20),0px_20px_25px_-5px_rgba(0,88,190,0.20)]"
                 >
-                  Continue to Step 3
-                </Link>
+                  {isSavingStep ? "Dang luu..." : "Continue to Step 3"}
+                </button>
               </div>
             </div>
 

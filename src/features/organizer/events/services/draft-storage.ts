@@ -28,6 +28,14 @@ export function setOrganizerDraftPayload(payload: Partial<OrganizerCreateEventPa
   window.localStorage.setItem(ORGANIZER_DRAFT_KEY, JSON.stringify(payload));
 }
 
+export function mergeOrganizerDraftPayload(payload: Partial<OrganizerCreateEventPayload>) {
+  const currentPayload = getOrganizerDraftPayload() ?? {};
+  setOrganizerDraftPayload({
+    ...currentPayload,
+    ...payload,
+  });
+}
+
 export function getOrganizerDraftEventId() {
   if (typeof window === "undefined") {
     return null;
@@ -42,4 +50,13 @@ export function setOrganizerDraftEventId(eventId: string) {
   }
 
   window.localStorage.setItem(ORGANIZER_DRAFT_ID_KEY, eventId);
+}
+
+export function clearOrganizerDraftStorage() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.removeItem(ORGANIZER_DRAFT_KEY);
+  window.localStorage.removeItem(ORGANIZER_DRAFT_ID_KEY);
 }
