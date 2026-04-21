@@ -2,7 +2,8 @@
 // src/components/templates/AdminLayout/AdminLayout.tsx
 import React, { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/router";
+import { useRouter } from "next/router"
+import { useCallback } from "react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import {
   LayoutDashboard,
@@ -76,9 +77,9 @@ export default function AdminLayout({
   const menuItems = [
     { icon: LayoutDashboard, label: "Overview", href: "/admin", exact: true },
     { icon: Users, label: "User Management", href: "/admin/users" },
-    { icon: CalendarDays, label: "Event Management", href: "/admin/events" },
+    { icon: CalendarDays, label: "Event Approval", href: "/admin/events" },
+    { icon: CheckSquare, label: "Events Listing", href: "/admin/events-listing" },
     { icon: Ticket, label: "Ticket Platform", href: "/admin/tickets" },
-    { icon: CheckSquare, label: "Organizer Requests", href: "/admin/requests" },
     { icon: BarChart3, label: "Financial Reports", href: "/admin/finance" },
     { icon: Settings, label: "System Settings", href: "/admin/settings" },
   ];
@@ -193,23 +194,25 @@ export default function AdminLayout({
               </button>
             </div>
 
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-100 border-2 border-white shadow-sm overflow-hidden">
-                <img
-                  src="https://i.pravatar.cc/150?u=admin-alex"
-                  className="w-full h-full object-cover"
-                  alt="avatar"
-                />
+            <Link href="/admin/profile">
+              <div className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity">
+                <div className="w-10 h-10 rounded-xl bg-blue-100 border-2 border-white shadow-sm overflow-hidden">
+                  <img
+                    src="https://i.pravatar.cc/150?u=admin-alex"
+                    className="w-full h-full object-cover"
+                    alt="avatar"
+                  />
+                </div>
+                <div className="text-left hidden sm:block">
+                  <p className="text-sm font-black text-slate-900 leading-none">
+                    Alex Phước
+                  </p>
+                  <p className="text-[10px] text-blue-500 font-bold uppercase tracking-tight mt-1">
+                    Super Admin
+                  </p>
+                </div>
               </div>
-              <div className="text-left hidden sm:block">
-                <p className="text-sm font-black text-slate-900 leading-none">
-                  Alex Phước
-                </p>
-                <p className="text-[10px] text-blue-500 font-bold uppercase tracking-tight mt-1">
-                  Super Admin
-                </p>
-              </div>
-            </div>
+            </Link>
           </div>
         </header>
 

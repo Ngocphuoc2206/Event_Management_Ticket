@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import AdminLayout from "@/components/templates/AdminLayout/AdminLayout";
+import RejectEventModal from "@/components/organisms/RejectEventModal/RejectEventModal";
 import {
   approveAdminEvent,
   getAdminEvents,
@@ -56,6 +57,11 @@ export default function EventManagementPage() {
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [rejectModal, setRejectModal] = useState<{ isOpen: boolean; eventId: string; eventTitle: string }>({
+    isOpen: false,
+    eventId: "",
+    eventTitle: "",
+  });
 
   const activeStatus = useMemo(() => {
     return statusFilter === "ALL" ? undefined : statusFilter;
@@ -108,30 +114,35 @@ export default function EventManagementPage() {
     }
   };
 
-  const handleReject = async (eventId: string) => {
-    const rejectReason = window.prompt("Nhập lý do từ chối sự kiện:");
-    if (rejectReason === null) {
-      return;
-    }
+  const handleRejectClick = (event: AdminEvent) => {
+    setRejectModal({
+      isOpen: true,
+      eventId: event.id,
+      eventTitle: event.title,
+    });
+  };
 
-    if (!rejectReason.trim()) {
-      setErrorMessage("Lý do từ chối không được để trống.");
-      return;
-    }
+  const handleRejectConfirm = async (reason: string) => {
+    const { eventId } = rejectModal;
 
     setActionLoadingId(eventId);
     setErrorMessage("");
     setSuccessMessage("");
 
     try {
-      await rejectAdminEvent(eventId, rejectReason.trim());
+      await rejectAdminEvent(eventId, reason);
       setSuccessMessage("Từ chối sự kiện thành công.");
+      setRejectModal({ isOpen: false, eventId: "", eventTitle: "" });
       await loadEvents();
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Từ chối sự kiện thất bại.");
     } finally {
       setActionLoadingId(null);
     }
+  };
+
+  const handleRejectCancel = () => {
+    setRejectModal({ isOpen: false, eventId: "", eventTitle: "" });
   };
 
   return (
@@ -302,7 +313,7 @@ export default function EventManagementPage() {
                                 </button>
 
                                 <button
-                                  onClick={() => void handleReject(event.id)}
+                                  onClick={() => handleRejectClick(event)}
                                   disabled={actionLoadingId === event.id}
                                   className="w-9 h-9 flex items-center justify-center rounded-xl border border-slate-100 text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all active:scale-90 disabled:opacity-50"
                                   title="Từ chối"
@@ -355,6 +366,14 @@ export default function EventManagementPage() {
             </div>
           </div>
         </div>
+
+        <RejectEventModal
+          isOpen={rejectModal.isOpen}
+          eventTitle={rejectModal.eventTitle}
+          isLoading={actionLoadingId === rejectModal.eventId}
+          onConfirm={handleRejectConfirm}
+          onCancel={handleRejectCancel}
+        />
       </div>
     </AdminLayout>
   );

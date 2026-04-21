@@ -1,22 +1,94 @@
 // src/pages/admin/index.tsx
 import AdminLayout from "@/components/templates/AdminLayout/AdminLayout";
+import {
+  getDashboardStats,
+  getRevenueReport,
+  getUserReport,
+  getEventReport,
+  getAdminEvents,
+  type AdminEvent,
+} from "@/features/admin/events.service";
 import { Users, Ticket, DollarSign, Activity, TrendingUp, MoreHorizontal } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
-const STATS = [
-  { label: "Total Users", value: "24.8k", icon: Users, trend: "+12.5%", color: "text-blue-600", bg: "bg-blue-50" },
-  { label: "Active Tickets", value: "1,429", icon: Ticket, trend: "+5.2%", color: "text-indigo-600", bg: "bg-indigo-50" },
-  { label: "Revenue (MTD)", value: "$64,250", icon: DollarSign, trend: "+18.4%", color: "text-emerald-600", bg: "bg-emerald-50" },
-  { label: "Server Load", value: "42%", icon: Activity, trend: "Stable", color: "text-amber-600", bg: "bg-amber-50" },
-];
+interface DashboardData {
+  stats: {
+    totalUsers: number;
+    activeUsers: number;
+    totalEvents: number;
+    publishedEvents: number;
+    pendingApprovalEvents: number;
+    totalRevenue: number;
+    monthlyRevenue: number;
+    totalTicketsSold: number;
+  };
+  recentEvents: AdminEvent[];
+  isLoading: boolean;
+}
 
-const RECENT_REQUESTS = [
-  { id: "#EV-9921", event: "Coachella Music Festival", organizer: "Goldenvoice", date: "2 mins ago", status: "Pending", amount: "$12,500" },
-  { id: "#EV-9918", event: "Global AI Tech Summit", organizer: "TechCorp", date: "15 mins ago", status: "Verified", amount: "$3,200" },
-  { id: "#EV-9915", event: "Neon Night Fest", organizer: "Hoang Nam", date: "1 hour ago", status: "Verified", amount: "$1,450" },
-  { id: "#EV-9912", event: "Startup Workshop", organizer: "Sarah Miller", date: "3 hours ago", status: "Rejected", amount: "$0" },
-];
+function formatCurrency(value: number): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
+function formatNumber(value: number): string {
+  if (value >= 1000000) {
+    return (value / 1000000).toFixed(1) + 'M';
+  }
+  if (value >= 1000) {
+    return (value / 1000).toFixed(1) + 'k';
+  }
+  return value.toString();
+}
 
 export default function AdminDashboard() {
+  const [data, setData] = useState<DashboardData>({
+    stats: {
+      totalUsers: 0,
+      activeUsers: 0,
+      totalEvents: 0,
+      publishedEvents: 0,
+      pendingApprovalEvents: 0,
+      totalRevenue: 0,
+      monthlyRevenue: 0,
+      totalTicketsSold: 0,
+    },
+    recentEvents: [],
+    isLoading: true,
+  });
+
+  useEffect(() => {
+    const loadDashboardData = async () => {
+      try {
+        const [stats, recentEventsResponse] = await Promise.all([
+          getDashboardStats(),
+          getAdminEvents({ status: "PENDING_APPROVAL", page: 0, size: 4 }),
+        ]);
+
+        setData({
+          stats,
+          recentEvents: recentEventsResponse.items,
+          isLoading: false,
+        });
+      } catch (error) {
+        console.error("[v0] Failed to load dashboard data:", error);
+        setData((prev) => ({ ...prev, isLoading: false }));
+      }
+    };
+
+    loadDashboardData();
+  }, []);
+
+  const STATS = [
+    { label: "Total Users", value: formatNumber(data.stats.totalUsers), icon: Users, trend: `+${data.stats.activeUsers}%`, color: "text-blue-600", bg: "bg-blue-50" },
+    { label: "Active Tickets", value: formatNumber(data.stats.totalTicketsSold), icon: Ticket, trend: "+5.2%", color: "text-indigo-600", bg: "bg-indigo-50" },
+    { label: "Revenue (MTD)", value: formatCurrency(data.stats.monthlyRevenue), icon: DollarSign, trend: "+18.4%", color: "text-emerald-600", bg: "bg-emerald-50" },
+    { label: "Pending Events", value: data.stats.pendingApprovalEvents.toString(), icon: Activity, trend: `${data.stats.publishedEvents} published`, color: "text-amber-600", bg: "bg-amber-50" },
+  ];
   return (
     <AdminLayout title="Dashboard Overview">
       {/* STATS GRID */}
@@ -59,34 +131,51 @@ export default function AdminDashboard() {
                   <th className="pb-5">Event Detail</th>
                   <th className="pb-5 text-center">Organizer</th>
                   <th className="pb-5 text-center">Status</th>
-                  <th className="pb-5 text-right">Amount</th>
+                  <th className="pb-5 text-right">Created</th>
                   <th className="pb-5"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {RECENT_REQUESTS.map((req, i) => (
-                  <tr key={i} className="group hover:bg-slate-50/50 transition-all">
-                    <td className="py-5">
-                      <p className="font-black text-slate-900 text-sm group-hover:text-indigo-600 transition-colors">{req.event}</p>
-                      <p className="text-[11px] text-slate-400 font-bold">{req.id} • {req.date}</p>
-                    </td>
-                    <td className="py-5 text-center text-xs font-bold text-slate-600">{req.organizer}</td>
-                    <td className="py-5 text-center">
-                      <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                        req.status === 'Verified' ? 'bg-emerald-50 text-emerald-600' :
-                        req.status === 'Pending' ? 'bg-amber-50 text-amber-600' : 'bg-rose-50 text-rose-500'
-                      }`}>
-                        {req.status}
-                      </span>
-                    </td>
-                    <td className="py-5 text-right text-sm font-black text-slate-900">{req.amount}</td>
-                    <td className="py-5 text-right">
-                      <button className="p-2 text-slate-300 hover:text-slate-600 transition-colors">
-                        <MoreHorizontal size={18} />
-                      </button>
+                {data.isLoading && (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center text-xs font-black text-slate-400">
+                      Loading pending events...
                     </td>
                   </tr>
-                ))}
+                )}
+                {!data.isLoading && data.recentEvents.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center text-xs font-black text-slate-400">
+                      No pending events
+                    </td>
+                  </tr>
+                )}
+                {!data.isLoading && data.recentEvents.map((event) => {
+                  const createdDate = event.createdAt ? new Date(event.createdAt).toLocaleDateString('vi-VN') : 'N/A';
+                  return (
+                    <tr key={event.id} className="group hover:bg-slate-50/50 transition-all">
+                      <td className="py-5">
+                        <p className="font-black text-slate-900 text-sm group-hover:text-indigo-600 transition-colors">{event.title}</p>
+                        <p className="text-[11px] text-slate-400 font-bold">{event.id} • {event.location || 'N/A'}</p>
+                      </td>
+                      <td className="py-5 text-center text-xs font-bold text-slate-600">{event.organizerName || 'Unknown'}</td>
+                      <td className="py-5 text-center">
+                        <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                          event.status === 'PUBLISHED' ? 'bg-emerald-50 text-emerald-600' :
+                          event.status === 'PENDING_APPROVAL' ? 'bg-amber-50 text-amber-600' : 'bg-rose-50 text-rose-500'
+                        }`}>
+                          {event.status}
+                        </span>
+                      </td>
+                      <td className="py-5 text-right text-sm font-black text-slate-900">{createdDate}</td>
+                      <td className="py-5 text-right">
+                        <button className="p-2 text-slate-300 hover:text-slate-600 transition-colors">
+                          <MoreHorizontal size={18} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -103,14 +192,14 @@ export default function AdminDashboard() {
               </div>
               
               <div className="mt-auto space-y-4">
-                <div className="bg-white/10 backdrop-blur-md p-5 rounded-[24px] border border-white/10">
-                   <p className="text-[10px] uppercase font-black text-indigo-300 tracking-widest mb-1">Target Progress</p>
+              <div className="bg-white/10 backdrop-blur-md p-5 rounded-[24px] border border-white/10">
+                   <p className="text-[10px] uppercase font-black text-indigo-300 tracking-widest mb-1">Monthly Target</p>
                    <div className="flex justify-between items-end mb-2">
-                      <span className="text-xl font-black">$85,000</span>
+                      <span className="text-xl font-black">{formatCurrency(data.stats.monthlyRevenue)}</span>
                       <span className="text-xs font-bold text-indigo-200">Goal: $100k</span>
                    </div>
                    <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-cyan-400 to-indigo-400 w-[85%] rounded-full shadow-[0_0_10px_rgba(34,211,238,0.5)]"></div>
+                      <div className="h-full bg-gradient-to-r from-cyan-400 to-indigo-400 rounded-full shadow-[0_0_10px_rgba(34,211,238,0.5)]" style={{width: `${Math.min(100, (data.stats.monthlyRevenue / 100000) * 100)}%`}}></div>
                    </div>
                 </div>
                 <button className="w-full bg-white text-indigo-900 font-black py-4 rounded-[20px] text-sm hover:shadow-xl active:scale-95 transition-all">
