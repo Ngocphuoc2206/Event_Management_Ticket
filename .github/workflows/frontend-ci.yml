@@ -1,0 +1,58 @@
+name: Frontend CI
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - "src/**"
+      - "public/**"
+      - "package.json"
+      - "package-lock.json"
+      - "next.config.ts"
+      - "Dockerfile"
+      - ".github/workflows/frontend-ci.yml"
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  lint-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run lint
+        run: npm run lint
+
+      - name: Build app
+        run: npm run build
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            --build-arg NEXT_PUBLIC_API_BASE_URL=http://localhost:8080 \
+            --build-arg NEXT_PUBLIC_ORGANIZER_CREATE_EVENT_ENDPOINT=/api/organizer/events \
+            --build-arg NEXT_PUBLIC_LOGIN_ENDPOINT=/api/auth/login \
+            --build-arg NEXT_PUBLIC_REGISTER_ENDPOINT=/api/auth/register \
+            --build-arg NEXT_PUBLIC_LOGOUT_ENDPOINT=/api/auth/logout \
+            --build-arg NEXT_PUBLIC_REFRESH_ENDPOINT=/api/auth/refresh \
+            --build-arg NEXT_PUBLIC_USER_PROFILE_ENDPOINT=/api/auth/users/me \
+            --build-arg NEXT_PUBLIC_CHANGE_PASSWORD_ENDPOINT=/users/{id}/change-password \
+            --build-arg NEXT_PUBLIC_ADMIN_USERS_ENDPOINT=/auth/admin/users \
+            --build-arg NEXT_PUBLIC_MY_NOTIFICATIONS_ENDPOINT=/api/customer/me/notifications \
+            --build-arg NEXT_PUBLIC_ORDERS_ENDPOINT=/api/orders \
+            --build-arg NEXT_PUBLIC_MY_ORDERS_ENDPOINT=/api/orders/me \
+            --build-arg NEXT_PUBLIC_PAYMENTS_ENDPOINT=/api/payments \
+            --build-arg NEXT_PUBLIC_MY_TICKETS_ENDPOINT=/api/me/tickets \
+            -t event-frontend:ci .
