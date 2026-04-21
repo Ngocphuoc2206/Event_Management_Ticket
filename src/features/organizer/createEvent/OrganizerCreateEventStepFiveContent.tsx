@@ -1,8 +1,14 @@
 import { AlertCircle, CheckCircle2, Save } from "lucide-react";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
+import { useSelector } from "react-redux";
 
-import { getApiErrorMessage, getApiResultData } from "@/features/auth/utils";
+import {
+  getApiErrorMessage,
+  getApiResultData,
+  getStoredAccessToken,
+  isApiResponse,
+} from "@/features/auth/utils";
 import type { ApiResult } from "@/features/auth/types";
 import {
   getOrganizerDraftEventId,
@@ -11,19 +17,40 @@ import {
   setOrganizerDraftEventId,
 } from "@/features/organizer/events/services/draft-storage";
 import {
+  createOrganizerEventForApproval,
   getOrganizerEventById,
   publishOrganizerEvent,
   saveOrganizerEventDraft,
-  submitOrganizerEventForApproval,
 } from "@/features/organizer/events/services/create-event.service";
+import { getOrganizerTicketTypes } from "@/features/organizer/events/services/ticket-types.service";
 import type {
   OrganizerCreateEventPayload,
   OrganizerEvent,
+  OrganizerTicketType,
 } from "@/features/organizer/events/types";
+import type { RootState } from "@/stores";
 
 type ToastState = {
   tone: "success" | "error";
   message: string;
+};
+
+type OrganizerSubmitPayload = {
+  title: string;
+  shortDescription: string;
+  description: string;
+  category: string;
+  venueName: string;
+  address: string;
+  city: string;
+  organizer_id: string;
+  bannerUrl: string;
+  startTime: string;
+  endTime: string;
+  visibility: "PUBLIC";
+  minPrice: number;
+  totalTickets: number;
+  featured: true;
 };
 
 function buildFallbackDraftPayload(): OrganizerCreateEventPayload {
@@ -51,6 +78,7 @@ function buildFallbackDraftPayload(): OrganizerCreateEventPayload {
 
 export function OrganizerCreateEventStepFiveContent() {
   const router = useRouter();
+  const userId = useSelector((state: RootState) => state.user.id);
   const [eventId, setEventId] = useState<string | null>(null);
   const [status, setStatus] = useState<string>("DRAFT");
   const [isSavingDraft, setIsSavingDraft] = useState(false);
@@ -123,6 +151,100 @@ export function OrganizerCreateEventStepFiveContent() {
     };
   };
 
+  const resolveOrganizerId = () => {
+    const fromStore = userId?.trim();
+    if (fromStore) {
+      return fromStore;
+    }
+
+    const token = getStoredAccessToken();
+    if (!token || typeof window === "undefined") {
+      return null;
+    }
+
+    try {
+      const [, payload] = token.split(".");
+      if (!payload) {
+        return null;
+      }
+
+      const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+      const padded = normalized.padEnd(
+        normalized.length + ((4 - (normalized.length % 4)) % 4),
+        "=",
+      );
+      const decoded = JSON.parse(window.atob(padded)) as { sub?: string };
+      return typeof decoded.sub === "string" && decoded.sub.trim()
+        ? decoded.sub.trim()
+        : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const toIsoOrFallback = (value: string | undefined, fallback: string) => {
+    const parsed = new Date(value ?? "");
+    return Number.isNaN(parsed.getTime()) ? fallback : parsed.toISOString();
+  };
+
+  const toNumberOrZero = (value: unknown) => {
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? numeric : 0;
+  };
+
+  const buildSubmitPayload = async (resolvedEventId: string): Promise<OrganizerSubmitPayload> => {
+    const latestPayload = resolveDraftPayload();
+    mergeOrganizerDraftPayload(latestPayload);
+    setReviewPayload(latestPayload);
+
+    const organizerId = resolveOrganizerId();
+    if (!organizerId) {
+      throw new Error("Khong tim thay organizer_id tu thong tin dang nhap.");
+    }
+
+    let ticketTypes: OrganizerTicketType[] = [];
+    try {
+      const ticketsResult = await getOrganizerTicketTypes(resolvedEventId);
+      const ticketsData = getApiResultData(
+        ticketsResult as ApiResult<OrganizerTicketType[]>,
+      );
+      ticketTypes = Array.isArray(ticketsData) ? ticketsData : [];
+    } catch {
+      ticketTypes = [];
+    }
+
+    const totalTickets = Number(
+      ticketTypes.reduce((sum, ticket) => sum + toNumberOrZero(ticket.quantity), 0),
+    );
+    const minPriceFromTickets =
+      ticketTypes.length > 0
+        ? Math.min(...ticketTypes.map((ticket) => toNumberOrZero(ticket.price)))
+        : toNumberOrZero(latestPayload.minPrice);
+
+    const fallbackPayload = buildFallbackDraftPayload();
+
+    return {
+      title: latestPayload.title?.trim() || fallbackPayload.title,
+      shortDescription:
+        latestPayload.shortDescription?.trim() ||
+        latestPayload.description?.trim().slice(0, 160) ||
+        fallbackPayload.shortDescription,
+      description: latestPayload.description?.trim() || fallbackPayload.description,
+      category: latestPayload.category?.trim() || fallbackPayload.category,
+      venueName: latestPayload.venueName?.trim() || fallbackPayload.venueName,
+      address: latestPayload.address?.trim() || fallbackPayload.address,
+      city: latestPayload.city?.trim() || fallbackPayload.city,
+      organizer_id: organizerId,
+      bannerUrl: latestPayload.bannerUrl?.trim() || fallbackPayload.bannerUrl,
+      startTime: toIsoOrFallback(latestPayload.startTime, fallbackPayload.startTime),
+      endTime: toIsoOrFallback(latestPayload.endTime, fallbackPayload.endTime),
+      visibility: "PUBLIC",
+      minPrice: Number(minPriceFromTickets),
+      totalTickets,
+      featured: true,
+    };
+  };
+
   const resolveEventId = async () => {
     if (eventId) {
       return eventId;
@@ -180,21 +302,26 @@ export function OrganizerCreateEventStepFiveContent() {
     setIsSubmittingWorkflow(true);
     try {
       const id = await resolveEventId();
-      const latestPayload = resolveDraftPayload();
-      mergeOrganizerDraftPayload(latestPayload);
-      setReviewPayload(latestPayload);
 
       if (canPublishDirectly) {
         await publishOrganizerEvent(id);
         setStatus("PUBLISHED");
         showToast({ tone: "success", message: "Sự kiện đã được publish." });
       } else {
-        await submitOrganizerEventForApproval(id);
+        const submitPayload = await buildSubmitPayload(id);
+        const submitResult = await createOrganizerEventForApproval(submitPayload);
+        const submitCode = isApiResponse(submitResult) ? submitResult.code : 0;
+
+        if (submitCode !== 0) {
+          throw new Error("Gui duyet su kien that bai.");
+        }
+
         setStatus("PENDING_APPROVAL");
         showToast({
           tone: "success",
-          message: "Đã submit sự kiện để chờ duyệt.",
+          message: "Sự kiện đã được tạo và gửi duyệt thành công!",
         });
+        await router.push("/organizer/events");
       }
     } catch (error) {
       showToast({
