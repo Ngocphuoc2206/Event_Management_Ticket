@@ -55,4 +55,7 @@ jobs:
             --build-arg NEXT_PUBLIC_MY_ORDERS_ENDPOINT=/api/orders/me \
             --build-arg NEXT_PUBLIC_PAYMENTS_ENDPOINT=/api/payments \
             --build-arg NEXT_PUBLIC_MY_TICKETS_ENDPOINT=/api/me/tickets \
+            --build-arg NEXT_PUBLIC_ORGANIZER_EVENTS_ENDPOINT=http://75.101.153.235:8080/api/organizer/events \
+            --build-arg NEXT_PUBLIC_ORGANIZER_API_BASE=http://75.101.153.235:8080/api/organizer \
+            --build-arg NEXT_PUBLIC_ORGANIZER_MEDIA_UPLOAD_ENDPOINT=http://75.101.153.235:8080/api/media/upload \
             -t event-frontend:ci .
