@@ -19,6 +19,7 @@ import {
   updateOrganizerTicketType,
 } from "@/features/organizer/events/services/ticket-types.service";
 import type {
+  OrganizerUpdateTicketTypePayload,
   OrganizerTicketType,
   OrganizerTicketTypeStatus,
 } from "@/features/organizer/events/types";
@@ -210,13 +211,36 @@ export function OrganizerTicketTypesEditor({
     setIsSaving(true);
     try {
       if (editingId) {
-        await updateOrganizerTicketType(editingId, {
-          name: form.name.trim(),
-          price,
-          quantity,
-          saleStart,
-          saleEnd,
-        });
+        const existingTicket = tickets.find((ticket) => ticket.id === editingId);
+        if (!existingTicket) {
+          throw new Error("Ticket type no longer exists.");
+        }
+
+        const updatePayload: OrganizerUpdateTicketTypePayload = {};
+        const nextName = form.name.trim();
+        if (nextName !== existingTicket.name) {
+          updatePayload.name = nextName;
+        }
+        if (price !== existingTicket.price) {
+          updatePayload.price = price;
+        }
+        if (quantity !== existingTicket.quantity) {
+          updatePayload.quantity = quantity;
+        }
+        if (saleStart !== existingTicket.saleStart) {
+          updatePayload.saleStart = saleStart;
+        }
+        if (saleEnd !== existingTicket.saleEnd) {
+          updatePayload.saleEnd = saleEnd;
+        }
+
+        if (Object.keys(updatePayload).length === 0) {
+          showToast({ tone: "success", message: "No changes to update." });
+          setIsSaving(false);
+          return;
+        }
+
+        await updateOrganizerTicketType(editingId, updatePayload);
         showToast({ tone: "success", message: "Ticket type updated." });
       } else {
         await createOrganizerTicketType(eventId, {

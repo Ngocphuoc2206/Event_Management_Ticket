@@ -7,6 +7,7 @@ import type { ApiResult } from "@/features/auth/types";
 import {
   getOrganizerDraftEventId,
   getOrganizerDraftPayload,
+  mergeOrganizerDraftPayload,
   setOrganizerDraftEventId,
 } from "@/features/organizer/events/services/draft-storage";
 import {
@@ -55,6 +56,8 @@ export function OrganizerCreateEventStepFiveContent() {
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isSubmittingWorkflow, setIsSubmittingWorkflow] = useState(false);
   const [toast, setToast] = useState<ToastState | null>(null);
+  const [reviewPayload, setReviewPayload] =
+    useState<OrganizerCreateEventPayload>(buildFallbackDraftPayload());
 
   useEffect(() => {
     const queryEventId =
@@ -63,6 +66,10 @@ export function OrganizerCreateEventStepFiveContent() {
     const resolvedEventId = queryEventId || storedEventId;
 
     if (!resolvedEventId) {
+      const localDraftPayload =
+        (getOrganizerDraftPayload() as OrganizerCreateEventPayload | null) ??
+        buildFallbackDraftPayload();
+      setReviewPayload(localDraftPayload);
       return;
     }
 
@@ -79,10 +86,25 @@ export function OrganizerCreateEventStepFiveContent() {
         if (eventData?.status) {
           setStatus(String(eventData.status));
         }
+
+        if (eventData) {
+          setReviewPayload((prev) => ({
+            ...prev,
+            ...eventData,
+          }));
+        }
       } catch {
         // Keep default status when detail endpoint is not reachable.
       }
     })();
+
+    const localDraftPayload =
+      (getOrganizerDraftPayload() as OrganizerCreateEventPayload | null) ??
+      buildFallbackDraftPayload();
+    setReviewPayload((prev) => ({
+      ...prev,
+      ...localDraftPayload,
+    }));
   }, [router.query.eventId]);
 
   const showToast = (nextToast: ToastState) => {
@@ -91,10 +113,14 @@ export function OrganizerCreateEventStepFiveContent() {
   };
 
   const resolveDraftPayload = () => {
-    return (
+    const payload =
       (getOrganizerDraftPayload() as OrganizerCreateEventPayload | null) ??
-      buildFallbackDraftPayload()
-    );
+      buildFallbackDraftPayload();
+
+    return {
+      ...payload,
+      status: "DRAFT",
+    };
   };
 
   const resolveEventId = async () => {
@@ -128,6 +154,7 @@ export function OrganizerCreateEventStepFiveContent() {
       const id = await resolveEventId();
       const draftPayload = resolveDraftPayload();
       await saveOrganizerEventDraft(draftPayload, id);
+      setReviewPayload(draftPayload);
       setStatus("DRAFT");
       showToast({ tone: "success", message: "Đã lưu draft thành công." });
     } catch (error) {
@@ -153,6 +180,9 @@ export function OrganizerCreateEventStepFiveContent() {
     setIsSubmittingWorkflow(true);
     try {
       const id = await resolveEventId();
+      const latestPayload = resolveDraftPayload();
+      mergeOrganizerDraftPayload(latestPayload);
+      setReviewPayload(latestPayload);
 
       if (canPublishDirectly) {
         await publishOrganizerEvent(id);
@@ -244,6 +274,48 @@ export function OrganizerCreateEventStepFiveContent() {
                 <Save className="h-4 w-4" />
                 {isSavingDraft ? "Dang luu..." : "Save as Draft"}
               </button>
+            </div>
+          </section>
+
+          <section className="rounded-3xl bg-white p-8 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
+            <h2 className="text-xl font-bold text-zinc-900">Review Event Data</h2>
+            <p className="mt-2 text-sm text-gray-700">
+              Dữ liệu bên dưới được lấy từ state tổng (draft payload) của toàn bộ các bước.
+            </p>
+
+            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wide text-gray-700">Title</p>
+                <p className="text-sm text-zinc-900">{reviewPayload.title || "-"}</p>
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wide text-gray-700">Category</p>
+                <p className="text-sm text-zinc-900">{reviewPayload.category || "-"}</p>
+              </div>
+              <div className="sm:col-span-2">
+                <p className="text-xs font-bold uppercase tracking-wide text-gray-700">Description</p>
+                <p className="text-sm text-zinc-900">{reviewPayload.description || "-"}</p>
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wide text-gray-700">Venue Name</p>
+                <p className="text-sm text-zinc-900">{reviewPayload.venueName || "-"}</p>
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wide text-gray-700">Address</p>
+                <p className="text-sm text-zinc-900">{reviewPayload.address || "-"}</p>
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wide text-gray-700">Start Time</p>
+                <p className="text-sm text-zinc-900">{reviewPayload.startTime || "-"}</p>
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wide text-gray-700">End Time</p>
+                <p className="text-sm text-zinc-900">{reviewPayload.endTime || "-"}</p>
+              </div>
+              <div className="sm:col-span-2">
+                <p className="text-xs font-bold uppercase tracking-wide text-gray-700">Banner URL</p>
+                <p className="break-all text-sm text-zinc-900">{reviewPayload.bannerUrl || "-"}</p>
+              </div>
             </div>
           </section>
         </div>
