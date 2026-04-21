@@ -2,6 +2,8 @@ import { Share, Megaphone } from "lucide-react";
 
 export default function UserFooter() {
   return (
+    <>
+    {/* Đồng bộ: Nền trắng, viền trên mảnh màu slate-100 */}
     <footer className="w-full flex justify-center bg-white border-t border-slate-100">
       {/* Đồng bộ: Nền trắng, viền trên mảnh màu slate-100 */}
 
@@ -248,5 +250,6 @@ export default function UserFooter() {
         </div>
       </div>
     </footer>
+    </>
   );
 }

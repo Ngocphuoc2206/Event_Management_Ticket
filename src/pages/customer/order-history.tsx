@@ -1,15 +1,23 @@
 import Head from "next/head";
-import Image from "next/image";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { useAuth } from "@/features/auth/hooks/useAuth";
-import { CustomerDashboardIcon, CustomerDashboardSidebar, customerProfile } from "@/features/customer";
+import {
+  CustomerDashboardIcon,
+  CustomerDashboardSidebar,
+  customerProfile,
+} from "@/features/customer";
 import type { CustomerNavItem } from "@/features/customer";
+import {
+  getMyOrder,
+  getMyOrders,
+  type OrderResponse,
+} from "@/features/customer/orders.service";
 
 type HistoryStatus = "Completed" | "Pending" | "Cancelled";
 type TimeFilter = "all" | "30days" | "6months" | "2024";
-type StatusFilter = "all" | HistoryStatus;
+type StatusFilter = "all" | "PENDING_PAYMENT" | "PAID" | "CANCELLED";
 type AmountSort = "default" | "asc" | "desc";
 
 type OrderHistoryItem = {
@@ -19,11 +27,11 @@ type OrderHistoryItem = {
   isoDate: string;
   amount: string;
   status: HistoryStatus;
-  paymentMethod: string;
+  rawStatus: string;
+  paymentStatus: string;
   ticketType: string;
   quantity: number;
-  venue: string;
-  imageSrc: string;
+  userName: string;
 };
 
 const customerOrderHistoryNavigationItems: CustomerNavItem[] = [
@@ -32,74 +40,6 @@ const customerOrderHistoryNavigationItems: CustomerNavItem[] = [
   { label: "Order History", href: "/customer/order-history", icon: "history", active: true },
   { label: "Notifications", href: "/customer/notifications", icon: "bell" },
   { label: "Profile Settings", href: "/customer/profile-settings", icon: "settings" },
-];
-
-const ORDER_HISTORY: OrderHistoryItem[] = [
-  {
-    id: "#RD-9021-X1",
-    eventName: "Neon Pulse Music Festival",
-    purchaseDate: "Sep 24, 2024",
-    isoDate: "2024-09-24",
-    amount: "$245.00",
-    status: "Completed",
-    paymentMethod: "Visa •••• 8842",
-    ticketType: "VIP Pass",
-    quantity: 2,
-    venue: "Grand Arena, LA",
-    imageSrc: "/images/upc1.png",
-  },
-  {
-    id: "#RD-8842-P3",
-    eventName: "Global Tech Summit 2024",
-    purchaseDate: "Aug 12, 2024",
-    isoDate: "2024-08-12",
-    amount: "$599.00",
-    status: "Pending",
-    paymentMethod: "Mastercard •••• 1024",
-    ticketType: "Standard Admission",
-    quantity: 1,
-    venue: "Convention Center",
-    imageSrc: "/images/upc2.png",
-  },
-  {
-    id: "#RD-7651-B9",
-    eventName: "Midnight Jazz Collective",
-    purchaseDate: "Jul 28, 2024",
-    isoDate: "2024-07-28",
-    amount: "$45.00",
-    status: "Cancelled",
-    paymentMethod: "PayPal",
-    ticketType: "General Admission",
-    quantity: 1,
-    venue: "Riverside Hall",
-    imageSrc: "/images/upc1.png",
-  },
-  {
-    id: "#RD-4410-Q1",
-    eventName: "Modern Art Expo 2024",
-    purchaseDate: "Jun 15, 2024",
-    isoDate: "2024-06-15",
-    amount: "$35.00",
-    status: "Completed",
-    paymentMethod: "Visa •••• 8842",
-    ticketType: "Entry Pass",
-    quantity: 1,
-    venue: "City Gallery",
-    imageSrc: "/images/upc2.png",
-  },
-  {
-    id: "#RD-3104-N7",
-    eventName: "Designers Meetup Tokyo",
-    purchaseDate: "May 30, 2024",
-    isoDate: "2024-05-30",
-    amount: "$128.80",
-    status: "Completed",
-    paymentMethod: "Apple Pay",
-    ticketType: "Workshop Bundle",
-    quantity: 2,
-    venue: "Studio Forum",
-    imageSrc: "/images/upc2.png",
-  },
 ];
 
 const STATUS_STYLES: Record<HistoryStatus, string> = {
@@ -119,12 +59,10 @@ function parseAmount(amount: string) {
   return Number.isFinite(value) ? value : 0;
 }
 
-function formatUsd(amount: number) {
-  return new Intl.NumberFormat("en-US", {
+function formatVnd(amount: number) {
+  return new Intl.NumberFormat("vi-VN", {
     style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    currency: "VND",
   }).format(amount);
 }
 
@@ -133,12 +71,79 @@ function escapeCsvValue(value: string | number) {
   return `"${normalizedValue}"`;
 }
 
+function resolveHistoryStatus(status: string): HistoryStatus {
+  const normalizedStatus = status.toUpperCase();
+
+  if (
+    normalizedStatus.includes("PAID") ||
+    normalizedStatus.includes("SUCCESS") ||
+    normalizedStatus.includes("COMPLETED")
+  ) {
+    return "Completed";
+  }
+
+  if (
+    normalizedStatus.includes("CANCEL") ||
+    normalizedStatus.includes("FAILED") ||
+    normalizedStatus.includes("EXPIRED")
+  ) {
+    return "Cancelled";
+  }
+
+  return "Pending";
+}
+
+function formatOrderDate(orderDate: string) {
+  const date = new Date(orderDate);
+
+  if (Number.isNaN(date.getTime())) {
+    return orderDate;
+  }
+
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function getOrderIsoDate(orderDate: string) {
+  const date = new Date(orderDate);
+  return Number.isNaN(date.getTime()) ? orderDate : date.toISOString();
+}
+
+function mapOrderToHistoryItem(order: OrderResponse): OrderHistoryItem {
+  const firstItem = order.items[0];
+  const ticketType = firstItem?.ticketTypeName || firstItem?.ticketTypeId || "Ticket";
+  const quantity = order.items.reduce((sum, item) => sum + item.quantity, 0);
+
+  return {
+    id: order.id,
+    eventName: ticketType,
+    purchaseDate: formatOrderDate(order.orderDate),
+    isoDate: getOrderIsoDate(order.orderDate),
+    amount: formatVnd(order.totalAmount),
+    status: resolveHistoryStatus(order.status),
+    rawStatus: order.status,
+    paymentStatus: order.paymentStatus || "PENDING",
+    ticketType,
+    quantity,
+    userName: order.userName || "Current user",
+  };
+}
+
 function isWithinTimeFilter(order: OrderHistoryItem, filter: TimeFilter) {
   if (filter === "all") {
     return true;
   }
 
   const orderDate = new Date(order.isoDate);
+  if (Number.isNaN(orderDate.getTime())) {
+    return true;
+  }
+
   if (filter === "2024") {
     return orderDate.getFullYear() === 2024;
   }
@@ -155,7 +160,17 @@ function isWithinTimeFilter(order: OrderHistoryItem, filter: TimeFilter) {
   return orderDate >= thresholdDate && orderDate <= now;
 }
 
-function StatCard({ label, value, accent, note }: { label: string; value: string; accent: string; note: string }) {
+function StatCard({
+  label,
+  value,
+  accent,
+  note,
+}: {
+  label: string;
+  value: string;
+  accent: string;
+  note: string;
+}) {
   return (
     <article className="rounded-[24px] border border-white/90 bg-white/95 p-6 shadow-[0_18px_44px_rgba(148,163,184,0.14)]">
       <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-slate-500">{label}</div>
@@ -210,7 +225,40 @@ export default function CustomerOrderHistoryPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [amountSort, setAmountSort] = useState<AmountSort>("default");
   const [query, setQuery] = useState("");
+  const [orders, setOrders] = useState<OrderHistoryItem[]>([]);
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [isLoadingOrders, setIsLoadingOrders] = useState(true);
+  const [isLoadingOrderDetail, setIsLoadingOrderDetail] = useState(false);
+  const [ordersError, setOrdersError] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<OrderHistoryItem | null>(null);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      const loadOrders = async () => {
+        setIsLoadingOrders(true);
+        setOrdersError(null);
+
+        try {
+          const response = await getMyOrders({
+            search: query,
+            orderStatus: statusFilter === "all" ? undefined : statusFilter,
+          });
+          setOrders(response.items.map(mapOrderToHistoryItem));
+          setHasNextPage(response.hasNext);
+        } catch {
+          setOrdersError("Could not load order history.");
+          setOrders([]);
+          setHasNextPage(false);
+        } finally {
+          setIsLoadingOrders(false);
+        }
+      };
+
+      void loadOrders();
+    }, 300);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [query, statusFilter]);
 
   useEffect(() => {
     if (!selectedOrder) {
@@ -253,18 +301,7 @@ export default function CustomerOrderHistoryPage() {
   }, [isFilterOpen]);
 
   const filteredOrders = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
-
-    const visibleOrders = ORDER_HISTORY.filter((order) => {
-      const matchesStatus = statusFilter === "all" || order.status === statusFilter;
-      const matchesTime = isWithinTimeFilter(order, timeFilter);
-      const matchesQuery =
-        !normalizedQuery ||
-        order.id.toLowerCase().includes(normalizedQuery) ||
-        order.eventName.toLowerCase().includes(normalizedQuery);
-
-      return matchesStatus && matchesTime && matchesQuery;
-    });
+    const visibleOrders = orders.filter((order) => isWithinTimeFilter(order, timeFilter));
 
     if (amountSort === "default") {
       return visibleOrders;
@@ -274,22 +311,37 @@ export default function CustomerOrderHistoryPage() {
       const amountDelta = parseAmount(left.amount) - parseAmount(right.amount);
       return amountSort === "asc" ? amountDelta : -amountDelta;
     });
-  }, [amountSort, query, statusFilter, timeFilter]);
+  }, [amountSort, orders, timeFilter]);
 
   const totalSpent = useMemo(
     () =>
-      formatUsd(
-        ORDER_HISTORY.filter((order) => order.status === "Completed").reduce((sum, order) => sum + parseAmount(order.amount), 0),
+      formatVnd(
+        orders.filter((order) => order.status === "Completed").reduce((sum, order) => sum + parseAmount(order.amount), 0),
       ),
-    [],
+    [orders],
   );
 
-  const eventsAttended = ORDER_HISTORY.filter((order) => order.status === "Completed").length.toString();
-  const activeOrders = ORDER_HISTORY.filter((order) => order.status === "Pending").length.toString();
+  const eventsAttended = orders.filter((order) => order.status === "Completed").length.toString();
+  const activeOrders = orders.filter((order) => order.status === "Pending").length.toString();
 
   const handleLogout = async () => {
     const result = await logout();
     void router.push(result.redirectTo);
+  };
+
+  const handleViewOrder = async (order: OrderHistoryItem) => {
+    setIsLoadingOrderDetail(true);
+    setOrdersError(null);
+
+    try {
+      const response = await getMyOrder(order.id);
+      setSelectedOrder(response ? mapOrderToHistoryItem(response) : order);
+    } catch {
+      setSelectedOrder(order);
+      setOrdersError("Could not load order detail.");
+    } finally {
+      setIsLoadingOrderDetail(false);
+    }
   };
 
   const handleExportCsv = () => {
@@ -299,26 +351,24 @@ export default function CustomerOrderHistoryPage() {
 
     const header = [
       "Order ID",
-      "Event Name",
+      "Ticket Type",
       "Purchase Date",
       "Amount",
+      "Order Status",
       "Payment Status",
-      "Payment Method",
-      "Ticket Type",
       "Quantity",
-      "Venue",
+      "Customer",
     ];
 
     const rows = filteredOrders.map((order) => [
       order.id,
-      order.eventName,
+      order.ticketType,
       order.purchaseDate,
       order.amount,
-      order.status,
-      order.paymentMethod,
-      order.ticketType,
+      order.rawStatus,
+      order.paymentStatus,
       order.quantity,
-      order.venue,
+      order.userName,
     ]);
 
     const csvContent = [header, ...rows]
@@ -365,14 +415,18 @@ export default function CustomerOrderHistoryPage() {
                   <input
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
-                    placeholder="Search orders..."
+                    placeholder="Search by ticket type..."
                     className="w-full bg-transparent outline-none placeholder:text-slate-400"
                   />
                 </label>
                 <button type="button" className="flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-slate-500 shadow-[0_10px_24px_rgba(148,163,184,0.12)]">
                   <CustomerDashboardIcon type="help" className="h-4 w-4" />
                 </button>
-                <button type="button" className="flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-slate-500 shadow-[0_10px_24px_rgba(148,163,184,0.12)]">
+                <button
+                  type="button"
+                  onClick={() => void handleLogout()}
+                  className="flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-slate-500 shadow-[0_10px_24px_rgba(148,163,184,0.12)]"
+                >
                   <CustomerDashboardIcon type="logout" className="h-4 w-4" />
                 </button>
               </div>
@@ -381,13 +435,13 @@ export default function CustomerOrderHistoryPage() {
             <section className="mt-10">
               <h1 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-[2.7rem]">Review Your Experiences</h1>
               <p className="mt-3 max-w-3xl text-base leading-7 text-slate-500">
-                Access and manage all your past ticket purchases, invoices, and event details in one centralized location.
+                Access and manage all your ticket purchases, statuses, and order details in one place.
               </p>
 
               <div className="mt-8 grid gap-4 md:grid-cols-3">
-                <StatCard label="Total Spent" value={totalSpent} accent="text-blue-600" note="Across completed purchases" />
-                <StatCard label="Events Attended" value={eventsAttended} accent="text-violet-600" note="Orders marked completed" />
-                <StatCard label="Active Orders" value={activeOrders} accent="text-rose-600" note="Orders awaiting payment" />
+                <StatCard label="Total Spent" value={totalSpent} accent="text-blue-600" note="Across paid purchases" />
+                <StatCard label="Paid Orders" value={eventsAttended} accent="text-violet-600" note="Orders marked paid" />
+                <StatCard label="Pending Orders" value={activeOrders} accent="text-rose-600" note="Orders awaiting payment" />
               </div>
 
               <div className="mt-6 flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
@@ -413,9 +467,9 @@ export default function CustomerOrderHistoryPage() {
                       </FilterSelect>
                       <FilterSelect value={statusFilter} onChange={(value) => setStatusFilter(value as StatusFilter)}>
                         <option value="all">All Statuses</option>
-                        <option value="Completed">Completed</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Cancelled">Cancelled</option>
+                        <option value="PENDING_PAYMENT">Pending Payment</option>
+                        <option value="PAID">Paid</option>
+                        <option value="CANCELLED">Cancelled</option>
                       </FilterSelect>
                       <FilterSelect value={amountSort} onChange={(value) => setAmountSort(value as AmountSort)}>
                         <option value="default">Amount</option>
@@ -439,29 +493,36 @@ export default function CustomerOrderHistoryPage() {
             </section>
 
             <section className="mt-8 overflow-hidden rounded-[28px] border border-white/90 bg-white/95 shadow-[0_24px_60px_rgba(148,163,184,0.14)]">
+              {ordersError ? (
+                <div className="border-b border-rose-100 bg-rose-50 px-6 py-4 text-sm font-semibold text-rose-600">
+                  {ordersError}
+                </div>
+              ) : null}
+              {isLoadingOrders ? (
+                <div className="border-b border-slate-100 bg-slate-50 px-6 py-8 text-center text-xs font-bold uppercase tracking-[0.24em] text-slate-400">
+                  Loading orders...
+                </div>
+              ) : null}
+
               <div className="overflow-x-auto">
                 <table className="min-w-full">
                   <thead>
                     <tr className="border-b border-slate-100">
                       <th className="px-6 py-5 text-left text-[11px] font-bold uppercase tracking-[0.24em] text-slate-500">Order ID</th>
-                      <th className="px-6 py-5 text-left text-[11px] font-bold uppercase tracking-[0.24em] text-slate-500">Event Name</th>
-                      <th className="px-6 py-5 text-left text-[11px] font-bold uppercase tracking-[0.24em] text-slate-500">Purchase Date</th>
+                      <th className="px-6 py-5 text-left text-[11px] font-bold uppercase tracking-[0.24em] text-slate-500">Ticket Type</th>
+                      <th className="px-6 py-5 text-left text-[11px] font-bold uppercase tracking-[0.24em] text-slate-500">Order Date</th>
                       <th className="px-6 py-5 text-left text-[11px] font-bold uppercase tracking-[0.24em] text-slate-500">Amount</th>
                       <th className="px-6 py-5 text-left text-[11px] font-bold uppercase tracking-[0.24em] text-slate-500">Status</th>
                       <th className="px-6 py-5 text-left text-[11px] font-bold uppercase tracking-[0.24em] text-slate-500">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredOrders.map((order) => (
+                    {!isLoadingOrders && filteredOrders.map((order) => (
                       <tr key={order.id} className="border-b border-slate-100 last:border-b-0">
                         <td className="px-6 py-5 text-sm font-semibold text-slate-700">{order.id}</td>
                         <td className="px-6 py-5">
-                          <div className="flex items-center gap-3">
-                            <div className="relative h-11 w-11 overflow-hidden rounded-xl bg-slate-100">
-                              <Image src={order.imageSrc} alt={order.eventName} fill sizes="44px" className="object-cover" />
-                            </div>
-                            <div className="text-sm font-semibold text-slate-900">{order.eventName}</div>
-                          </div>
+                          <div className="text-sm font-semibold text-slate-900">{order.ticketType}</div>
+                          <div className="mt-1 text-xs text-slate-500">Quantity: {order.quantity}</div>
                         </td>
                         <td className="px-6 py-5 text-sm text-slate-500">{order.purchaseDate}</td>
                         <td className="px-6 py-5 text-sm font-semibold text-slate-900">{order.amount}</td>
@@ -471,10 +532,11 @@ export default function CustomerOrderHistoryPage() {
                         <td className="px-6 py-5">
                           <button
                             type="button"
-                            onClick={() => setSelectedOrder(order)}
-                            className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:text-blue-700"
+                            onClick={() => void handleViewOrder(order)}
+                            disabled={isLoadingOrderDetail}
+                            className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
                           >
-                            View
+                            {isLoadingOrderDetail ? "Loading..." : "View"}
                           </button>
                         </td>
                       </tr>
@@ -483,14 +545,21 @@ export default function CustomerOrderHistoryPage() {
                 </table>
               </div>
 
+              {!isLoadingOrders && filteredOrders.length === 0 ? (
+                <div className="border-t border-slate-100 px-6 py-10 text-center text-sm font-semibold text-slate-500">
+                  No orders found.
+                </div>
+              ) : null}
+
               <div className="flex flex-col gap-3 border-t border-slate-100 px-6 py-5 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-                <div>Showing {filteredOrders.length} of {ORDER_HISTORY.length} orders</div>
+                <div>
+                  Showing {filteredOrders.length} of {orders.length} orders
+                  {hasNextPage ? " - more available" : ""}
+                </div>
                 <div className="flex items-center gap-2">
-                  <button type="button" className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-400">‹</button>
+                  <button type="button" className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-400">{"<"}</button>
                   <button type="button" className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-white">1</button>
-                  <button type="button" className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-500">2</button>
-                  <button type="button" className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-500">3</button>
-                  <button type="button" className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-400">›</button>
+                  <button type="button" className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-400">{">"}</button>
                 </div>
               </div>
             </section>
@@ -506,7 +575,7 @@ export default function CustomerOrderHistoryPage() {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-violet-600">Order Details</div>
-                  <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">{selectedOrder.eventName}</h2>
+                  <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">{selectedOrder.ticketType}</h2>
                   <p className="mt-2 text-sm text-slate-500">{selectedOrder.id}</p>
                 </div>
                 <button
@@ -521,30 +590,22 @@ export default function CustomerOrderHistoryPage() {
                 </button>
               </div>
 
-              <div className="mt-6 grid gap-5 sm:grid-cols-[140px_minmax(0,1fr)]">
-                <div className="relative h-32 overflow-hidden rounded-2xl bg-slate-100">
-                  <Image src={selectedOrder.imageSrc} alt={selectedOrder.eventName} fill sizes="140px" className="object-cover" />
-                </div>
-                <div className="grid gap-3">
-                  <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
-                    <span className="text-sm text-slate-500">Payment Status</span>
-                    <OrderStatusBadge status={selectedOrder.status} />
-                  </div>
-                  <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                    <div className="font-semibold text-slate-900">Purchase Date</div>
-                    <div className="mt-1">{selectedOrder.purchaseDate}</div>
-                  </div>
-                  <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                    <div className="font-semibold text-slate-900">Amount</div>
-                    <div className="mt-1">{selectedOrder.amount}</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
                 <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                  <div className="font-semibold text-slate-900">Payment Method</div>
-                  <div className="mt-1">{selectedOrder.paymentMethod}</div>
+                  <div className="font-semibold text-slate-900">Order Status</div>
+                  <div className="mt-2"><OrderStatusBadge status={selectedOrder.status} /></div>
+                </div>
+                <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                  <div className="font-semibold text-slate-900">Payment Status</div>
+                  <div className="mt-1">{selectedOrder.paymentStatus}</div>
+                </div>
+                <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                  <div className="font-semibold text-slate-900">Order Date</div>
+                  <div className="mt-1">{selectedOrder.purchaseDate}</div>
+                </div>
+                <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                  <div className="font-semibold text-slate-900">Amount</div>
+                  <div className="mt-1">{selectedOrder.amount}</div>
                 </div>
                 <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
                   <div className="font-semibold text-slate-900">Ticket Type</div>
@@ -554,9 +615,9 @@ export default function CustomerOrderHistoryPage() {
                   <div className="font-semibold text-slate-900">Quantity</div>
                   <div className="mt-1">{selectedOrder.quantity}</div>
                 </div>
-                <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                  <div className="font-semibold text-slate-900">Venue</div>
-                  <div className="mt-1">{selectedOrder.venue}</div>
+                <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700 sm:col-span-2">
+                  <div className="font-semibold text-slate-900">Customer</div>
+                  <div className="mt-1">{selectedOrder.userName}</div>
                 </div>
               </div>
             </div>
