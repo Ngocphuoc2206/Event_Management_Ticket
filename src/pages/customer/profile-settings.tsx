@@ -553,35 +553,12 @@ export default function CustomerProfileSettingsPage() {
           />
 
           <section className="flex-1 px-5 py-6 sm:px-8 lg:px-10 xl:px-12">
+            <div className="mx-auto w-full max-w-[1600px]">
             <div className="text-xs font-medium text-slate-500">
               Dashboard &nbsp;&rsaquo;&nbsp; Profile Settings
             </div>
             <header className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-end">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center xl:ml-auto">
-                <button
-                  type="button"
-                  className="flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-slate-500 shadow-[0_10px_24px_rgba(148,163,184,0.12)]"
-                  aria-label="Help"
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="h-4 w-4 fill-none stroke-current"
-                    strokeWidth="1.8"
-                  >
-                    <circle cx="12" cy="12" r="7" />
-                    <path
-                      d="M9.75 9.75a2.25 2.25 0 1 1 3.18 2.05c-.86.42-1.43 1.02-1.43 1.95v.25"
-                      strokeLinecap="round"
-                    />
-                    <circle
-                      cx="12"
-                      cy="17"
-                      r="0.8"
-                      fill="currentColor"
-                      stroke="none"
-                    />
-                  </svg>
-                </button>
                 <button
                   type="button"
                   onClick={() => void handleLogout()}
@@ -607,15 +584,15 @@ export default function CustomerProfileSettingsPage() {
                 </button>
               </div>
             </header>
-            <h1 className="mt-5 text-4xl font-bold tracking-tight text-slate-900 sm:text-[2.85rem]">
+            <h1 className="mt-5 text-3xl font-bold tracking-tight text-slate-900">
               Profile Settings
             </h1>
 
             <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1fr)_290px]">
               <div className="space-y-6">
-                <section className="rounded-[26px] border border-slate-100 bg-white p-5 shadow-[0_18px_45px_rgba(148,163,184,0.14)] sm:p-6">
+                <section className="rounded-[24px] border border-slate-100 bg-white p-5 shadow-[0_18px_45px_rgba(148,163,184,0.14)] sm:p-6">
                   <div className="flex items-center justify-between gap-4">
-                    <h2 className="text-[1.6rem] font-bold tracking-tight text-slate-900">
+                    <h2 className="text-[1.35rem] font-bold tracking-tight text-slate-900">
                       Personal Information
                     </h2>
                     <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-blue-600">
@@ -798,7 +775,7 @@ export default function CustomerProfileSettingsPage() {
                   </form>
                 </section>
 
-                <section className="rounded-[26px] border border-slate-100 bg-white p-5 shadow-[0_18px_45px_rgba(148,163,184,0.14)] sm:p-6">
+                <section className="rounded-[24px] border border-slate-100 bg-white p-5 shadow-[0_18px_45px_rgba(148,163,184,0.14)] sm:p-6">
                   <div className="flex items-center gap-3">
                     <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-blue-50 text-blue-600">
                       <svg
@@ -820,7 +797,7 @@ export default function CustomerProfileSettingsPage() {
                         />
                       </svg>
                     </span>
-                    <h2 className="text-[1.55rem] font-bold tracking-tight text-slate-900">
+                    <h2 className="text-[1.35rem] font-bold tracking-tight text-slate-900">
                       Security & Password
                     </h2>
                   </div>
@@ -916,8 +893,8 @@ export default function CustomerProfileSettingsPage() {
               </div>
 
               <aside className="space-y-6">
-                <section className="rounded-[22px] border border-slate-100 bg-white p-5 shadow-[0_18px_45px_rgba(148,163,184,0.14)]">
-                  <h3 className="text-2xl font-bold tracking-tight text-slate-900">
+                <section className="rounded-[20px] border border-slate-100 bg-white p-5 shadow-[0_18px_45px_rgba(148,163,184,0.14)]">
+                  <h3 className="text-xl font-bold tracking-tight text-slate-900">
                     Notifications
                   </h3>
                   <div className="mt-6 space-y-5">
@@ -931,7 +908,7 @@ export default function CustomerProfileSettingsPage() {
                   </div>
                 </section>
 
-                <section className="rounded-[22px] border border-rose-100 bg-white p-5 shadow-[0_18px_45px_rgba(148,163,184,0.12)]">
+                <section className="rounded-[20px] border border-rose-100 bg-white p-5 shadow-[0_18px_45px_rgba(148,163,184,0.12)]">
                   <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-rose-500">
                     Danger Zone
                   </div>
@@ -947,11 +924,11 @@ export default function CustomerProfileSettingsPage() {
                   </button>
                 </section>
 
-                <section className="overflow-hidden rounded-[22px] bg-gradient-to-br from-blue-700 to-violet-600 p-5 text-white shadow-[0_18px_45px_rgba(76,92,193,0.25)]">
+                <section className="overflow-hidden rounded-[20px] bg-gradient-to-br from-blue-700 to-violet-600 p-5 text-white shadow-[0_18px_45px_rgba(76,92,193,0.25)]">
                   <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-blue-100">
                     Pro Feature
                   </div>
-                  <h3 className="mt-4 text-[1.65rem] font-bold leading-tight">
+                  <h3 className="mt-4 text-[1.35rem] font-bold leading-tight">
                     Unlock Early Access to Festivals
                   </h3>
                   <button
@@ -962,6 +939,7 @@ export default function CustomerProfileSettingsPage() {
                   </button>
                 </section>
               </aside>
+            </div>
             </div>
           </section>
         </div>
