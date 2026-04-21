@@ -1,5 +1,5 @@
 import type { ApiResult } from "@/features/auth/types";
-import { ensureApiResultSuccess, getApiErrorMessage } from "@/features/auth/utils";
+import { ensureApiResultSuccess, getApiErrorMessage, getApiResultData } from "@/features/auth/utils";
 import axiosClient from "@/features/httpClient/axiosClient";
 import { ORGANIZER_CREATE_EVENT_ENDPOINT, ORGANIZER_EVENTS_ENDPOINT } from "@/features/organizer/events/constants";
 import type {
@@ -8,13 +8,6 @@ import type {
   OrganizerEventsPageData,
   OrganizerUpdateEventPayload,
 } from "@/features/organizer/events/types";
-
-export type OrganizerSubmitForApprovalPayload = OrganizerCreateEventPayload & {
-  organizer_id: string;
-  totalTickets: number;
-  featured: boolean;
-  visibility: "PUBLIC";
-};
 
 export async function createOrganizerEvent(payload: OrganizerCreateEventPayload) {
   try {
@@ -38,7 +31,24 @@ export async function getOrganizerEvents(params?: { page?: number; size?: number
     );
 
     ensureApiResultSuccess(response.data, "Khong the tai danh sach su kien.");
-    return response.data;
+    const payload = getApiResultData(response.data as ApiResult<unknown>);
+
+    if (!payload || typeof payload !== "object") {
+      return {
+        items: [],
+        hasNext: false,
+      } as OrganizerEventsPageData;
+    }
+
+    const objectPayload = payload as {
+      items?: unknown[];
+      hasNext?: boolean;
+    };
+
+    return {
+      items: Array.isArray(objectPayload.items) ? (objectPayload.items as OrganizerEvent[]) : [],
+      hasNext: Boolean(objectPayload.hasNext),
+    } as OrganizerEventsPageData;
   } catch (error) {
     throw new Error(getApiErrorMessage(error, "Khong the tai danh sach su kien."));
   }
@@ -77,44 +87,4 @@ export async function saveOrganizerEventDraft(payload: OrganizerCreateEventPaylo
   }
 
   return createOrganizerEvent({ ...payload, status: "DRAFT" });
-}
-
-export async function submitOrganizerEventForApproval(eventId: string) {
-  try {
-    const response = await axiosClient.put<ApiResult<OrganizerEvent>>(
-      `${ORGANIZER_EVENTS_ENDPOINT}/${eventId}/submit`,
-    );
-
-    ensureApiResultSuccess(response.data, "Gui duyet su kien that bai.");
-    return response.data;
-  } catch (error) {
-    throw new Error(getApiErrorMessage(error, "Gui duyet su kien that bai."));
-  }
-}
-
-export async function createOrganizerEventForApproval(payload: OrganizerSubmitForApprovalPayload) {
-  try {
-    const response = await axiosClient.post<ApiResult<OrganizerEvent>>(
-      "http://100.25.101.12:8080/api/organizer/events",
-      payload,
-    );
-
-    ensureApiResultSuccess(response.data, "Gui duyet su kien that bai.");
-    return response.data;
-  } catch (error) {
-    throw new Error(getApiErrorMessage(error, "Gui duyet su kien that bai."));
-  }
-}
-
-export async function publishOrganizerEvent(eventId: string) {
-  try {
-    const response = await axiosClient.put<ApiResult<OrganizerEvent>>(`${ORGANIZER_EVENTS_ENDPOINT}/${eventId}`, {
-      status: "PUBLISHED",
-    });
-
-    ensureApiResultSuccess(response.data, "Publish su kien that bai.");
-    return response.data;
-  } catch (error) {
-    throw new Error(getApiErrorMessage(error, "Publish su kien that bai."));
-  }
 }

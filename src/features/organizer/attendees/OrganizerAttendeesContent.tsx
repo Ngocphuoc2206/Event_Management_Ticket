@@ -6,7 +6,6 @@ import { getApiErrorMessage, getApiResultData } from "@/features/auth/utils";
 import { getOrganizerEvents } from "@/features/organizer/events/services/create-event.service";
 import type {
   OrganizerEvent,
-  OrganizerEventsPageData,
 } from "@/features/organizer/events/types";
 import {
   checkInOrganizerAttendee,
@@ -30,32 +29,6 @@ type SortDir = "asc" | "desc";
 type StatusFilter = "ALL" | "true" | "false";
 
 const DEFAULT_PAGE_SIZE = 50;
-
-function normalizeEventsPayload(payload: unknown): OrganizerEvent[] {
-  if (Array.isArray(payload)) {
-    return payload as OrganizerEvent[];
-  }
-
-  if (!payload || typeof payload !== "object") {
-    return [];
-  }
-
-  const objectPayload = payload as Partial<OrganizerEventsPageData> & {
-    events?: OrganizerEvent[];
-    content?: OrganizerEvent[];
-    data?: OrganizerEvent[];
-    results?: OrganizerEvent[];
-  };
-
-  const items =
-    objectPayload.items ??
-    objectPayload.events ??
-    objectPayload.content ??
-    objectPayload.data ??
-    objectPayload.results;
-
-  return Array.isArray(items) ? items : [];
-}
 
 function normalizeAttendeesPayload(payload: unknown): OrganizerAttendee[] {
   if (!Array.isArray(payload)) {
@@ -125,16 +98,14 @@ export function OrganizerAttendeesContent() {
   const loadEvents = useCallback(async () => {
     setIsLoadingEvents(true);
     try {
-      const apiResult = await getOrganizerEvents({
+      const pageData = await getOrganizerEvents({
         page: 1,
         size: DEFAULT_PAGE_SIZE,
       });
-      const data = getApiResultData(apiResult as ApiResult<unknown>);
-      const normalizedEvents = normalizeEventsPayload(data);
 
-      setEvents(normalizedEvents);
-      if (!selectedEventId && normalizedEvents.length > 0) {
-        setSelectedEventId(normalizedEvents[0]?.id ?? "");
+      setEvents(pageData.items);
+      if (!selectedEventId && pageData.items.length > 0) {
+        setSelectedEventId(pageData.items[0]?.id ?? "");
       }
     } catch (error) {
       showToast({

@@ -1,13 +1,10 @@
 import { AlertCircle, CheckCircle2, Save } from "lucide-react";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
-import { useSelector } from "react-redux";
 
 import {
   getApiErrorMessage,
   getApiResultData,
-  getStoredAccessToken,
-  isApiResponse,
 } from "@/features/auth/utils";
 import type { ApiResult } from "@/features/auth/types";
 import {
@@ -17,9 +14,8 @@ import {
   setOrganizerDraftEventId,
 } from "@/features/organizer/events/services/draft-storage";
 import {
-  createOrganizerEventForApproval,
+  createOrganizerEvent,
   getOrganizerEventById,
-  publishOrganizerEvent,
   saveOrganizerEventDraft,
 } from "@/features/organizer/events/services/create-event.service";
 import { getOrganizerTicketTypes } from "@/features/organizer/events/services/ticket-types.service";
@@ -28,30 +24,52 @@ import type {
   OrganizerEvent,
   OrganizerTicketType,
 } from "@/features/organizer/events/types";
-import type { RootState } from "@/stores";
 
 type ToastState = {
   tone: "success" | "error";
   message: string;
 };
 
-type OrganizerSubmitPayload = {
-  title: string;
-  shortDescription: string;
-  description: string;
-  category: string;
-  venueName: string;
-  address: string;
-  city: string;
-  organizer_id: string;
-  bannerUrl: string;
-  startTime: string;
-  endTime: string;
-  visibility: "PUBLIC";
-  minPrice: number;
-  totalTickets: number;
-  featured: true;
-};
+function getStringField(source: Record<string, unknown>, keys: string[]) {
+  for (const key of keys) {
+    const value = source[key];
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+  }
+
+  return undefined;
+}
+
+function mapToCreatePayload(source: unknown): Partial<OrganizerCreateEventPayload> {
+  if (!source || typeof source !== "object") {
+    return {};
+  }
+
+  const data = source as Record<string, unknown>;
+
+  return {
+    title: getStringField(data, ["title", "name", "eventName"]),
+    shortDescription: getStringField(data, ["shortDescription", "short_description", "summary"]),
+    description: getStringField(data, ["description", "details", "content"]),
+    category: getStringField(data, ["category", "eventCategory"]),
+    venueName: getStringField(data, ["venueName", "venue_name", "venue", "locationName"]),
+    address: getStringField(data, ["address", "venueAddress", "locationAddress"]),
+    city: getStringField(data, ["city"]),
+    bannerUrl: getStringField(data, ["bannerUrl", "banner_url", "banner", "imageUrl"]),
+    startTime: getStringField(data, ["startTime", "start_time", "startDateTime"]),
+    endTime: getStringField(data, ["endTime", "end_time", "endDateTime"]),
+    visibility: "PUBLIC",
+    minPrice:
+      typeof data.minPrice === "number"
+        ? data.minPrice
+        : undefined,
+    status:
+      typeof data.status === "string"
+        ? (data.status as OrganizerCreateEventPayload["status"])
+        : undefined,
+  };
+}
 
 function buildFallbackDraftPayload(): OrganizerCreateEventPayload {
   const now = new Date();
@@ -78,7 +96,6 @@ function buildFallbackDraftPayload(): OrganizerCreateEventPayload {
 
 export function OrganizerCreateEventStepFiveContent() {
   const router = useRouter();
-  const userId = useSelector((state: RootState) => state.user.id);
   const [eventId, setEventId] = useState<string | null>(null);
   const [status, setStatus] = useState<string>("DRAFT");
   const [isSavingDraft, setIsSavingDraft] = useState(false);
@@ -116,10 +133,8 @@ export function OrganizerCreateEventStepFiveContent() {
         }
 
         if (eventData) {
-          setReviewPayload((prev) => ({
-            ...prev,
-            ...eventData,
-          }));
+          const normalizedEventPayload = mapToCreatePayload(eventData);
+          setReviewPayload((prev) => ({ ...prev, ...normalizedEventPayload }));
         }
       } catch {
         // Keep default status when detail endpoint is not reachable.
@@ -129,9 +144,10 @@ export function OrganizerCreateEventStepFiveContent() {
     const localDraftPayload =
       (getOrganizerDraftPayload() as OrganizerCreateEventPayload | null) ??
       buildFallbackDraftPayload();
+    const normalizedLocalPayload = mapToCreatePayload(localDraftPayload);
     setReviewPayload((prev) => ({
       ...prev,
-      ...localDraftPayload,
+      ...normalizedLocalPayload,
     }));
   }, [router.query.eventId]);
 
@@ -151,37 +167,6 @@ export function OrganizerCreateEventStepFiveContent() {
     };
   };
 
-  const resolveOrganizerId = () => {
-    const fromStore = userId?.trim();
-    if (fromStore) {
-      return fromStore;
-    }
-
-    const token = getStoredAccessToken();
-    if (!token || typeof window === "undefined") {
-      return null;
-    }
-
-    try {
-      const [, payload] = token.split(".");
-      if (!payload) {
-        return null;
-      }
-
-      const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
-      const padded = normalized.padEnd(
-        normalized.length + ((4 - (normalized.length % 4)) % 4),
-        "=",
-      );
-      const decoded = JSON.parse(window.atob(padded)) as { sub?: string };
-      return typeof decoded.sub === "string" && decoded.sub.trim()
-        ? decoded.sub.trim()
-        : null;
-    } catch {
-      return null;
-    }
-  };
-
   const toIsoOrFallback = (value: string | undefined, fallback: string) => {
     const parsed = new Date(value ?? "");
     return Number.isNaN(parsed.getTime()) ? fallback : parsed.toISOString();
@@ -192,25 +177,18 @@ export function OrganizerCreateEventStepFiveContent() {
     return Number.isFinite(numeric) ? numeric : 0;
   };
 
-  const buildSubmitPayload = async (resolvedEventId: string): Promise<OrganizerSubmitPayload> => {
+  const buildCreatePayload = async (): Promise<OrganizerCreateEventPayload> => {
     const latestPayload = resolveDraftPayload();
     mergeOrganizerDraftPayload(latestPayload);
-    setReviewPayload(latestPayload);
-
-    const organizerId = resolveOrganizerId();
-    if (!organizerId) {
-      throw new Error("Khong tim thay organizer_id tu thong tin dang nhap.");
-    }
+    setReviewPayload((prev) => ({ ...prev, ...mapToCreatePayload(latestPayload) }));
 
     let ticketTypes: OrganizerTicketType[] = [];
-    try {
-      const ticketsResult = await getOrganizerTicketTypes(resolvedEventId);
-      const ticketsData = getApiResultData(
-        ticketsResult as ApiResult<OrganizerTicketType[]>,
-      );
-      ticketTypes = Array.isArray(ticketsData) ? ticketsData : [];
-    } catch {
-      ticketTypes = [];
+    if (eventId) {
+      try {
+        ticketTypes = await getOrganizerTicketTypes(eventId);
+      } catch {
+        ticketTypes = [];
+      }
     }
 
     const totalTickets = Number(
@@ -234,14 +212,12 @@ export function OrganizerCreateEventStepFiveContent() {
       venueName: latestPayload.venueName?.trim() || fallbackPayload.venueName,
       address: latestPayload.address?.trim() || fallbackPayload.address,
       city: latestPayload.city?.trim() || fallbackPayload.city,
-      organizer_id: organizerId,
       bannerUrl: latestPayload.bannerUrl?.trim() || fallbackPayload.bannerUrl,
       startTime: toIsoOrFallback(latestPayload.startTime, fallbackPayload.startTime),
       endTime: toIsoOrFallback(latestPayload.endTime, fallbackPayload.endTime),
       visibility: "PUBLIC",
       minPrice: Number(minPriceFromTickets),
-      totalTickets,
-      featured: true,
+      status: "DRAFT",
     };
   };
 
@@ -289,11 +265,6 @@ export function OrganizerCreateEventStepFiveContent() {
     }
   };
 
-  const canPublishDirectly = useMemo(
-    () => status.toUpperCase() === "APPROVED",
-    [status],
-  );
-
   const handleSubmitWorkflow = async () => {
     if (isSubmittingWorkflow) {
       return;
@@ -301,28 +272,20 @@ export function OrganizerCreateEventStepFiveContent() {
 
     setIsSubmittingWorkflow(true);
     try {
-      const id = await resolveEventId();
-
-      if (canPublishDirectly) {
-        await publishOrganizerEvent(id);
-        setStatus("PUBLISHED");
-        showToast({ tone: "success", message: "Sự kiện đã được publish." });
-      } else {
-        const submitPayload = await buildSubmitPayload(id);
-        const submitResult = await createOrganizerEventForApproval(submitPayload);
-        const submitCode = isApiResponse(submitResult) ? submitResult.code : 0;
-
-        if (submitCode !== 0) {
-          throw new Error("Gui duyet su kien that bai.");
-        }
-
-        setStatus("PENDING_APPROVAL");
-        showToast({
-          tone: "success",
-          message: "Sự kiện đã được tạo và gửi duyệt thành công!",
-        });
-        await router.push("/organizer/events");
+      const createPayload = await buildCreatePayload();
+      const createResult = await createOrganizerEvent(createPayload);
+      const createdEvent = getApiResultData(createResult as ApiResult<OrganizerEvent>);
+      if (createdEvent?.id) {
+        setEventId(createdEvent.id);
+        setOrganizerDraftEventId(createdEvent.id);
       }
+
+      setStatus(String(createdEvent?.status ?? "PENDING_APPROVAL"));
+      showToast({
+        tone: "success",
+        message: "Sự kiện đã được tạo thành công.",
+      });
+      await router.push("/organizer/events");
     } catch (error) {
       showToast({
         tone: "error",
@@ -374,8 +337,8 @@ export function OrganizerCreateEventStepFiveContent() {
               Workflow Actions
             </h2>
             <p className="mt-2 text-sm text-gray-700">
-              Save Draft dùng cho trạng thái DRAFT. Nút chính sẽ tự động Submit
-              for Approval, hoặc Publish nếu event đã APPROVED.
+              Save Draft dùng cho trạng thái DRAFT. Nút chính sẽ tạo sự kiện qua
+              POST /api/organizer/events, backend sẽ tự xử lý trạng thái chờ duyệt.
             </p>
 
             <div className="mt-6 space-y-4">
@@ -385,11 +348,7 @@ export function OrganizerCreateEventStepFiveContent() {
                 disabled={isSubmittingWorkflow}
                 className="inline-flex w-full justify-center rounded-3xl bg-gradient-to-r from-sky-700 to-violet-700 px-8 py-4 text-lg font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isSubmittingWorkflow
-                  ? "Dang xu ly..."
-                  : canPublishDirectly
-                    ? "Publish Event"
-                    : "Submit For Approval"}
+                {isSubmittingWorkflow ? "Dang xu ly..." : "Submit For Approval"}
               </button>
 
               <button

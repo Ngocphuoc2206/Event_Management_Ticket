@@ -1,30 +1,76 @@
 import type { ApiResult } from "@/features/auth/types";
-import { ensureApiResultSuccess, getApiErrorMessage } from "@/features/auth/utils";
+import { ensureApiResultSuccess, getApiErrorMessage, getApiResultData } from "@/features/auth/utils";
 import axiosClient from "@/features/httpClient/axiosClient";
 import type {
   OrganizerCreateTicketTypePayload,
   OrganizerTicketType,
+  OrganizerTicketTypesPageData,
   OrganizerTicketTypeStatus,
   OrganizerUpdateTicketTypePayload,
 } from "@/features/organizer/events/types";
 
 const ORGANIZER_API_BASE =
-  process.env.NEXT_PUBLIC_ORGANIZER_API_BASE || "http://localhost:8080/api/organizer";
+  process.env.NEXT_PUBLIC_ORGANIZER_API_BASE || "http://100.25.101.12:8080/api/organizer";
 
 type TicketTypeListQuery = {
   search?: string;
   status?: OrganizerTicketTypeStatus;
 };
 
+function toNumberOrZero(value: unknown) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function mapTicketTypeItem(item: unknown, index: number): OrganizerTicketType {
+  const value = (item && typeof item === "object" ? item : {}) as Record<string, unknown>;
+
+  return {
+    id:
+      (typeof value.id === "string" && value.id) ||
+      (typeof value.ticketTypeId === "string" && value.ticketTypeId) ||
+      `ticket-type-${index + 1}`,
+    name:
+      (typeof value.name === "string" && value.name.trim()) ||
+      (typeof value.ticketName === "string" && value.ticketName.trim()) ||
+      "Unnamed Ticket",
+    price: toNumberOrZero(value.price),
+    quantity: toNumberOrZero(value.quantity),
+    saleStart:
+      (typeof value.saleStart === "string" && value.saleStart) ||
+      (typeof value.sale_start === "string" && value.sale_start) ||
+      new Date().toISOString(),
+    saleEnd:
+      (typeof value.saleEnd === "string" && value.saleEnd) ||
+      (typeof value.sale_end === "string" && value.sale_end) ||
+      new Date().toISOString(),
+    eventId:
+      (typeof value.eventId === "string" && value.eventId) ||
+      (typeof value.event_id === "string" && value.event_id) ||
+      undefined,
+    status:
+      value.status === "ACTIVE" || value.status === "INACTIVE"
+        ? value.status
+        : undefined,
+  };
+}
+
 export async function getOrganizerTicketTypes(eventId: string, params?: TicketTypeListQuery) {
   try {
-    const response = await axiosClient.get<ApiResult<OrganizerTicketType[]>>(
+    const response = await axiosClient.get<ApiResult<OrganizerTicketTypesPageData>>(
       `${ORGANIZER_API_BASE}/events/${eventId}/ticket-types`,
       { params },
     );
 
     ensureApiResultSuccess(response.data, "Khong the tai danh sach loai ve.");
-    return response.data;
+    const payload = getApiResultData(response.data as ApiResult<unknown>);
+    if (!payload || typeof payload !== "object") {
+      return [] as OrganizerTicketType[];
+    }
+
+    const objectPayload = payload as OrganizerTicketTypesPageData;
+    const items = Array.isArray(objectPayload.items) ? objectPayload.items : [];
+    return items.map((item, index) => mapTicketTypeItem(item, index));
   } catch (error) {
     throw new Error(getApiErrorMessage(error, "Khong the tai danh sach loai ve."));
   }
