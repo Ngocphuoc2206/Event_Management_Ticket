@@ -29,7 +29,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "."
+          source: "src,public,package.json,package-lock.json,next.config.ts,Dockerfile,docker-compose.yml,.dockerignore,tsconfig.json,postcss.config.mjs,eslint.config.mjs"
           target: "/home/ubuntu/apps/eventhub/${{ steps.target.outputs.folder }}/source"
 
       - name: Deploy frontend on server
