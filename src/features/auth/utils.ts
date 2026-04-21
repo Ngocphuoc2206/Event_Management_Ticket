@@ -39,7 +39,25 @@ export function getApiResultMessage<T>(response: ApiResult<T>): string | undefin
   return response.message;
 }
 
+export function ensureApiResultSuccess<T>(response: ApiResult<T>, fallback: string): void {
+  if (!isApiResponse(response)) {
+    return;
+  }
+
+  if (response.success === false) {
+    throw new Error(response.message?.trim() || fallback);
+  }
+
+  if (typeof response.code === "number" && response.code !== 0) {
+    throw new Error(response.message?.trim() || fallback);
+  }
+}
+
 export function getApiErrorMessage<T>(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+
   if (!isAxiosError<ApiResponse<T> | string>(error)) {
     return fallback;
   }

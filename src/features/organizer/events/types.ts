@@ -20,7 +20,35 @@ export type OrganizerCreateEventPayload = {
   endTime: string;
   visibility: OrganizerEventVisibility;
   minPrice: number;
+  status?: OrganizerEventStatus;
 };
+
+export type OrganizerUpdateEventPayload = Partial<OrganizerCreateEventPayload>;
+
+export type OrganizerTicketTypeStatus = "ACTIVE" | "INACTIVE";
+
+export type OrganizerTicketType = {
+  id: string;
+  eventId?: string;
+  name: string;
+  price: number;
+  quantity: number;
+  saleStart: string;
+  saleEnd: string;
+  status?: OrganizerTicketTypeStatus;
+};
+
+export type OrganizerCreateTicketTypePayload = {
+  name: string;
+  price: number;
+  quantity: number;
+  saleStart: string;
+  saleEnd: string;
+};
+
+export type OrganizerUpdateTicketTypePayload = Partial<
+  OrganizerCreateTicketTypePayload & { status: OrganizerTicketTypeStatus }
+>;
 
 export type OrganizerEvent = OrganizerCreateEventPayload & {
   id?: string;

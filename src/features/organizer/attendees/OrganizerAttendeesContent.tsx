@@ -1,370 +1,384 @@
+import { AlertCircle, CheckCircle2, Search } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+
+import type { ApiResult } from "@/features/auth/types";
+import { getApiErrorMessage, getApiResultData } from "@/features/auth/utils";
+import { getOrganizerEvents } from "@/features/organizer/events/services/create-event.service";
+import type { OrganizerEvent, OrganizerEventsPageData } from "@/features/organizer/events/types";
 import {
-  Bell,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  Download,
-  MoreVertical,
-  Search,
-  Settings,
-  Timer,
-  Users,
-  Zap,
-} from "lucide-react";
-import { useMemo, useState } from "react";
+  checkInOrganizerAttendee,
+  getOrganizerAttendees,
+} from "@/features/organizer/attendees/services/attendees.service";
 
-type CheckInStatus = "Checked In" | "Pending";
-type TicketType = "VIP Experience" | "Standard Pass" | "Early Bird";
-type TicketTypeFilter = TicketType | "All Ticket Types";
-
-type AttendeeRow = {
-  id: string;
-  name: string;
-  email: string;
-  ticketType: TicketType;
-  checkInStatus?: CheckInStatus;
-  orderId: string;
-  avatarSrc?: string;
-  initials?: string;
-  initialsBgClass?: string;
+type ToastState = {
+  tone: "success" | "error";
+  message: string;
 };
 
-const ATTENDEE_ROWS: AttendeeRow[] = [
-  {
-    id: "ORD-90210",
-    name: "Julian Casablancas",
-    email: "j.casablancas@gmail.com",
-    ticketType: "VIP Experience",
-    checkInStatus: "Checked In",
-    orderId: "ORD-90210",
-    avatarSrc: "https://placehold.co/40x40",
-  },
-  {
-    id: "ORD-88273",
-    name: "Sarah Miller",
-    email: "sarah.m@outlook.com",
-    ticketType: "Standard Pass",
-    checkInStatus: "Pending",
-    orderId: "ORD-88273",
-    initials: "SM",
-    initialsBgClass: "bg-indigo-300 text-sky-700",
-  },
-  {
-    id: "ORD-77122",
-    name: "Marcus Aurelius",
-    email: "marcus.stoic@live.com",
-    ticketType: "Early Bird",
-    checkInStatus: "Checked In",
-    orderId: "ORD-77122",
-    avatarSrc: "https://placehold.co/40x40",
-  },
-  {
-    id: "ORD-55443",
-    name: "Elena Rodriguez",
-    email: "elena.rod@tech.co",
-    ticketType: "VIP Experience",
-    orderId: "ORD-55443",
-    avatarSrc: "https://placehold.co/40x40",
-  },
-];
+type OrganizerAttendee = {
+  orderItemId: string;
+  fullName: string;
+  ticketType: string;
+  checkedIn: boolean;
+};
 
-const TICKET_TYPE_FILTERS: TicketTypeFilter[] = ["All Ticket Types", "VIP Experience", "Standard Pass", "Early Bird"];
+type SortBy = "fullName" | "ticketType" | "check-in";
+type SortDir = "asc" | "desc";
+type StatusFilter = "ALL" | "true" | "false";
 
-function getTicketBadge(ticketType: TicketType) {
-  if (ticketType === "VIP Experience") {
-    return {
-      wrapClass: "bg-purple-200 text-violet-950",
-      line1: "VIP",
-      line2: "Experience",
-    };
+const DEFAULT_PAGE_SIZE = 50;
+
+function normalizeEventsPayload(payload: unknown): OrganizerEvent[] {
+  if (Array.isArray(payload)) {
+    return payload as OrganizerEvent[];
   }
 
-  if (ticketType === "Standard Pass") {
-    return {
-      wrapClass: "bg-blue-100 text-sky-950",
-      line1: "Standard",
-      line2: "Pass",
-    };
+  if (!payload || typeof payload !== "object") {
+    return [];
   }
 
-  return {
-    wrapClass: "bg-red-100 text-rose-900",
-    line1: "Early Bird",
-    line2: "",
+  const objectPayload = payload as Partial<OrganizerEventsPageData> & {
+    events?: OrganizerEvent[];
+    content?: OrganizerEvent[];
+    data?: OrganizerEvent[];
+    results?: OrganizerEvent[];
   };
+
+  const items =
+    objectPayload.items ??
+    objectPayload.events ??
+    objectPayload.content ??
+    objectPayload.data ??
+    objectPayload.results;
+
+  return Array.isArray(items) ? items : [];
+}
+
+function normalizeAttendeesPayload(payload: unknown): OrganizerAttendee[] {
+  if (!Array.isArray(payload)) {
+    return [];
+  }
+
+  return payload.map((item, index) => {
+    const obj = item as Record<string, unknown>;
+
+    const orderItemId =
+      (typeof obj.orderItemId === "string" && obj.orderItemId) ||
+      (typeof obj.id === "string" && obj.id) ||
+      `order-item-${index + 1}`;
+
+    const fullName =
+      (typeof obj.fullName === "string" && obj.fullName) ||
+      (typeof obj.username === "string" && obj.username) ||
+      "Unknown attendee";
+
+    const ticketType = typeof obj.ticketType === "string" ? obj.ticketType : "-";
+
+    const checkedInRaw = obj.checkedIn ?? obj.checkIn ?? obj.status;
+    const checkedIn = checkedInRaw === true || checkedInRaw === "true";
+
+    return {
+      orderItemId,
+      fullName,
+      ticketType,
+      checkedIn,
+    };
+  });
 }
 
 export function OrganizerAttendeesContent() {
-  const [searchValue, setSearchValue] = useState("");
-  const [ticketTypeFilter, setTicketTypeFilter] = useState<TicketTypeFilter>("All Ticket Types");
-  const [openActionsForId, setOpenActionsForId] = useState<string | null>(null);
+  const [events, setEvents] = useState<OrganizerEvent[]>([]);
+  const [selectedEventId, setSelectedEventId] = useState<string>("");
+  const [attendees, setAttendees] = useState<OrganizerAttendee[]>([]);
 
-  const filteredAttendees = useMemo(() => {
-    const normalizedSearch = searchValue.trim().toLowerCase();
+  const [searchInput, setSearchInput] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
+  const [sortBy, setSortBy] = useState<SortBy>("fullName");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
 
-    return ATTENDEE_ROWS.filter((attendee) => {
-      const matchesSearch =
-        normalizedSearch.length === 0
-        || attendee.name.toLowerCase().includes(normalizedSearch)
-        || attendee.email.toLowerCase().includes(normalizedSearch);
+  const [isLoadingEvents, setIsLoadingEvents] = useState(false);
+  const [isLoadingAttendees, setIsLoadingAttendees] = useState(false);
+  const [isCheckingInByOrderItemId, setIsCheckingInByOrderItemId] = useState<Record<string, boolean>>({});
+  const [toast, setToast] = useState<ToastState | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-      const matchesTicketType = ticketTypeFilter === "All Ticket Types" || attendee.ticketType === ticketTypeFilter;
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setDebouncedSearch(searchInput.trim());
+    }, 300);
 
-      return matchesSearch && matchesTicketType;
-    });
-  }, [searchValue, ticketTypeFilter]);
+    return () => window.clearTimeout(timer);
+  }, [searchInput]);
+
+  const showToast = (nextToast: ToastState) => {
+    setToast(nextToast);
+    window.setTimeout(() => setToast(null), 2500);
+  };
+
+  const loadEvents = useCallback(async () => {
+    setIsLoadingEvents(true);
+    try {
+      const apiResult = await getOrganizerEvents({ page: 1, size: DEFAULT_PAGE_SIZE });
+      const data = getApiResultData(apiResult as ApiResult<unknown>);
+      const normalizedEvents = normalizeEventsPayload(data);
+
+      setEvents(normalizedEvents);
+      if (!selectedEventId && normalizedEvents.length > 0) {
+        setSelectedEventId(normalizedEvents[0]?.id ?? "");
+      }
+    } catch (error) {
+      showToast({
+        tone: "error",
+        message: getApiErrorMessage(error, "Unable to load organizer events."),
+      });
+    } finally {
+      setIsLoadingEvents(false);
+    }
+  }, [selectedEventId]);
+
+  useEffect(() => {
+    void loadEvents();
+  }, [loadEvents]);
+
+  const loadAttendees = useCallback(async () => {
+    if (!selectedEventId) {
+      setAttendees([]);
+      return;
+    }
+
+    setIsLoadingAttendees(true);
+    setErrorMessage(null);
+    try {
+      const apiResult = await getOrganizerAttendees(selectedEventId, {
+        search: debouncedSearch || undefined,
+        status: statusFilter === "ALL" ? undefined : statusFilter,
+        sortBy,
+        sortDir,
+      });
+
+      const data = getApiResultData(apiResult as ApiResult<unknown>);
+      setAttendees(normalizeAttendeesPayload(data));
+    } catch (error) {
+      const message = getApiErrorMessage(error, "Unable to load attendees list.");
+      setErrorMessage(message);
+      setAttendees([]);
+    } finally {
+      setIsLoadingAttendees(false);
+    }
+  }, [selectedEventId, debouncedSearch, statusFilter, sortBy, sortDir]);
+
+  useEffect(() => {
+    void loadAttendees();
+  }, [loadAttendees]);
+
+  const checkedInCount = useMemo(() => attendees.filter((item) => item.checkedIn).length, [attendees]);
+
+  const handleCheckIn = async (orderItemId: string) => {
+    if (!orderItemId) {
+      return;
+    }
+
+    setIsCheckingInByOrderItemId((prev) => ({ ...prev, [orderItemId]: true }));
+    try {
+      await checkInOrganizerAttendee(orderItemId);
+      setAttendees((prev) =>
+        prev.map((item) =>
+          item.orderItemId === orderItemId
+            ? {
+                ...item,
+                checkedIn: true,
+              }
+            : item,
+        ),
+      );
+      showToast({ tone: "success", message: "Check-in successful." });
+    } catch (error) {
+      showToast({
+        tone: "error",
+        message: getApiErrorMessage(error, "Check-in failed."),
+      });
+    } finally {
+      setIsCheckingInByOrderItemId((prev) => ({ ...prev, [orderItemId]: false }));
+    }
+  };
 
   return (
-    <section className="flex-1 bg-slate-50 text-zinc-900">
-      <header className="flex min-h-20 w-full flex-wrap items-center justify-between gap-4 border-b border-gray-100 bg-slate-50 px-5 py-4 sm:px-8 lg:px-10">
-        <h1 className="text-xl font-semibold leading-7 text-zinc-900">Attendee Management</h1>
-
-        <div className="flex w-full flex-wrap items-center justify-end gap-4 sm:w-auto sm:gap-6">
-          <div className="relative w-full sm:w-64">
-            <Search className="pointer-events-none absolute left-4 top-3.5 h-4 w-4 text-gray-700" />
-            <input
-              type="text"
-              value={searchValue}
-              onChange={(event) => setSearchValue(event.target.value)}
-              placeholder="Search attendees..."
-              className="w-full rounded-full bg-gray-100 py-3 pl-12 pr-5 text-sm text-gray-700 placeholder:text-gray-500"
-            />
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button type="button" aria-label="Notifications" className="rounded-full p-2 text-gray-700 transition hover:bg-gray-100">
-              <Bell className="h-5 w-5" />
-            </button>
-            <button type="button" aria-label="Settings" className="rounded-full p-2 text-gray-700 transition hover:bg-gray-100">
-              <Settings className="h-5 w-5" />
-            </button>
-            <div className="mx-1 h-8 w-px bg-slate-300/30" />
-            <img src="https://placehold.co/36x36" alt="Organizer avatar" className="h-9 w-9 rounded-full border-2 border-blue-100 object-cover" />
+    <section className="relative flex-1 overflow-hidden bg-slate-50 text-zinc-900">
+      {toast ? (
+        <div className="fixed right-6 top-6 z-50">
+          <div
+            className={`inline-flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold shadow-lg ${
+              toast.tone === "success" ? "bg-emerald-600 text-white" : "bg-rose-600 text-white"
+            }`}
+          >
+            {toast.tone === "success" ? <CheckCircle2 className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
+            {toast.message}
           </div>
         </div>
-      </header>
+      ) : null}
 
-      <div className="mx-auto flex w-full max-w-[1280px] flex-col gap-8 p-5 sm:p-8">
-        <section className="flex flex-wrap items-start justify-between gap-4">
+      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 p-5 sm:p-8">
+        <section className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold leading-8 text-zinc-900">Guest List</h2>
-            <p className="mt-1 text-sm leading-5 text-gray-700">
-              Managing 1,240 confirmed attendees for &apos;Future Tech 2024&apos;
-            </p>
+            <h1 className="text-3xl font-bold text-zinc-900">Attendee Management</h1>
+            <p className="mt-1 text-sm text-gray-700">Manage attendees and perform check-in via organizer APIs.</p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <label className="relative inline-flex h-10 items-center rounded-2xl bg-white shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)]">
-              <select
-                value={ticketTypeFilter}
-                onChange={(event) => setTicketTypeFilter(event.target.value as TicketTypeFilter)}
-                className="h-10 appearance-none rounded-2xl bg-transparent py-2 pl-4 pr-10 text-sm font-medium text-zinc-900"
-                aria-label="Filter by ticket type"
-              >
-                {TICKET_TYPE_FILTERS.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-3 h-4 w-4 text-gray-500" />
-            </label>
+          <button
+            type="button"
+            onClick={() => void loadAttendees()}
+            disabled={!selectedEventId || isLoadingAttendees}
+            className="rounded-2xl bg-gray-200 px-5 py-2.5 text-sm font-semibold text-zinc-900 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isLoadingAttendees ? "Refreshing..." : "Refresh"}
+          </button>
+        </section>
 
-            <button
-              type="button"
-              className="inline-flex h-10 items-center gap-2 rounded-2xl bg-gradient-to-r from-sky-700 to-violet-700 px-5 text-sm font-semibold text-white shadow-[0px_4px_6px_-4px_rgba(0,88,190,0.2),0px_10px_15px_-3px_rgba(0,88,190,0.2)]"
+        <section className="grid gap-3 rounded-3xl bg-white p-6 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)] md:grid-cols-5">
+          <label className="space-y-1 md:col-span-2">
+            <span className="text-xs font-bold uppercase tracking-wide text-gray-700">Event</span>
+            <select
+              value={selectedEventId}
+              onChange={(event) => setSelectedEventId(event.target.value)}
+              disabled={isLoadingEvents}
+              className="h-11 w-full rounded-2xl bg-gray-100 px-4 text-sm text-zinc-900"
             >
-              <Download className="h-4 w-4" />
-              <span>Export List</span>
-            </button>
+              {events.length === 0 ? <option value="">No events available</option> : null}
+              {events.map((event) => (
+                <option key={event.id} value={event.id}>
+                  {event.title}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="space-y-1 md:col-span-3">
+            <span className="text-xs font-bold uppercase tracking-wide text-gray-700">Search</span>
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-gray-500" />
+              <input
+                value={searchInput}
+                onChange={(event) => setSearchInput(event.target.value)}
+                placeholder="Search by username or full name"
+                disabled={isLoadingAttendees}
+                className="w-full rounded-2xl bg-gray-100 py-3 pl-10 pr-4 text-sm text-zinc-900"
+              />
+            </div>
+          </label>
+
+          <label className="space-y-1">
+            <span className="text-xs font-bold uppercase tracking-wide text-gray-700">Status</span>
+            <select
+              value={statusFilter}
+              onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}
+              disabled={isLoadingAttendees}
+              className="h-11 w-full rounded-2xl bg-gray-100 px-4 text-sm text-zinc-900"
+            >
+              <option value="ALL">ALL</option>
+              <option value="true">Checked In</option>
+              <option value="false">Pending</option>
+            </select>
+          </label>
+
+          <label className="space-y-1">
+            <span className="text-xs font-bold uppercase tracking-wide text-gray-700">Sort By</span>
+            <select
+              value={sortBy}
+              onChange={(event) => setSortBy(event.target.value as SortBy)}
+              disabled={isLoadingAttendees}
+              className="h-11 w-full rounded-2xl bg-gray-100 px-4 text-sm text-zinc-900"
+            >
+              <option value="fullName">fullName</option>
+              <option value="ticketType">ticketType</option>
+              <option value="check-in">check-in</option>
+            </select>
+          </label>
+
+          <label className="space-y-1">
+            <span className="text-xs font-bold uppercase tracking-wide text-gray-700">Sort Dir</span>
+            <select
+              value={sortDir}
+              onChange={(event) => setSortDir(event.target.value as SortDir)}
+              disabled={isLoadingAttendees}
+              className="h-11 w-full rounded-2xl bg-gray-100 px-4 text-sm text-zinc-900"
+            >
+              <option value="asc">asc</option>
+              <option value="desc">desc</option>
+            </select>
+          </label>
+
+          <div className="rounded-2xl bg-gray-100 p-3 text-center">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-gray-700">Checked In</p>
+            <p className="text-lg font-bold text-zinc-900">{checkedInCount}</p>
+          </div>
+
+          <div className="rounded-2xl bg-gray-100 p-3 text-center">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-gray-700">Total</p>
+            <p className="text-lg font-bold text-zinc-900">{attendees.length}</p>
           </div>
         </section>
 
-        <section className="overflow-hidden rounded-3xl bg-white shadow-[0px_1px_2px_0px_rgba(0,0,0,0.05)] outline outline-1 outline-gray-100">
+        <section className="overflow-hidden rounded-3xl bg-white shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
+          {errorMessage ? <div className="px-6 py-4 text-sm font-medium text-rose-700">{errorMessage}</div> : null}
+
           <div className="overflow-x-auto">
-            <table className="min-w-[980px] w-full border-collapse">
-              <thead>
-                <tr className="bg-gray-100 text-left">
-                  <th className="px-6 py-6 text-xs font-bold uppercase tracking-wide text-gray-700">Attendee Name</th>
-                  <th className="px-6 py-6 text-xs font-bold uppercase tracking-wide text-gray-700">Email</th>
-                  <th className="px-6 py-6 text-xs font-bold uppercase tracking-wide text-gray-700">Ticket Type</th>
-                  <th className="px-6 py-6 text-xs font-bold uppercase tracking-wide text-gray-700">Check-in Status</th>
-                  <th className="px-6 py-6 text-xs font-bold uppercase tracking-wide text-gray-700">Order ID</th>
-                  <th className="px-6 py-6 text-xs font-bold uppercase tracking-wide text-gray-700">Actions</th>
+            <table className="min-w-[920px] w-full">
+              <thead className="bg-gray-100/70">
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wide text-gray-700">Full Name</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wide text-gray-700">Ticket Type</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wide text-gray-700">Check-in</th>
+                  <th className="px-6 py-4 text-right text-xs font-bold uppercase tracking-wide text-gray-700">Action</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredAttendees.length === 0 ? (
+                {isLoadingAttendees ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-10 text-center text-sm text-gray-500">
+                    <td colSpan={4} className="px-6 py-10 text-center text-sm text-gray-700">
+                      Loading attendees...
+                    </td>
+                  </tr>
+                ) : attendees.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-10 text-center text-sm text-gray-700">
                       No attendees found.
                     </td>
                   </tr>
-                ) : filteredAttendees.map((attendee) => {
-                  const ticketBadge = getTicketBadge(attendee.ticketType);
-                  const isCheckedIn = attendee.checkInStatus === "Checked In";
-                  const hasCheckInStatus = Boolean(attendee.checkInStatus);
+                ) : (
+                  attendees.map((attendee) => {
+                    const isCheckingIn = !!isCheckingInByOrderItemId[attendee.orderItemId];
 
-                  return (
-                    <tr key={attendee.id} className="border-t border-gray-100 first:border-t-0">
-                      <td className="px-6 py-5">
-                        <div className="flex items-center gap-3">
-                          {attendee.avatarSrc ? (
-                            <img src={attendee.avatarSrc} alt={attendee.name} className="h-10 w-10 rounded-full object-cover" />
-                          ) : (
-                            <div
-                              className={`flex h-10 w-10 items-center justify-center rounded-full text-xs font-bold ${attendee.initialsBgClass ?? "bg-slate-200 text-slate-700"}`}
-                            >
-                              {attendee.initials}
-                            </div>
-                          )}
-                          <span className="text-sm font-semibold text-zinc-900">{attendee.name}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-5 text-sm text-gray-700">{attendee.email}</td>
-                      <td className="px-6 py-5">
-                        {ticketBadge.line2 ? (
+                    return (
+                      <tr key={attendee.orderItemId} className="border-t border-gray-100">
+                        <td className="px-6 py-4 text-sm font-semibold text-zinc-900">{attendee.fullName}</td>
+                        <td className="px-6 py-4 text-sm text-gray-700">{attendee.ticketType}</td>
+                        <td className="px-6 py-4">
                           <span
-                            className={`inline-flex min-w-[64px] flex-col items-center rounded-full px-3 py-1 text-[10px] font-bold uppercase leading-3 ${ticketBadge.wrapClass}`}
+                            className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                              attendee.checkedIn ? "bg-emerald-100 text-emerald-700" : "bg-zinc-200 text-gray-700"
+                            }`}
                           >
-                            <span>{ticketBadge.line1}</span>
-                            <span>{ticketBadge.line2}</span>
+                            {attendee.checkedIn ? "Checked In" : "Pending"}
                           </span>
-                        ) : (
-                          <span className={`inline-flex rounded-full px-3 py-1 text-[10px] font-bold uppercase ${ticketBadge.wrapClass}`}>
-                            {ticketBadge.line1}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-5">
-                        {hasCheckInStatus ? (
-                          <span
-                            className={`inline-flex items-center gap-2 text-sm font-medium ${isCheckedIn ? "text-emerald-600" : "text-gray-700"}`}
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <button
+                            type="button"
+                            disabled={attendee.checkedIn || isCheckingIn || isLoadingAttendees}
+                            onClick={() => void handleCheckIn(attendee.orderItemId)}
+                            className="rounded-xl bg-gradient-to-r from-sky-700 to-violet-700 px-4 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
                           >
-                            <span className={`h-2 w-2 rounded-full ${isCheckedIn ? "bg-emerald-500" : "bg-slate-300"}`} />
-                            {attendee.checkInStatus}
-                          </span>
-                        ) : (
-                          <span className="text-sm text-gray-400">No status</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-5 font-mono text-sm text-gray-500">#{attendee.orderId}</td>
-                      <td className="relative px-6 py-5">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setOpenActionsForId((prev) => (prev === attendee.id ? null : attendee.id))
-                          }
-                          aria-haspopup="menu"
-                          aria-expanded={openActionsForId === attendee.id}
-                          aria-label={`More actions for ${attendee.name}`}
-                          className="rounded-full p-2 text-gray-500 transition hover:bg-gray-100"
-                        >
-                          <MoreVertical className="h-4 w-4" />
-                        </button>
-
-                        {openActionsForId === attendee.id ? (
-                          <div
-                            role="menu"
-                            className="absolute right-6 top-14 z-10 min-w-40 overflow-hidden rounded-xl border border-gray-100 bg-white shadow-lg"
-                          >
-                            <button
-                              type="button"
-                              role="menuitem"
-                              onClick={() => setOpenActionsForId(null)}
-                              className="block w-full px-4 py-2 text-left text-sm text-gray-700 transition hover:bg-gray-100"
-                            >
-                              View details
-                            </button>
-                            <button
-                              type="button"
-                              role="menuitem"
-                              onClick={() => setOpenActionsForId(null)}
-                              className="block w-full px-4 py-2 text-left text-sm text-gray-700 transition hover:bg-gray-100"
-                            >
-                              Resend ticket
-                            </button>
-                            <button
-                              type="button"
-                              role="menuitem"
-                              onClick={() => setOpenActionsForId(null)}
-                              className="block w-full px-4 py-2 text-left text-sm text-rose-600 transition hover:bg-rose-50"
-                            >
-                              Remove attendee
-                            </button>
-                          </div>
-                        ) : null}
-                      </td>
-                    </tr>
-                  );
-                })}
+                            {attendee.checkedIn ? "Done" : isCheckingIn ? "Checking..." : "Check-in"}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
-
-          <div className="flex flex-wrap items-center justify-between gap-4 border-t border-gray-100 p-6">
-            <p className="text-sm text-gray-700">
-              Showing <span className="font-semibold">{filteredAttendees.length === 0 ? 0 : 1}-{filteredAttendees.length}</span> of <span className="font-semibold">{filteredAttendees.length}</span> attendees
-            </p>
-
-            <div className="flex items-center gap-2">
-              <button type="button" className="flex h-10 w-10 items-center justify-center rounded-2xl border border-gray-100 text-zinc-900 opacity-30" aria-label="Previous page">
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-
-              <div className="flex items-center gap-1">
-                <button type="button" className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-700 to-violet-700 text-sm font-bold text-white" aria-label="Page 1">
-                  1
-                </button>
-                <button type="button" className="flex h-10 w-10 items-center justify-center rounded-2xl text-sm font-medium text-zinc-900" aria-label="Page 2">
-                  2
-                </button>
-                <button type="button" className="flex h-10 w-10 items-center justify-center rounded-2xl text-sm font-medium text-zinc-900" aria-label="Page 3">
-                  3
-                </button>
-                <span className="px-2 text-base text-gray-500">...</span>
-                <button type="button" className="flex h-10 w-10 items-center justify-center rounded-2xl text-sm font-medium text-zinc-900" aria-label="Page 124">
-                  124
-                </button>
-              </div>
-
-              <button type="button" className="flex h-10 w-10 items-center justify-center rounded-2xl border border-gray-100 text-zinc-900" aria-label="Next page">
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        </section>
-
-        <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <article className="flex items-center gap-4 rounded-3xl bg-gray-100 p-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-sky-700/10 text-sky-700">
-              <Users className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wide text-gray-700">Checked In</p>
-              <p className="text-2xl font-bold text-zinc-900">842 / 1,240</p>
-            </div>
-          </article>
-
-          <article className="flex items-center gap-4 rounded-3xl bg-gray-100 p-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-violet-700/10 text-violet-700">
-              <Zap className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wide text-gray-700">VIP Ratio</p>
-              <p className="text-2xl font-bold text-zinc-900">12%</p>
-            </div>
-          </article>
-
-          <article className="flex items-center gap-4 rounded-3xl bg-gray-100 p-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-rose-700/10 text-rose-700">
-              <Timer className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wide text-gray-700">Velocity</p>
-              <p className="text-2xl font-bold text-zinc-900">+14 / hr</p>
-            </div>
-          </article>
         </section>
       </div>
     </section>

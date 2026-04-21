@@ -2,9 +2,7 @@ import Head from "next/head";
 
 import {
   OrganizerCreateEventStepFiveContent,
-  OrganizerDashboardSidebar,
-  getOrganizerNavigationItems,
-  organizerProfile,
+  OrganizerLayout,
 } from "@/features/organizer";
 
 export default function OrganizerCreateEventReviewPublishPage() {
@@ -14,15 +12,9 @@ export default function OrganizerCreateEventReviewPublishPage() {
         <title>Create Event - Review & Publish | EventHub</title>
       </Head>
 
-      <main className="min-h-screen w-full bg-slate-50 text-slate-900">
-        <div className="flex min-h-screen w-full flex-col lg:flex-row">
-          <OrganizerDashboardSidebar
-            navigationItems={getOrganizerNavigationItems("Events")}
-            profile={organizerProfile}
-          />
-          <OrganizerCreateEventStepFiveContent />
-        </div>
-      </main>
+      <OrganizerLayout title="Create Event - Review & Publish" activeLabel="Events">
+        <OrganizerCreateEventStepFiveContent />
+      </OrganizerLayout>
     </>
   );
 }

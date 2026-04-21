@@ -13,8 +13,7 @@ export const organizerNavigationItems = [
   { label: "Tickets", href: "/organizer/tickets", icon: "ticket" },
   { label: "Attendees", href: "/organizer/attendees", icon: "attendees" },
   { label: "Analytics", href: "/organizer/analytics", icon: "analytics" },
-  { label: "Reports", href: "#reports", icon: "reports" },
-  { label: "Settings", href: "#settings", icon: "settings" },
+  { label: "Settings", href: "/organizer/settings", icon: "settings" },
 ] satisfies OrganizerNavItem[];
 
 export function getOrganizerNavigationItems(activeLabel: OrganizerNavItem["label"]) {
