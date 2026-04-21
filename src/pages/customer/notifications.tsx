@@ -6,9 +6,9 @@ import { useAuth } from "@/features/auth/hooks/useAuth";
 import {
   CustomerDashboardIcon,
   CustomerDashboardSidebar,
+  getCustomerNavigationItems,
   customerProfile,
 } from "@/features/customer";
-import type { CustomerNavItem } from "@/features/customer";
 import type { CustomerNotification } from "@/features/customer/notifications.service";
 import {
   getMyNotifications,
@@ -38,23 +38,6 @@ type NotificationItem = {
   badgeLabel?: string;
   collaborators?: string[];
 };
-
-const customerNotificationNavigationItems: CustomerNavItem[] = [
-  { label: "Dashboard", href: "/customer", icon: "grid" },
-  { label: "My Tickets", href: "/customer/my-tickets", icon: "ticket" },
-  { label: "Order History", href: "/customer/order-history", icon: "history" },
-  {
-    label: "Notifications",
-    href: "/customer/notifications",
-    icon: "bell",
-    active: true,
-  },
-  {
-    label: "Profile Settings",
-    href: "/customer/profile-settings",
-    icon: "settings",
-  },
-];
 
 function getNotificationGroup(type?: string) {
   if (type === "TICKET_PURCHASE_SUCCESS") return "Ticket Confirmations";
@@ -530,7 +513,7 @@ export default function CustomerNotificationsPage() {
       <main className="min-h-screen w-full bg-[#eef2f8] text-slate-900">
         <div className="flex min-h-screen w-full flex-col xl:flex-row">
           <CustomerDashboardSidebar
-            navigationItems={customerNotificationNavigationItems}
+            navigationItems={getCustomerNavigationItems("/customer/notifications")}
             profile={customerProfile}
             onLogout={() => void handleLogout()}
           />

@@ -5,10 +5,13 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { useState } from "react";
 
-const DEFAULT_TICKET_TYPE_ID = "TICKET-2";
-const DEFAULT_QUANTITY = 2;
+const DEFAULT_QUANTITY = 1;
 
 function getOrderErrorMessage(error: unknown) {
+  if (error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+
   const responseData = (error as { response?: { data?: { code?: number; message?: string } } })?.response?.data;
 
   if (responseData?.message) {
@@ -40,6 +43,7 @@ export default function CheckoutPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [createdOrder, setCreatedOrder] = useState<OrderResponse | null>(null);
+  const [createdOrderEventId, setCreatedOrderEventId] = useState("");
   const [createdPayment, setCreatedPayment] = useState<PaymentResponse | null>(null);
   const [isMockingWebhook, setIsMockingWebhook] = useState(false);
   const [webhookMessage, setWebhookMessage] = useState("");
@@ -48,11 +52,25 @@ export default function CheckoutPage() {
   const ticketTypeId =
     typeof router.query.ticketTypeId === "string" && router.query.ticketTypeId.trim()
       ? router.query.ticketTypeId.trim()
-      : DEFAULT_TICKET_TYPE_ID;
+      : "";
+  const eventIdFromQuery =
+    typeof router.query.eventId === "string" && router.query.eventId.trim()
+      ? router.query.eventId.trim()
+      : "";
   const quantityQuery = typeof router.query.quantity === "string" ? Number(router.query.quantity) : DEFAULT_QUANTITY;
   const quantity = Number.isFinite(quantityQuery) && quantityQuery > 0 ? Math.floor(quantityQuery) : DEFAULT_QUANTITY;
 
   const handlePayment = async () => {
+    if (!ticketTypeId) {
+      setErrorMessage("Ticket type is missing. Please choose a valid ticket before checkout.");
+      return;
+    }
+
+    if (!eventIdFromQuery) {
+      setErrorMessage("Event information is missing. Please start checkout from the event details page.");
+      return;
+    }
+
     setIsProcessing(true);
     setErrorMessage("");
 
@@ -67,6 +85,7 @@ export default function CheckoutPage() {
       });
 
       setCreatedOrder(order ?? null);
+      setCreatedOrderEventId(eventIdFromQuery);
       if (!order?.id) {
         throw new Error("Order response does not include an order id.");
       }
@@ -99,10 +118,13 @@ export default function CheckoutPage() {
     const providerTransactionId =
       createdPayment.providerTransactionId ??
       `mock-txn-${createdPayment.paymentId}`;
-    const eventId =
-      typeof crypto !== "undefined" && "randomUUID" in crypto
-        ? crypto.randomUUID()
-        : `mock-event-${Date.now()}`;
+    const eventId = createdOrderEventId || eventIdFromQuery;
+
+    if (!eventId) {
+      setErrorMessage("Missing event information for payment callback.");
+      setIsMockingWebhook(false);
+      return;
+    }
 
     try {
       const response = await mockPaymentWebhook({

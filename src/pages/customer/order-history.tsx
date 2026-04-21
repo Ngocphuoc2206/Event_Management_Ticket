@@ -6,9 +6,9 @@ import { useAuth } from "@/features/auth/hooks/useAuth";
 import {
   CustomerDashboardIcon,
   CustomerDashboardSidebar,
+  getCustomerNavigationItems,
   customerProfile,
 } from "@/features/customer";
-import type { CustomerNavItem } from "@/features/customer";
 import {
   getMyOrder,
   getMyOrders,
@@ -33,14 +33,6 @@ type OrderHistoryItem = {
   quantity: number;
   userName: string;
 };
-
-const customerOrderHistoryNavigationItems: CustomerNavItem[] = [
-  { label: "Dashboard", href: "/customer", icon: "grid" },
-  { label: "My Tickets", href: "/customer/my-tickets", icon: "ticket" },
-  { label: "Order History", href: "/customer/order-history", icon: "history", active: true },
-  { label: "Notifications", href: "/customer/notifications", icon: "bell" },
-  { label: "Profile Settings", href: "/customer/profile-settings", icon: "settings" },
-];
 
 const STATUS_STYLES: Record<HistoryStatus, string> = {
   Completed: "bg-emerald-100 text-emerald-700",
@@ -397,7 +389,7 @@ export default function CustomerOrderHistoryPage() {
       <main className="min-h-screen w-full bg-[#eef2f8] text-slate-900">
         <div className="flex min-h-screen w-full flex-col xl:flex-row">
           <CustomerDashboardSidebar
-            navigationItems={customerOrderHistoryNavigationItems}
+            navigationItems={getCustomerNavigationItems("/customer/order-history")}
             profile={customerProfile}
             onLogout={() => void handleLogout()}
           />
