@@ -4,7 +4,6 @@ const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
   reactStrictMode: true,
-  output: "standalone",
   turbopack: {
     root: process.cwd(),
   },

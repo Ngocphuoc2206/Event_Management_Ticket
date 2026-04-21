@@ -1,13 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { CustomerDashboardIcon } from "./CustomerDashboardIcons";
-import {
-  getMyNotifications,
-  markNotificationAsRead,
-  type CustomerNotification,
-} from "../notifications.service";
 import type {
   CustomerOrderRow,
   CustomerOrderStatus,
@@ -34,7 +29,7 @@ const STATUS_DOT_STYLES: Record<CustomerOrderStatus, string> = {
 function StatIcon({ icon, accent }: Pick<CustomerStatCard, "icon" | "accent">) {
   return (
     <div
-      className={`flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-50 ${accent} group-hover:scale-110 transition-transform`}
+      className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 ${accent} group-hover:scale-110 transition-transform`}
     >
       <CustomerDashboardIcon type={icon} className="h-6 w-6" />
     </div>
@@ -123,43 +118,6 @@ function TicketQr({ ticket }: { ticket: CustomerTicketCard }) {
   );
 }
 
-type DashboardNotificationItem = {
-  id: string;
-  title: string;
-  description: string;
-  time: string;
-  unread: boolean;
-  href: string;
-};
-
-function formatNotificationTime(createdAt: string) {
-  const date = new Date(createdAt);
-
-  if (Number.isNaN(date.getTime())) {
-    return createdAt;
-  }
-
-  return new Intl.DateTimeFormat("vi-VN", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(date);
-}
-
-function mapDashboardNotification(
-  notification: CustomerNotification,
-): DashboardNotificationItem {
-  return {
-    id: notification.id,
-    title: notification.title,
-    description: notification.content,
-    time: formatNotificationTime(notification.createdAt),
-    unread: !notification.read,
-    href: notification.orderId
-      ? `/customer/order-history?highlight=${notification.orderId}`
-      : "/customer/notifications",
-  };
-}
-
 type CustomerDashboardContentProps = {
   customerName: string;
   statCards: CustomerStatCard[];
@@ -175,17 +133,6 @@ export function CustomerDashboardContent({
 }: CustomerDashboardContentProps) {
   const [selectedQrTicket, setSelectedQrTicket] =
     useState<CustomerTicketCard | null>(null);
-  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const [notifications, setNotifications] = useState<DashboardNotificationItem[]>(
-    [],
-  );
-  const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
-  const [notificationsError, setNotificationsError] = useState("");
-  const notificationPanelRef = useRef<HTMLDivElement | null>(null);
-  const hasLoadedNotificationsRef = useRef(false);
-  const unreadNotificationCount = notifications.filter(
-    (notification) => notification.unread,
-  ).length;
 
   useEffect(() => {
     if (!selectedQrTicket) {
@@ -202,92 +149,18 @@ export function CustomerDashboardContent({
     return () => window.removeEventListener("keydown", handleEscape);
   }, [selectedQrTicket]);
 
-  useEffect(() => {
-    if (!isNotificationOpen) {
-      return;
-    }
-
-    const handlePointerDown = (event: MouseEvent) => {
-      if (!notificationPanelRef.current?.contains(event.target as Node)) {
-        setIsNotificationOpen(false);
-      }
-    };
-
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setIsNotificationOpen(false);
-      }
-    };
-
-    window.addEventListener("mousedown", handlePointerDown);
-    window.addEventListener("keydown", handleEscape);
-
-    return () => {
-      window.removeEventListener("mousedown", handlePointerDown);
-      window.removeEventListener("keydown", handleEscape);
-    };
-  }, [isNotificationOpen]);
-
-  const loadNotifications = async () => {
-    setIsLoadingNotifications(true);
-    setNotificationsError("");
-
-    try {
-      const nextNotifications = await getMyNotifications();
-      setNotifications(nextNotifications.map(mapDashboardNotification));
-      hasLoadedNotificationsRef.current = true;
-    } catch {
-      setNotificationsError("Cannot load notifications.");
-    } finally {
-      setIsLoadingNotifications(false);
-    }
-  };
-
-  const handleToggleNotifications = async () => {
-    const nextOpen = !isNotificationOpen;
-    setIsNotificationOpen(nextOpen);
-
-    if (nextOpen && !hasLoadedNotificationsRef.current) {
-      await loadNotifications();
-    }
-  };
-
-  const handleMarkNotificationAsRead = async (id: string) => {
-    setNotifications((current) =>
-      current.map((notification) =>
-        notification.id === id
-          ? { ...notification, unread: false }
-          : notification,
-      ),
-    );
-
-    try {
-      await markNotificationAsRead(id);
-    } catch {
-      setNotifications((current) =>
-        current.map((notification) =>
-          notification.id === id
-            ? { ...notification, unread: true }
-            : notification,
-        ),
-      );
-      setNotificationsError("Cannot update notification.");
-    }
-  };
-
   return (
     <>
       {/* SỬA TẠI ĐÂY: Đổi bg-slate-50/30 thành bg-transparent để lộ màu #FDFDFF của layout */}
       <div className="flex-1 flex flex-col min-h-screen bg-transparent">
         {/* HEADER - Sticky tách biệt hoàn toàn khỏi scroll content */}
-        <header className="sticky top-0 z-30 border-b border-slate-200/50 bg-white/80 backdrop-blur-md">
-          <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-4 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-10 xl:px-12">
-            <div>
-               <h1 className="text-xl font-black text-slate-900 tracking-tight">Dashboard Overview</h1>
-               <p className="text-xs text-slate-400 font-medium -mt-0.5">Monitoring your personal activities</p>
-            </div>
-            
-            <div className="flex items-center gap-5 self-end sm:self-auto">
+        <header className="sticky top-0 z-30 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between px-5 py-4 sm:px-8 lg:px-10 xl:px-12 bg-white/80 backdrop-blur-md border-b border-slate-200/50">
+          <div>
+             <h1 className="text-xl font-black text-slate-900 tracking-tight">Dashboard Overview</h1>
+             <p className="text-xs text-slate-400 font-medium -mt-0.5">Monitoring your personal activities</p>
+          </div>
+          
+          <div className="flex items-center gap-5 self-end sm:self-auto">
             {/* 1. Thanh tìm kiếm (Search Bar) */}
             <div className="relative hidden lg:block">
               <svg 
@@ -305,141 +178,14 @@ export function CustomerDashboardContent({
             </div>
             
             {/* 2. Nút Chuông Thông báo */}
-            <div
-              ref={notificationPanelRef}
-              className="relative flex items-center gap-3 border-r border-slate-100 pr-5"
-            >
-                <button
-                  type="button"
-                  onClick={() => void handleToggleNotifications()}
-                  className="relative rounded-full p-2.5 text-slate-500 transition-all hover:bg-slate-100"
-                  aria-label="Open notifications"
-                  aria-expanded={isNotificationOpen}
-                >
+            <div className="flex items-center gap-3 border-r border-slate-100 pr-5">
+                <button className="relative p-2.5 text-slate-500 hover:bg-slate-100 rounded-full transition-all">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                     <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                   </svg>
-                  {unreadNotificationCount > 0 ? (
-                    <>
-                      <span className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full border-2 border-white bg-blue-500 animate-pulse"></span>
-                      <span className="absolute -right-1 -top-1 inline-flex min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-black leading-none text-white">
-                        {unreadNotificationCount > 9
-                          ? "9+"
-                          : unreadNotificationCount}
-                      </span>
-                    </>
-                  ) : null}
+                  <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-blue-500 rounded-full border-2 border-white animate-pulse"></span>
                 </button>
-
-                {isNotificationOpen ? (
-                  <div className="absolute right-0 top-[calc(100%+16px)] z-40 w-[340px] overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_24px_60px_rgba(15,23,42,0.18)]">
-                    <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-4">
-                      <div>
-                        <div className="text-sm font-black text-slate-900">
-                          Notifications
-                        </div>
-                        <div className="mt-1 text-xs font-medium text-slate-400">
-                          {unreadNotificationCount} unread
-                        </div>
-                      </div>
-                      <Link
-                        href="/customer/notifications"
-                        className="text-xs font-bold uppercase tracking-[0.18em] text-blue-600"
-                        onClick={() => setIsNotificationOpen(false)}
-                      >
-                        View all
-                      </Link>
-                    </div>
-
-                    <div className="max-h-[420px] overflow-y-auto bg-slate-50/40">
-                      {notificationsError ? (
-                        <div className="px-5 py-4 text-sm font-semibold text-rose-600">
-                          {notificationsError}
-                        </div>
-                      ) : null}
-
-                      {isLoadingNotifications ? (
-                        <div className="px-5 py-10 text-center text-xs font-bold uppercase tracking-[0.24em] text-slate-400">
-                          Loading notifications...
-                        </div>
-                      ) : null}
-
-                      {!isLoadingNotifications && notifications.length === 0 ? (
-                        <div className="px-5 py-10 text-center text-sm font-semibold text-slate-500">
-                          No notifications yet.
-                        </div>
-                      ) : null}
-
-                      {!isLoadingNotifications ? (
-                        <div className="divide-y divide-slate-100">
-                          {notifications.slice(0, 6).map((notification) => (
-                            <div
-                              key={notification.id}
-                              className="bg-white px-5 py-4 transition hover:bg-slate-50"
-                            >
-                              <div className="flex items-start gap-3">
-                                <span
-                                  className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${
-                                    notification.unread
-                                      ? "bg-blue-500"
-                                      : "bg-slate-200"
-                                  }`}
-                                />
-                                <div className="min-w-0 flex-1">
-                                  <div className="flex items-start justify-between gap-3">
-                                    <Link
-                                      href={notification.href}
-                                      className="line-clamp-1 text-sm font-bold text-slate-900"
-                                      onClick={() => {
-                                        setIsNotificationOpen(false);
-                                        if (notification.unread) {
-                                          void handleMarkNotificationAsRead(
-                                            notification.id,
-                                          );
-                                        }
-                                      }}
-                                    >
-                                      {notification.title}
-                                    </Link>
-                                    <span className="shrink-0 text-[11px] font-medium text-slate-400">
-                                      {notification.time}
-                                    </span>
-                                  </div>
-                                  <p className="mt-1 line-clamp-2 text-sm leading-6 text-slate-500">
-                                    {notification.description}
-                                  </p>
-                                  <div className="mt-3 flex items-center justify-between gap-3">
-                                    <Link
-                                      href={notification.href}
-                                      className="text-xs font-semibold text-blue-600"
-                                      onClick={() => setIsNotificationOpen(false)}
-                                    >
-                                      Open
-                                    </Link>
-                                    {notification.unread ? (
-                                      <button
-                                        type="button"
-                                        onClick={() =>
-                                          void handleMarkNotificationAsRead(
-                                            notification.id,
-                                          )
-                                        }
-                                        className="text-xs font-semibold text-slate-500 transition hover:text-slate-900"
-                                      >
-                                        Mark as read
-                                      </button>
-                                    ) : null}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : null}
-                    </div>
-                  </div>
-                ) : null}
             </div>
             
             {/* 3. Khu vực Profile User */}
@@ -456,31 +202,29 @@ export function CustomerDashboardContent({
                 <p className="text-[10px] text-blue-500 font-bold uppercase tracking-tight mt-1">Pro Member</p>
               </div>
             </div>
-            </div>
           </div>
         </header>
 
         {/* MAIN CONTENT - Vùng Scroll chính */}
-        <main className="flex-1 px-5 py-6 sm:px-8 lg:px-10 xl:px-12">
-          <div className="mx-auto w-full max-w-[1600px]">
+        <main className="flex-1 px-5 py-8 sm:px-8 lg:px-10 xl:px-12">
           {/* WELCOME SECTION */}
           <section className="mb-10">
             <div className="text-[11px] font-black uppercase tracking-widest text-indigo-600 mb-2">
               Overview
             </div>
-            <h1 className="text-3xl font-black tracking-tight text-slate-900">
+            <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">
               Welcome back, {customerName}!
             </h1>
-            <p className="mt-2 max-w-2xl text-sm font-medium text-slate-500 sm:text-base">
+            <p className="mt-2 max-w-2xl text-base font-medium text-slate-500">
               You have 2 events coming up this week. Get ready!
             </p>
 
             {/* STAT CARDS */}
-            <div className="mt-7 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+            <div className="mt-8 grid gap-8 md:grid-cols-2 xl:grid-cols-4">
               {statCards.map((card) => (
                 <article
                   key={card.label}
-                  className="group rounded-[28px] border border-slate-100 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl"
+                  className="rounded-[32px] border border-slate-100 bg-white p-7 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl group"
                 >
                   <div className="flex items-start justify-between gap-3 mb-6">
                     <StatIcon icon={card.icon} accent={card.accent} />
@@ -488,7 +232,7 @@ export function CustomerDashboardContent({
                       {card.label}
                     </div>
                   </div>
-                  <div className="mt-2 text-2xl font-black text-slate-900">
+                  <div className="mt-2 text-3xl font-black text-slate-900">
                     {card.value}
                   </div>
                   <div className="mt-2 text-xs font-bold text-slate-400">{card.note}</div>
@@ -499,7 +243,7 @@ export function CustomerDashboardContent({
 
           {/* UPCOMING TICKETS */}
           <section id="tickets" className="mt-12">
-            <div className="mb-6 flex items-center justify-between gap-4">
+            <div className="flex items-center justify-between gap-4 mb-8">
               <h2 className="text-xl font-black tracking-tight text-slate-900">
                 Upcoming Tickets
               </h2>
@@ -511,11 +255,11 @@ export function CustomerDashboardContent({
               </Link>
             </div>
 
-            <div className="grid gap-6 xl:grid-cols-2">
+            <div className="grid gap-8 xl:grid-cols-2">
               {upcomingTickets.map((ticket) => (
                 <article
                   key={ticket.title}
-                  className="group overflow-hidden rounded-[28px] border border-slate-100 bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl sm:grid sm:grid-cols-[0.92fr_1.18fr]"
+                  className="overflow-hidden rounded-[32px] border border-slate-100 bg-white shadow-sm sm:grid sm:grid-cols-[0.92fr_1.18fr] transition-all hover:-translate-y-1 hover:shadow-xl group"
                 >
                   <TicketArtwork
                     palette={ticket.palette}
@@ -525,8 +269,8 @@ export function CustomerDashboardContent({
                     title={ticket.title}
                   />
 
-                  <div className="flex flex-col p-6">
-                    <h3 className="text-lg font-black leading-tight tracking-tight text-slate-900 transition-colors group-hover:text-indigo-600">
+                  <div className="flex flex-col p-8">
+                    <h3 className="text-xl font-black leading-tight tracking-tight text-slate-900 group-hover:text-indigo-600 transition-colors">
                       {ticket.title}
                     </h3>
 
@@ -548,13 +292,13 @@ export function CustomerDashboardContent({
                       </div>
                     </div>
 
-                    <div className="mt-auto flex items-end justify-between gap-4 pt-6">
+                    <div className="mt-auto flex items-end justify-between gap-4 pt-8">
                       <div onClick={() => setSelectedQrTicket(ticket)}>
                         <TicketQr ticket={ticket} />
                       </div>
                       <Link
                         href="/customer/my-tickets"
-                        className="inline-flex items-center gap-2 rounded-2xl bg-indigo-900 px-5 py-2.5 text-sm font-black text-white shadow-md shadow-indigo-200 transition-all hover:bg-indigo-800 hover:-translate-y-0.5 active:scale-95"
+                        className="inline-flex items-center gap-2 rounded-2xl bg-indigo-900 px-6 py-3 text-sm font-black text-white shadow-md shadow-indigo-200 transition-all hover:bg-indigo-800 hover:-translate-y-0.5 active:scale-95"
                       >
                         <CustomerDashboardIcon
                           type="download"
@@ -571,8 +315,8 @@ export function CustomerDashboardContent({
 
           {/* RECENT ORDERS */}
           <section id="orders" className="mt-12">
-            <div className="rounded-[32px] border border-slate-100 bg-white p-6 shadow-sm">
-              <h2 className="mb-6 text-xl font-black tracking-tight text-slate-900">
+            <div className="bg-white rounded-[40px] border border-slate-100 shadow-sm p-8">
+              <h2 className="text-xl font-black tracking-tight text-slate-900 mb-8">
                 Recent Orders
               </h2>
 
@@ -619,7 +363,6 @@ export function CustomerDashboardContent({
           <footer className="py-10 text-center text-[11px] font-bold uppercase tracking-widest text-slate-400 mt-6">
             Copyright 2026 EventHub Ticketing Platform | All rights reserved
           </footer>
-          </div>
         </main>
       </div>
 

@@ -112,9 +112,7 @@ export function OrganizerEventsContent() {
   const [page, setPage] = useState(1);
   const [hasNext, setHasNext] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSubmittingById, setIsSubmittingById] = useState<
-    Record<string, boolean>
-  >({});
+  const [isSubmittingById, setIsSubmittingById] = useState<Record<string, boolean>>({});
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastState | null>(null);
 
@@ -130,10 +128,7 @@ export function OrganizerEventsContent() {
     setErrorMessage(null);
 
     try {
-      const apiResult = await getOrganizerEvents({
-        page: nextPage,
-        size: DEFAULT_PAGE_SIZE,
-      });
+      const apiResult = await getOrganizerEvents({ page: nextPage, size: DEFAULT_PAGE_SIZE });
       const data = getApiResultData(apiResult as ApiResult<unknown>);
       const normalized = normalizeEventsPayload(data);
 
@@ -141,10 +136,7 @@ export function OrganizerEventsContent() {
       setHasNext(normalized.hasNext);
     } catch (error) {
       setErrorMessage(
-        getApiErrorMessage(
-          error,
-          "Không thể tải danh sách sự kiện. Vui lòng thử lại.",
-        ),
+        getApiErrorMessage(error, "Không thể tải danh sách sự kiện. Vui lòng thử lại."),
       );
       setEvents([]);
       setHasNext(false);
@@ -154,25 +146,18 @@ export function OrganizerEventsContent() {
   }, []);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadEvents(page);
   }, [loadEvents, page]);
 
   const totalDraftEvents = useMemo(
-    () =>
-      events.filter(
-        (event) => (event.status ?? "DRAFT").toUpperCase() === "DRAFT",
-      ).length,
+    () => events.filter((event) => (event.status ?? "DRAFT").toUpperCase() === "DRAFT").length,
     [events],
   );
 
   const handleSubmitForApproval = async (event: OrganizerEvent) => {
     const eventId = event.id;
     if (!eventId) {
-      showToast({
-        tone: "error",
-        message: "Sự kiện không hợp lệ để gửi duyệt.",
-      });
+      showToast({ tone: "error", message: "Sự kiện không hợp lệ để gửi duyệt." });
       return;
     }
 
@@ -181,11 +166,7 @@ export function OrganizerEventsContent() {
     try {
       const apiResult = await submitOrganizerEventForApproval(eventId);
 
-      if (
-        isApiResponse(apiResult) &&
-        typeof apiResult.code === "number" &&
-        apiResult.code !== 0
-      ) {
+      if (isApiResponse(apiResult) && typeof apiResult.code === "number" && apiResult.code !== 0) {
         throw new Error(apiResult.message || "Gửi duyệt thất bại.");
       }
 
@@ -247,10 +228,7 @@ export function OrganizerEventsContent() {
               </div>
             </div>
             <div className="absolute left-4 top-[10px] flex h-6 items-center">
-              <OrganizerDashboardIcon
-                type="search"
-                className="h-4 w-4 text-gray-700"
-              />
+              <OrganizerDashboardIcon type="search" className="h-4 w-4 text-gray-700" />
             </div>
           </div>
         </div>
@@ -272,9 +250,7 @@ export function OrganizerEventsContent() {
             <OrganizerDashboardIcon type="settings" className="h-5 w-5" />
           </button>
           <div className="h-8 w-px bg-slate-300/30" />
-          <p className="text-sm font-bold tracking-wider text-gray-700">
-            ORGANIZER DASHBOARD
-          </p>
+          <p className="text-sm font-bold tracking-wider text-gray-700">ORGANIZER DASHBOARD</p>
         </div>
       </header>
 
@@ -285,17 +261,14 @@ export function OrganizerEventsContent() {
               Events Management
             </h1>
             <p className="text-lg font-light leading-7 text-gray-700">
-              Theo doi va quan ly cac su kien da tao, trang thai va tien do
-              duyet theo thoi gian thuc.
+              Theo doi va quan ly cac su kien da tao, trang thai va tien do duyet theo thoi gian thuc.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center justify-end gap-3">
             <div className="inline-flex items-center gap-3 rounded-2xl bg-white px-5 py-3 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
               <span className="text-sm text-gray-700">Draft:</span>
-              <span className="text-base font-bold text-zinc-900">
-                {totalDraftEvents}
-              </span>
+              <span className="text-base font-bold text-zinc-900">{totalDraftEvents}</span>
               <span className="text-sm text-gray-700">Page:</span>
               <span className="text-base font-bold text-zinc-900">{page}</span>
             </div>
@@ -312,9 +285,7 @@ export function OrganizerEventsContent() {
 
         <section className="overflow-hidden rounded-3xl bg-white shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
           <div className="flex items-center justify-between border-b border-gray-100 p-6">
-            <h2 className="text-xl font-bold leading-7 text-zinc-900">
-              Event List
-            </h2>
+            <h2 className="text-xl font-bold leading-7 text-zinc-900">Event List</h2>
             <button
               type="button"
               onClick={() => void loadEvents(page)}
@@ -325,9 +296,7 @@ export function OrganizerEventsContent() {
           </div>
 
           {errorMessage ? (
-            <div className="p-6 text-sm font-medium text-rose-700">
-              {errorMessage}
-            </div>
+            <div className="p-6 text-sm font-medium text-rose-700">{errorMessage}</div>
           ) : null}
 
           <div className="overflow-x-auto">
@@ -358,19 +327,13 @@ export function OrganizerEventsContent() {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td
-                      colSpan={6}
-                      className="px-6 py-10 text-center text-sm font-medium text-gray-700"
-                    >
+                    <td colSpan={6} className="px-6 py-10 text-center text-sm font-medium text-gray-700">
                       Dang tai danh sach su kien...
                     </td>
                   </tr>
                 ) : events.length === 0 ? (
                   <tr>
-                    <td
-                      colSpan={6}
-                      className="px-6 py-10 text-center text-sm font-medium text-gray-700"
-                    >
+                    <td colSpan={6} className="px-6 py-10 text-center text-sm font-medium text-gray-700">
                       Chua co su kien nao.
                     </td>
                   </tr>
@@ -378,18 +341,12 @@ export function OrganizerEventsContent() {
                   events.map((item) => {
                     const eventId = item.id ?? "";
                     const status = (item.status ?? "DRAFT").toUpperCase();
-                    const statusClassName =
-                      STATUS_STYLE[status] || "bg-slate-200 text-slate-700";
+                    const statusClassName = STATUS_STYLE[status] || "bg-slate-200 text-slate-700";
                     const isDraft = status === "DRAFT";
-                    const isSubmitting = Boolean(
-                      eventId && isSubmittingById[eventId],
-                    );
+                    const isSubmitting = Boolean(eventId && isSubmittingById[eventId]);
 
                     return (
-                      <tr
-                        key={eventId || item.title}
-                        className="border-t border-gray-100"
-                      >
+                      <tr key={eventId || item.title} className="border-t border-gray-100">
                         <td className="px-6 py-4">
                           {item.bannerUrl ? (
                             <Image
@@ -405,17 +362,11 @@ export function OrganizerEventsContent() {
                         </td>
                         <td className="px-6 py-4">
                           <div className="max-w-[280px]">
-                            <p className="truncate text-sm font-bold text-zinc-900">
-                              {item.title}
-                            </p>
-                            <p className="truncate text-xs text-gray-700">
-                              {item.category}
-                            </p>
+                            <p className="truncate text-sm font-bold text-zinc-900">{item.title}</p>
+                            <p className="truncate text-xs text-gray-700">{item.category}</p>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-sm text-zinc-900">
-                          {formatDate(item.startTime)}
-                        </td>
+                        <td className="px-6 py-4 text-sm text-zinc-900">{formatDate(item.startTime)}</td>
                         <td className="px-6 py-4 text-sm font-semibold text-zinc-900">
                           {formatPrice(item.minPrice)}
                         </td>
@@ -459,9 +410,7 @@ export function OrganizerEventsContent() {
           </div>
 
           <div className="inline-flex w-full items-center justify-between border-t border-gray-100 bg-gray-100/30 px-8 py-4">
-            <p className="text-xs font-medium text-gray-700">
-              Hien thi {events.length} su kien - Trang {page}
-            </p>
+            <p className="text-xs font-medium text-gray-700">Hien thi {events.length} su kien - Trang {page}</p>
             <div className="flex items-center gap-2">
               <button
                 type="button"

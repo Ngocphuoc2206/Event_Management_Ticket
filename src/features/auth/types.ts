@@ -26,7 +26,6 @@ export type UserResponse = {
   avatar?: string;
   bio?: string;
   password?: string;
-  role?: UserRole;
 };
 
 export type AuthPayload = UserResponse & {
@@ -55,12 +54,6 @@ export type LoginPayload = {
 
 export type LoginResponse = AuthPayload;
 
-export type RefreshPayload = {
-  refreshToken: string;
-};
-
-export type RefreshResponse = AuthPayload;
-
 export type LogoutPayload = Partial<LoginPayload>;
 
 export type LogoutResponse = {
@@ -72,6 +65,8 @@ export type UserProfileResponse = UserResponse;
 export type UpdateProfilePayload = {
   fullName: string;
   phone: string;
+  bio?: string | null;
+  avatar?: string | null;
 };
 
 export type ChangePasswordPayload = {

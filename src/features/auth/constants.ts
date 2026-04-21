@@ -22,11 +22,8 @@ export const REGISTER_ENDPOINT =
   process.env.NEXT_PUBLIC_REGISTER_ENDPOINT || "/api/auth/register";
 export const LOGOUT_ENDPOINT =
   process.env.NEXT_PUBLIC_LOGOUT_ENDPOINT || "/api/auth/logout";
-export const REFRESH_ENDPOINT =
-  process.env.NEXT_PUBLIC_REFRESH_ENDPOINT || "/api/auth/refresh";
 export const BACKEND_HEALTH_ENDPOINT = "/api/health";
-export const USER_PROFILE_ENDPOINT =
-  process.env.NEXT_PUBLIC_USER_PROFILE_ENDPOINT || "/api/auth/users/me";
+export const USER_PROFILE_ENDPOINT = process.env.NEXT_PUBLIC_USER_PROFILE_ENDPOINT || "/users";
 export const CHANGE_PASSWORD_ENDPOINT =
   process.env.NEXT_PUBLIC_CHANGE_PASSWORD_ENDPOINT || "/users/{id}/change-password";
 

@@ -1,134 +1,19 @@
 import UserLayout from "@/components/templates/UserLayout/UserLayout";
-import { createOrder, type OrderResponse } from "@/features/customer/orders.service";
-import { initPayment, mockPaymentWebhook, type PaymentResponse } from "@/features/customer/payments.service";
 import Link from "next/link";
-import { useRouter } from "next/router";
 import { useState } from "react";
 
-const DEFAULT_TICKET_TYPE_ID = "TICKET-2";
-const DEFAULT_QUANTITY = 2;
-
-function getOrderErrorMessage(error: unknown) {
-  const responseData = (error as { response?: { data?: { code?: number; message?: string } } })?.response?.data;
-
-  if (responseData?.message) {
-    return responseData.message;
-  }
-
-  if (responseData?.code === 1017) {
-    return "Ticket type not found";
-  }
-
-  if (responseData?.code === 1019) {
-    return "Not enough tickets available";
-  }
-
-  return "Could not create order. Please try again.";
-}
-
-function formatCurrency(amount?: number) {
-  if (typeof amount !== "number") return "Pending";
-
-  return new Intl.NumberFormat("vi-VN", {
-    currency: "VND",
-    style: "currency",
-  }).format(amount);
-}
-
 export default function CheckoutPage() {
-  const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [createdOrder, setCreatedOrder] = useState<OrderResponse | null>(null);
-  const [createdPayment, setCreatedPayment] = useState<PaymentResponse | null>(null);
-  const [isMockingWebhook, setIsMockingWebhook] = useState(false);
-  const [webhookMessage, setWebhookMessage] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
 
-  const ticketTypeId =
-    typeof router.query.ticketTypeId === "string" && router.query.ticketTypeId.trim()
-      ? router.query.ticketTypeId.trim()
-      : DEFAULT_TICKET_TYPE_ID;
-  const quantityQuery = typeof router.query.quantity === "string" ? Number(router.query.quantity) : DEFAULT_QUANTITY;
-  const quantity = Number.isFinite(quantityQuery) && quantityQuery > 0 ? Math.floor(quantityQuery) : DEFAULT_QUANTITY;
-
-  const handlePayment = async () => {
+  // Simulate payment API call process
+  const handlePayment = () => {
     setIsProcessing(true);
-    setErrorMessage("");
-
-    try {
-      const order = await createOrder({
-        items: [
-          {
-            ticketTypeId,
-            quantity,
-          },
-        ],
-      });
-
-      setCreatedOrder(order ?? null);
-      if (!order?.id) {
-        throw new Error("Order response does not include an order id.");
-      }
-
-      const payment = await initPayment({
-        orderId: order.id,
-        method: "MOCK",
-      });
-
-      setCreatedPayment(payment ?? null);
-      setShowModal(true);
-    } catch (error) {
-      setErrorMessage(getOrderErrorMessage(error));
-    } finally {
+    // Wait 1.5s to simulate card processing delay
+    setTimeout(() => {
       setIsProcessing(false);
-    }
-  };
-
-  const handleMockPaymentSuccess = async () => {
-    if (!createdPayment?.paymentId || !createdPayment.orderId) {
-      setErrorMessage("Payment information is missing.");
-      return;
-    }
-
-    setIsMockingWebhook(true);
-    setErrorMessage("");
-    setWebhookMessage("");
-
-    const amount = createdPayment.amount ?? createdOrder?.totalAmount ?? 0;
-    const providerTransactionId =
-      createdPayment.providerTransactionId ??
-      `mock-txn-${createdPayment.paymentId}`;
-    const eventId =
-      typeof crypto !== "undefined" && "randomUUID" in crypto
-        ? crypto.randomUUID()
-        : `mock-event-${Date.now()}`;
-
-    try {
-      const response = await mockPaymentWebhook({
-        paymentId: createdPayment.paymentId,
-        orderId: createdPayment.orderId,
-        providerTransactionId,
-        provider: createdPayment.provider || "MOCK_GATEWAY",
-        status: "SUCCESS",
-        amount,
-        signature: `${createdPayment.paymentId}|${createdPayment.orderId}|SUCCESS|${amount}`,
-        eventId,
-        rawData: JSON.stringify({ demo: true }),
-      });
-
-      setCreatedPayment((current) =>
-        current ? { ...current, providerTransactionId, status: "SUCCESS" } : current,
-      );
-      setCreatedOrder((current) =>
-        current ? { ...current, status: "PAID", paymentStatus: "SUCCESS" } : current,
-      );
-      setWebhookMessage(response?.message || "Webhook processed successfully");
-    } catch (error) {
-      setErrorMessage(getOrderErrorMessage(error));
-    } finally {
-      setIsMockingWebhook(false);
-    }
+      setShowModal(true);
+    }, 1500);
   };
 
   return (
@@ -229,10 +114,10 @@ export default function CheckoutPage() {
                 <div className="p-8">
                   <div className="flex justify-between items-start mb-6 border-b border-gray-100 pb-6">
                     <div>
-                      <p className="font-black text-gray-900">{ticketTypeId}</p>
-                      <p className="text-sm text-gray-500 font-medium">Quantity: {quantity}</p>
+                      <p className="font-black text-gray-900">VIP Pass</p>
+                      <p className="text-sm text-gray-500 font-medium">Quantity: 2</p>
                     </div>
-                    <p className="font-black text-gray-900">Calculated by server</p>
+                    <p className="font-black text-gray-900">$240.00</p>
                   </div>
 
                   {/* Promo code */}
@@ -242,26 +127,19 @@ export default function CheckoutPage() {
                   </div>
 
                   <div className="space-y-3 text-sm font-bold text-gray-500 mb-6">
-                    <div className="flex justify-between"><span>Ticket Type</span><span className="text-gray-900">{ticketTypeId}</span></div>
-                    <div className="flex justify-between"><span>Quantity</span><span className="text-gray-900">{quantity}</span></div>
-                    <div className="flex justify-between"><span>Payment Method</span><span className="text-gray-900">MOCK</span></div>
-                    <div className="flex justify-between"><span>Status</span><span className="text-gray-900">Pending payment</span></div>
+                    <div className="flex justify-between"><span>Subtotal</span><span className="text-gray-900">$240.00</span></div>
+                    <div className="flex justify-between"><span>Service Fee</span><span className="text-gray-900">$18.50</span></div>
+                    <div className="flex justify-between"><span>Tax</span><span className="text-gray-900">$12.40</span></div>
                   </div>
 
                   <div className="flex justify-between items-end mb-8 pt-6 border-t border-gray-100">
                     <span className="text-lg font-bold text-gray-900">Total</span>
-                    <span className="text-3xl font-black text-indigo-600">Server total</span>
+                    <span className="text-3xl font-black text-indigo-600">$270.90</span>
                   </div>
-
-                  {errorMessage ? (
-                    <div className="mb-5 rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-600">
-                      {errorMessage}
-                    </div>
-                  ) : null}
 
                   {/* PAYMENT BUTTON WITH LOADING STATE */}
                   <button 
-                    onClick={() => void handlePayment()}
+                    onClick={handlePayment}
                     disabled={isProcessing}
                     className={`w-full py-4 rounded-2xl font-black text-lg transition-all shadow-lg flex justify-center items-center gap-2 ${
                       isProcessing 
@@ -307,38 +185,13 @@ export default function CheckoutPage() {
               
               <h2 className="text-3xl font-black text-gray-900 text-center mb-2">Success!</h2>
               <p className="text-gray-500 text-center font-medium mb-8 leading-relaxed">
-                Order <strong className="text-gray-900">{createdOrder?.id}</strong> was created with status <strong className="text-indigo-600">{createdOrder?.status ?? "PENDING_PAYMENT"}</strong>. Payment <strong className="text-gray-900">{createdPayment?.paymentId}</strong> is <strong className="text-indigo-600">{createdPayment?.status ?? "PENDING"}</strong> for <strong className="text-gray-900">{formatCurrency(createdPayment?.amount ?? createdOrder?.totalAmount)}</strong>.
+                Payment of <strong className="text-gray-900">$270.90</strong> completed. E-tickets have been sent to your email <strong className="text-indigo-600">alex@example.com</strong>.
               </p>
 
               <div className="space-y-3">
-                {webhookMessage ? (
-                  <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-center text-sm font-bold text-emerald-600">
-                    {webhookMessage}
-                  </div>
-                ) : null}
-                {createdPayment?.paymentUrl ? (
-                  <a href={createdPayment.paymentUrl}>
-                    <button className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-base hover:bg-slate-800 transition-colors shadow-md">
-                      Open Payment Link
-                    </button>
-                  </a>
-                ) : null}
-                <button
-                  type="button"
-                  onClick={() => void handleMockPaymentSuccess()}
-                  disabled={isMockingWebhook || createdPayment?.status === "SUCCESS"}
-                  className="w-full bg-emerald-600 text-white py-4 rounded-2xl font-black text-base hover:bg-emerald-700 transition-colors shadow-md disabled:cursor-not-allowed disabled:bg-emerald-300"
-                >
-                  {isMockingWebhook ? "Processing Webhook..." : createdPayment?.status === "SUCCESS" ? "Payment Success" : "Mock Payment Success"}
-                </button>
                 <Link href="/events">
                   <button className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black text-base hover:bg-indigo-700 transition-colors shadow-md">
                     Continue Browsing
-                  </button>
-                </Link>
-                <Link href="/customer/my-tickets">
-                  <button className="w-full bg-white text-indigo-600 py-4 rounded-2xl font-black text-base hover:bg-indigo-50 transition-colors border border-indigo-100">
-                    View My Tickets
                   </button>
                 </Link>
                 <button 

@@ -1,12 +1,10 @@
 version: "3.9"
-
 services:
   frontend:
-    build:
-      context: .
-      args:
-        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL}
-        NEXT_PUBLIC_ORGANIZER_CREATE_EVENT_ENDPOINT: ${NEXT_PUBLIC_ORGANIZER_CREATE_EVENT_ENDPOINT}
+    build: .
     container_name: eventhub-frontend
     ports:
-      - "${APP_PORT}:3000"
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_BASE_URL: http://host.docker.internal:8080
+      - NEXT_PUBLIC_ORGANIZER_CREATE_EVENT_ENDPOINT: http://host.docker.internal:8080/api/organizer/events

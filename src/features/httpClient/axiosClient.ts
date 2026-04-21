@@ -39,31 +39,8 @@ const axiosClient = axios.create({
   },
 });
 
-const PUBLIC_ENDPOINT_PATTERNS = [
-  /^\/api\/auth\/register(?:$|[/?#])/,
-  /^\/api\/auth\/login(?:$|[/?#])/,
-  /^\/api\/auth\/refresh(?:$|[/?#])/,
-  /^\/api\/events(?:$|[/?#])/,
-  /^\/api\/events\//,
-  /^\/api\/payments\/webhook(?:$|[/?#])/,
-  /^\/api\/payments\/webhook\//,
-];
-
-function isPublicEndpoint(url?: string) {
-  if (!url) {
-    return false;
-  }
-
-  const normalizedUrl = url.startsWith("http")
-    ? new URL(url).pathname
-    : url;
-
-  return PUBLIC_ENDPOINT_PATTERNS.some((pattern) => pattern.test(normalizedUrl));
-}
-
 axiosClient.interceptors.request.use((config) => {
-  const skipAuth =
-    config.headers?.["X-Skip-Auth"] === "true" || isPublicEndpoint(config.url);
+  const skipAuth = config.headers?.["X-Skip-Auth"] === "true";
 
   if (skipAuth && config.headers) {
     delete config.headers["X-Skip-Auth"];
