@@ -72,11 +72,16 @@ export async function getOrganizerTicketTypes(eventId: string, params?: TicketTy
     const items = Array.isArray(objectPayload.items) ? objectPayload.items : [];
     return items.map((item, index) => mapTicketTypeItem(item, index));
   } catch (error) {
-    throw new Error(getApiErrorMessage(error, "Khong the tai danh sach loai ve."));
+    throw new Error(
+      getApiErrorMessage(error, "Khong the tai danh sach loai ve."),
+    );
   }
 }
 
-export async function createOrganizerTicketType(eventId: string, payload: OrganizerCreateTicketTypePayload) {
+export async function createOrganizerTicketType(
+  eventId: string,
+  payload: OrganizerCreateTicketTypePayload,
+) {
   try {
     const response = await axiosClient.post<ApiResult<OrganizerTicketType>>(
       `${ORGANIZER_API_BASE}/events/${eventId}/ticket-types`,
@@ -90,7 +95,10 @@ export async function createOrganizerTicketType(eventId: string, payload: Organi
   }
 }
 
-export async function updateOrganizerTicketType(ticketTypeId: string, payload: OrganizerUpdateTicketTypePayload) {
+export async function updateOrganizerTicketType(
+  ticketTypeId: string,
+  payload: OrganizerUpdateTicketTypePayload,
+) {
   try {
     const response = await axiosClient.put<ApiResult<OrganizerTicketType>>(
       `${ORGANIZER_API_BASE}/ticket-types/${ticketTypeId}`,

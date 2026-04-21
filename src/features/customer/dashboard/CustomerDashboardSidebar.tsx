@@ -23,10 +23,10 @@ export function CustomerDashboardSidebar({
     <aside className="w-[280px] bg-white border-r border-slate-100 flex flex-col sticky top-0 h-screen z-40">
       
       {/* --- TOP SECTION --- */}
-      <div className="p-7">
+      <div className="p-6">
         
         {/* Logo giống y hệt Admin (Khối vuông bo tròn góc, xoay nhẹ) */}
-        <div className="flex items-center gap-3 mb-10 px-1">
+        <div className="mb-9 flex items-center gap-3 px-1">
           <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-100 rotate-3">
             {/* Dùng luôn icon tia sét (Zap) giống admin hoặc bạn có thể thay bằng icon khác */}
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="white" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -34,7 +34,7 @@ export function CustomerDashboardSidebar({
             </svg>
           </div>
           <div>
-            <span className="text-xl font-black text-slate-900 tracking-tighter block uppercase leading-none">EventHub</span>
+            <span className="block text-xl font-black uppercase leading-none tracking-tighter text-slate-900">EventHub</span>
             <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest mt-1 block">Customer Portal</span>
           </div>
         </div>
@@ -48,7 +48,7 @@ export function CustomerDashboardSidebar({
 
             return (
               <Link key={item.label} href={item.href}>
-                <div className={`flex items-center gap-3.5 px-5 py-3 rounded-full cursor-pointer transition-all duration-300 group ${
+                <div className={`flex cursor-pointer items-center gap-3.5 rounded-full px-5 py-2.5 transition-all duration-300 group ${
                   isActive 
                     ? 'bg-blue-600 text-white shadow-md shadow-blue-100' 
                     : 'text-slate-600 hover:bg-slate-50 hover:text-blue-700'
@@ -69,11 +69,11 @@ export function CustomerDashboardSidebar({
 
       {/* --- BOTTOM SECTION --- */}
       {/* Nút Help và Sign Out ép xuống đáy giống Admin */}
-      <div className="mt-auto p-7 border-t border-slate-100 space-y-2">
+      <div className="mt-auto space-y-2 border-t border-slate-100 p-6">
         
         {/* Nút Help (Giống nút Support ở Admin) */}
         <Link href="/customer/help">
-          <div className={`flex items-center gap-3.5 px-5 py-3 cursor-pointer rounded-full transition-all duration-300 group ${
+          <div className={`flex cursor-pointer items-center gap-3.5 rounded-full px-5 py-2.5 transition-all duration-300 group ${
             isHelpPageActive 
               ? 'bg-blue-600 text-white shadow-md shadow-blue-100' 
               : 'text-slate-500 hover:text-blue-700 hover:bg-slate-50'
@@ -89,7 +89,7 @@ export function CustomerDashboardSidebar({
         {/* Nút Sign Out (Mặc định màu đỏ, hover trượt icon sang trái giống Admin) */}
         <button 
           onClick={onLogout}
-          className="flex items-center gap-3.5 px-5 py-3 text-rose-500 font-bold hover:bg-rose-50 w-full rounded-full transition-all group"
+          className="group flex w-full items-center gap-3.5 rounded-full px-5 py-2.5 font-bold text-rose-500 transition-all hover:bg-rose-50"
         >
           <CustomerDashboardIcon 
             type="logout" 

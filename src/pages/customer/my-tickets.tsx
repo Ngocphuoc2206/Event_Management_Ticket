@@ -69,6 +69,48 @@ function getQrFallbackSrc(ticket: Pick<TicketRecord, "code" | "title" | "date" |
   return `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(payload)}`;
 }
 
+function isAbsoluteUrl(value?: string) {
+  if (!value) {
+    return false;
+  }
+
+  try {
+    const parsedUrl = new URL(value);
+    return parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function resolveQrCodeSrc(
+  ticket: CustomerTicketResponse,
+  fallbackTicket: Pick<TicketRecord, "code" | "title" | "date" | "time" | "type">,
+) {
+  const directImageUrlCandidates = [
+    ticket.qrPublicUrl,
+    ticket.qrCodeUrl,
+    ticket.qrImageUrl,
+    ticket.publicUrl,
+    ticket.imageUrl,
+  ];
+
+  const directImageUrl = directImageUrlCandidates.find((candidate) =>
+    isAbsoluteUrl(candidate),
+  );
+
+  if (directImageUrl) {
+    return directImageUrl;
+  }
+
+  if (ticket.qrCode?.trim()) {
+    return isAbsoluteUrl(ticket.qrCode)
+      ? ticket.qrCode
+      : `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(ticket.qrCode)}`;
+  }
+
+  return getQrFallbackSrc(fallbackTicket);
+}
+
 function mapTicketStatus(status?: string, used?: boolean, group?: "upcoming" | "past"): TicketStatus {
   if (group === "past" || used) return "Completed";
   if (status === "USED" || status === "COMPLETED") return "Completed";
@@ -93,14 +135,14 @@ function mapTicket(ticket: CustomerTicketResponse, index: number, group?: "upcom
     type,
     status: mapTicketStatus(ticket.status, ticket.used, group),
     code,
-    qrCodeSrc: ticket.qrCodeUrl || ticket.qrImageUrl || ticket.qrCode || "",
+    qrCodeSrc: "",
     imageSrc: index % 2 === 0 ? "/images/upc1.png" : "/images/upc2.png",
     detailHref: ticket.eventId ? `/event/${ticket.eventId}` : "/events",
   };
 
   return {
     ...mappedTicket,
-    qrCodeSrc: mappedTicket.qrCodeSrc || getQrFallbackSrc(mappedTicket),
+    qrCodeSrc: resolveQrCodeSrc(ticket, mappedTicket),
   };
 }
 
@@ -136,7 +178,7 @@ function TicketCard({
   const isPast = ticket.status === "Completed" || ticket.status === "Cancelled";
 
   return (
-    <article className="overflow-hidden rounded-[26px] bg-white shadow-[0_18px_44px_rgba(148,163,184,0.16)] ring-1 ring-slate-100">
+    <article className="overflow-hidden rounded-[24px] bg-white shadow-[0_18px_44px_rgba(148,163,184,0.16)] ring-1 ring-slate-100">
       <div className="relative h-44 overflow-hidden">
         <Image
           src={ticket.imageSrc}
@@ -155,16 +197,16 @@ function TicketCard({
         </div>
       </div>
 
-      <div className="p-5">
+      <div className="p-4 sm:p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
             <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-violet-600">{ticket.category}</div>
-            <h2 className="mt-2 text-[2rem] font-bold leading-[1.05] tracking-tight text-slate-900">{ticket.title}</h2>
+            <h2 className="mt-2 text-[1.5rem] font-bold leading-[1.1] tracking-tight text-slate-900 sm:text-[1.7rem]">{ticket.title}</h2>
           </div>
           <button
             type="button"
             onClick={() => onOpenQr(ticket)}
-            className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[22px] bg-slate-100 p-3 shadow-[inset_0_0_0_1px_rgba(226,232,240,0.9)] transition hover:scale-[1.03] hover:bg-blue-50"
+            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[18px] bg-slate-100 p-2.5 shadow-[inset_0_0_0_1px_rgba(226,232,240,0.9)] transition hover:scale-[1.03] hover:bg-blue-50"
             aria-label={`Open QR code for ${ticket.title}`}
             title="Open QR"
           >
@@ -292,12 +334,13 @@ export default function CustomerMyTicketsPage() {
           />
 
           <section className="flex-1 px-5 py-6 sm:px-8 lg:px-10 xl:px-12">
+            <div className="mx-auto w-full max-w-[1600px]">
             <div className="text-xs font-medium text-slate-500">Dashboard &nbsp;&rsaquo;&nbsp; My Tickets</div>
             <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <div className="text-xs font-bold uppercase tracking-[0.34em] text-blue-600">Customer Area</div>
-                <h1 className="mt-2 text-4xl font-bold tracking-tight text-slate-900 sm:text-[2.8rem]">My Tickets</h1>
-                <p className="mt-3 max-w-2xl text-lg text-slate-500">
+                <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">My Tickets</h1>
+                <p className="mt-3 max-w-2xl text-sm text-slate-500 sm:text-base">
                   View your active passes, event details, and saved QR codes in one place.
                 </p>
               </div>
@@ -305,7 +348,7 @@ export default function CustomerMyTicketsPage() {
 
             <section className="mt-10">
               <div className="flex items-center justify-between gap-4">
-                <h2 className="text-[2rem] font-bold tracking-tight text-slate-900">Upcoming Tickets</h2>
+                <h2 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">Upcoming Tickets</h2>
                 <span className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-[0_10px_24px_rgba(148,163,184,0.12)]">
                   {upcomingTickets.length} active
                 </span>
@@ -338,7 +381,7 @@ export default function CustomerMyTicketsPage() {
 
             <section className="mt-12">
               <div className="flex items-center justify-between gap-4">
-                <h2 className="text-[2rem] font-bold tracking-tight text-slate-900">Past Tickets</h2>
+                <h2 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">Past Tickets</h2>
                 <span className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-[0_10px_24px_rgba(148,163,184,0.12)]">
                   {pastTickets.length} archived
                 </span>
@@ -349,6 +392,7 @@ export default function CustomerMyTicketsPage() {
                 ))}
               </div>
             </section>
+            </div>
           </section>
         </div>
       </main>

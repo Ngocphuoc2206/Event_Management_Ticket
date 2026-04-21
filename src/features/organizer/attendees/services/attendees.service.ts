@@ -1,5 +1,8 @@
 import type { ApiResult } from "@/features/auth/types";
-import { ensureApiResultSuccess, getApiErrorMessage } from "@/features/auth/utils";
+import {
+  ensureApiResultSuccess,
+  getApiErrorMessage,
+} from "@/features/auth/utils";
 import axiosClient from "@/features/httpClient/axiosClient";
 
 type AttendeesQuery = {
@@ -10,9 +13,13 @@ type AttendeesQuery = {
 };
 
 const ORGANIZER_API_BASE =
-  process.env.NEXT_PUBLIC_ORGANIZER_API_BASE || "http://localhost:8080/api/organizer";
+  process.env.NEXT_PUBLIC_ORGANIZER_API_BASE ||
+  "http://100.25.101.12:8080/api/organizer";
 
-export async function getOrganizerAttendees(eventId: string, params?: AttendeesQuery) {
+export async function getOrganizerAttendees(
+  eventId: string,
+  params?: AttendeesQuery,
+) {
   try {
     const response = await axiosClient.get<ApiResult<unknown>>(
       `${ORGANIZER_API_BASE}/events/${eventId}/attendees`,
@@ -22,7 +29,9 @@ export async function getOrganizerAttendees(eventId: string, params?: AttendeesQ
     ensureApiResultSuccess(response.data, "Khong the tai danh sach attendee.");
     return response.data;
   } catch (error) {
-    throw new Error(getApiErrorMessage(error, "Khong the tai danh sach attendee."));
+    throw new Error(
+      getApiErrorMessage(error, "Khong the tai danh sach attendee."),
+    );
   }
 }
 

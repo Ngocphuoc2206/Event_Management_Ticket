@@ -233,7 +233,7 @@ function NotificationListCard({
   const toneStyle = TONE_STYLES[item.tone];
 
   return (
-    <article className="relative overflow-hidden rounded-3xl border border-white/80 bg-white/95 p-5 shadow-[0_18px_42px_rgba(148,163,184,0.14)] sm:p-6">
+    <article className="relative overflow-hidden rounded-[24px] border border-white/80 bg-white/95 p-5 shadow-[0_18px_42px_rgba(148,163,184,0.14)]">
       <div
         className={`absolute inset-y-4 left-0 w-1 rounded-full ${toneStyle.accent}`}
       />
@@ -303,7 +303,7 @@ function NotificationFeatureCard({
 
   return (
     <article
-      className={`overflow-hidden rounded-[26px] border border-white/80 p-5 shadow-[0_18px_42px_rgba(148,163,184,0.14)] ${toneStyle.featureBg ?? "bg-white"}`}
+      className={`overflow-hidden rounded-[24px] border border-white/80 p-5 shadow-[0_18px_42px_rgba(148,163,184,0.14)] ${toneStyle.featureBg ?? "bg-white"}`}
     >
       <div className="flex items-start justify-between gap-4">
         <div
@@ -328,7 +328,7 @@ function NotificationFeatureCard({
         </div>
       </div>
 
-      <h3 className="mt-5 text-xl font-bold tracking-tight text-slate-900">
+      <h3 className="mt-5 text-lg font-bold tracking-tight text-slate-900">
         {item.title}
       </h3>
       <p className="mt-3 text-sm leading-6 text-slate-500">
@@ -401,7 +401,7 @@ function EmptyNotificationState({ onReset }: { onReset: () => void }) {
           <path d="M4.5 4.5V9H9" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </div>
-      <h3 className="mt-6 text-2xl font-bold tracking-tight text-slate-700">
+      <h3 className="mt-6 text-xl font-bold tracking-tight text-slate-700">
         All caught up
       </h3>
       <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-slate-500">
@@ -536,6 +536,7 @@ export default function CustomerNotificationsPage() {
           />
 
           <section className="flex-1 px-5 py-6 sm:px-8 lg:px-10 xl:px-12">
+            <div className="mx-auto w-full max-w-[1600px]">
             <div className="text-xs font-medium text-slate-500">
               Dashboard &nbsp;&rsaquo;&nbsp; Notifications
             </div>
@@ -552,12 +553,6 @@ export default function CustomerNotificationsPage() {
                 </label>
                 <button
                   type="button"
-                  className="flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-slate-500 shadow-[0_10px_24px_rgba(148,163,184,0.12)]"
-                >
-                  <CustomerDashboardIcon type="help" className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
                   onClick={() => void handleLogout()}
                   className="flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-slate-500 shadow-[0_10px_24px_rgba(148,163,184,0.12)]"
                 >
@@ -572,10 +567,10 @@ export default function CustomerNotificationsPage() {
                   <div className="text-xs font-bold uppercase tracking-[0.34em] text-blue-600">
                     Customer Area
                   </div>
-                  <h1 className="mt-2 text-4xl font-bold tracking-tight text-slate-900 sm:text-[2.9rem]">
+                  <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
                     Notifications
                   </h1>
-                  <p className="mt-3 max-w-3xl text-base leading-7 text-slate-500">
+                  <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-500 sm:text-base">
                     Stay updated with your latest event activities, venue
                     changes, and ticket status.
                   </p>
@@ -611,7 +606,7 @@ export default function CustomerNotificationsPage() {
                     type="button"
                     onClick={() => void handleMarkAllAsRead()}
                     disabled={unreadCount === 0 || markingReadIds.size > 0}
-                    className="inline-flex items-center justify-center rounded-full border border-blue-200 bg-white px-5 py-3 text-sm font-semibold text-blue-600 shadow-[0_10px_24px_rgba(148,163,184,0.12)] transition hover:border-blue-300 disabled:cursor-not-allowed disabled:text-slate-300"
+                    className="inline-flex items-center justify-center rounded-full border border-blue-200 bg-white px-4 py-2.5 text-sm font-semibold text-blue-600 shadow-[0_10px_24px_rgba(148,163,184,0.12)] transition hover:border-blue-300 disabled:cursor-not-allowed disabled:text-slate-300"
                   >
                     Mark all as read
                   </button>
@@ -685,6 +680,7 @@ export default function CustomerNotificationsPage() {
                 </>
               )}
             </section>
+            </div>
           </section>
         </div>
       </main>
