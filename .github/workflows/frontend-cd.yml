@@ -39,10 +39,14 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            set -e
             cd /home/ubuntu/apps/eventhub/${{ steps.target.outputs.folder }}/source
 
-            cp /home/ubuntu/apps/eventhub/${{ steps.target.outputs.folder }}/.env .env
+            cat > .env <<EOF
+            NEXT_PUBLIC_API_BASE_URL=${{ secrets.NEXT_PUBLIC_API_BASE_URL }}
+            NEXT_PUBLIC_ORGANIZER_CREATE_EVENT_ENDPOINT=${{ secrets.NEXT_PUBLIC_ORGANIZER_CREATE_EVENT_ENDPOINT }}
+            EOF
 
             docker compose down || true
             docker compose up -d --build
-            docker image prune -af
+            docker image prune -af || true
