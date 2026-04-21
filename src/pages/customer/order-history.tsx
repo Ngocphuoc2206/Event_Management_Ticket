@@ -172,9 +172,9 @@ function StatCard({
   note: string;
 }) {
   return (
-    <article className="rounded-[24px] border border-white/90 bg-white/95 p-6 shadow-[0_18px_44px_rgba(148,163,184,0.14)]">
+    <article className="rounded-[22px] border border-white/90 bg-white/95 p-5 shadow-[0_18px_44px_rgba(148,163,184,0.14)]">
       <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-slate-500">{label}</div>
-      <div className={`mt-4 text-[2rem] font-bold tracking-tight ${accent}`}>{value}</div>
+      <div className={`mt-3 text-[1.65rem] font-bold tracking-tight ${accent}`}>{value}</div>
       <div className="mt-1 text-sm text-slate-500">{note}</div>
     </article>
   );
@@ -203,7 +203,7 @@ function FilterSelect({
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-14 w-full appearance-none rounded-[20px] border border-slate-200 bg-white px-5 pr-12 text-base font-semibold text-slate-700 outline-none"
+        className="h-12 w-full appearance-none rounded-[18px] border border-slate-200 bg-white px-4 pr-11 text-sm font-semibold text-slate-700 outline-none"
       >
         {children}
       </select>
@@ -403,10 +403,11 @@ export default function CustomerOrderHistoryPage() {
           />
 
           <section className="flex-1 px-5 py-6 sm:px-8 lg:px-10 xl:px-12">
+            <div className="mx-auto w-full max-w-[1600px]">
             <div className="text-xs font-medium text-slate-500">Dashboard &nbsp;&rsaquo;&nbsp; Order History</div>
             <header className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
               <div>
-                <div className="text-3xl font-bold tracking-tight text-slate-900">Order History</div>
+                <div className="text-2xl font-bold tracking-tight text-slate-900">Order History</div>
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -419,9 +420,6 @@ export default function CustomerOrderHistoryPage() {
                     className="w-full bg-transparent outline-none placeholder:text-slate-400"
                   />
                 </label>
-                <button type="button" className="flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-slate-500 shadow-[0_10px_24px_rgba(148,163,184,0.12)]">
-                  <CustomerDashboardIcon type="help" className="h-4 w-4" />
-                </button>
                 <button
                   type="button"
                   onClick={() => void handleLogout()}
@@ -433,8 +431,8 @@ export default function CustomerOrderHistoryPage() {
             </header>
 
             <section className="mt-10">
-              <h1 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-[2.7rem]">Review Your Experiences</h1>
-              <p className="mt-3 max-w-3xl text-base leading-7 text-slate-500">
+              <h1 className="text-3xl font-bold tracking-tight text-slate-900">Review Your Experiences</h1>
+              <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-500 sm:text-base">
                 Access and manage all your ticket purchases, statuses, and order details in one place.
               </p>
 
@@ -449,7 +447,7 @@ export default function CustomerOrderHistoryPage() {
                   <button
                     type="button"
                     onClick={() => setIsFilterOpen((value) => !value)}
-                    className="inline-flex items-center gap-2 rounded-2xl bg-slate-200/80 px-5 py-3 text-sm font-semibold text-slate-700"
+                    className="inline-flex items-center gap-2 rounded-2xl bg-slate-200/80 px-4 py-2.5 text-sm font-semibold text-slate-700"
                   >
                     <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="2">
                       <path d="M4 7h16M7.5 12h9M10.5 17h3" strokeLinecap="round" />
@@ -458,7 +456,7 @@ export default function CustomerOrderHistoryPage() {
                   </button>
 
                   {isFilterOpen ? (
-                    <div className="absolute left-0 top-[calc(100%+12px)] z-20 grid w-[280px] gap-4 rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_20px_50px_rgba(148,163,184,0.2)]">
+                    <div className="absolute left-0 top-[calc(100%+12px)] z-20 grid w-[260px] gap-3 rounded-[22px] border border-slate-200 bg-white p-4 shadow-[0_20px_50px_rgba(148,163,184,0.2)]">
                       <FilterSelect value={timeFilter} onChange={(value) => setTimeFilter(value as TimeFilter)}>
                         <option value="all">All Time</option>
                         <option value="30days">Last 30 Days</option>
@@ -484,7 +482,7 @@ export default function CustomerOrderHistoryPage() {
                   type="button"
                   onClick={handleExportCsv}
                   disabled={filteredOrders.length === 0}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-700 to-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_28px_rgba(76,92,193,0.24)] disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-700 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_16px_28px_rgba(76,92,193,0.24)] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <CustomerDashboardIcon type="download" className="h-4 w-4" />
                   Export CSV
@@ -563,6 +561,7 @@ export default function CustomerOrderHistoryPage() {
                 </div>
               </div>
             </section>
+            </div>
           </section>
         </div>
 
