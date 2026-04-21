@@ -51,6 +51,7 @@ public enum ErrorCode {
     TICKET_NOT_BELONG_TO_USER(1040, "You can only check in tickets that belong to you"),
     NOTIFICATION_NOT_FOUND(1038, "Notification not found"),
     INVALID_RANGE(1041,"Invalid range"),
+    NOTIFICATION_NOT_FOUND(1041, "Notification not found"),
     INTERNAL_ERROR (9999, "Internal Error!"),
     ;
     private final int code;
