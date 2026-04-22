@@ -70,7 +70,7 @@ export default function AdminDashboard() {
       try {
         const [stats, recentEventsResponse] = await Promise.all([
           getDashboardStats(),
-          getAdminEvents({ status: "pending", page: 0, size: 4 }),
+          getAdminEvents({ page: 0, size: 10 }),
         ]);
 
         setData({

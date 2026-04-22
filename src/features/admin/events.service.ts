@@ -8,7 +8,7 @@ import {
 } from "@/features/auth/utils";
 import axiosClient from "@/features/httpClient/axiosClient";
 
-export type AdminEventStatus = "pending" | "published" | "rejected";
+export type AdminEventStatus = "PENDING_APPROVAL" | "PUBLISHED" | "REJECTED";
 
 export type AdminEvent = {
   id: string;
@@ -79,7 +79,9 @@ function mapAdminEvent(item: unknown, index: number): AdminEvent {
     "Untitled event";
 
   const status =
-    readString(value.status) || readString(value.eventStatus) || "PENDING";
+    readString(value.status) ||
+    readString(value.eventStatus) ||
+    "PENDING_APPROVAL";
 
   return {
     id,
@@ -140,9 +142,7 @@ function parseAdminEventsPage(payload: unknown): AdminEventsPage {
     size,
     totalElements,
     totalPages,
-    hasNext: Boolean(
-      (raw.hasNext ?? raw.last === false) || page + 1 < totalPages,
-    ),
+    hasNext: Boolean(raw.hasNext ? raw.last === false : page + 1 < totalPages),
   };
 }
 
@@ -196,9 +196,9 @@ export async function findAdminEventByIdFromList(
   eventId: string,
 ): Promise<AdminEvent | null> {
   const statuses: Array<AdminEventStatus | undefined> = [
-    "pending",
-    "published",
-    "rejected",
+    "PENDING_APPROVAL",
+    "PUBLISHED",
+    "REJECTED",
     undefined,
   ];
 
