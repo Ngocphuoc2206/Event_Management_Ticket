@@ -87,7 +87,9 @@ public class SecurityConfig {
                 "http://localhost:3000",
                 "http://localhost:3001",
                 "http://100.25.101.12:3000",
-                "http://100.25.101.12:3001"
+                "http://100.25.101.12:3001",
+                "http://75.101.153.235:3000",
+                "http://75.101.153.235:3001"
         ));
         corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         corsConfiguration.setAllowedHeaders(List.of("*"));
