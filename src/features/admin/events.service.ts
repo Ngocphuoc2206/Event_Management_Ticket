@@ -8,7 +8,7 @@ import {
 } from "@/features/auth/utils";
 import axiosClient from "@/features/httpClient/axiosClient";
 
-export type AdminEventStatus = "PENDING" | "PUBLISHED" | "REJECTED";
+export type AdminEventStatus = "pending" | "published" | "rejected";
 
 export type AdminEvent = {
   id: string;
@@ -196,9 +196,9 @@ export async function findAdminEventByIdFromList(
   eventId: string,
 ): Promise<AdminEvent | null> {
   const statuses: Array<AdminEventStatus | undefined> = [
-    "PENDING",
-    "PUBLISHED",
-    "REJECTED",
+    "pending",
+    "published",
+    "rejected",
     undefined,
   ];
 

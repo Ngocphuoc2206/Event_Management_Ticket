@@ -50,7 +50,7 @@ export default function EventManagementPage() {
   const [events, setEvents] = useState<AdminEvent[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<AdminEventStatus | "ALL">(
-    "PENDING",
+    "pending",
   );
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
