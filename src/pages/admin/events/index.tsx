@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 /* eslint-disable @next/next/no-img-element */
 import AdminLayout from "@/components/templates/AdminLayout/AdminLayout";
 import RejectEventModal from "@/components/organisms/RejectEventModal/RejectEventModal";
@@ -57,7 +58,11 @@ export default function EventManagementPage() {
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const [rejectModal, setRejectModal] = useState<{ isOpen: boolean; eventId: string; eventTitle: string }>({
+  const [rejectModal, setRejectModal] = useState<{
+    isOpen: boolean;
+    eventId: string;
+    eventTitle: string;
+  }>({
     isOpen: false,
     eventId: "",
     eventTitle: "",
@@ -82,7 +87,11 @@ export default function EventManagementPage() {
       setEvents(data.items);
       setTotalPages(Math.max(1, data.totalPages));
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Không thể tải danh sách sự kiện.");
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Không thể tải danh sách sự kiện.",
+      );
       setEvents([]);
       setTotalPages(1);
     } finally {
@@ -108,7 +117,9 @@ export default function EventManagementPage() {
       setSuccessMessage("Duyệt sự kiện thành công.");
       await loadEvents();
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Duyệt sự kiện thất bại.");
+      setErrorMessage(
+        error instanceof Error ? error.message : "Duyệt sự kiện thất bại.",
+      );
     } finally {
       setActionLoadingId(null);
     }
@@ -135,7 +146,9 @@ export default function EventManagementPage() {
       setRejectModal({ isOpen: false, eventId: "", eventTitle: "" });
       await loadEvents();
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Từ chối sự kiện thất bại.");
+      setErrorMessage(
+        error instanceof Error ? error.message : "Từ chối sự kiện thất bại.",
+      );
     } finally {
       setActionLoadingId(null);
     }
@@ -250,7 +263,9 @@ export default function EventManagementPage() {
 
                 {!isLoading &&
                   events.map((event) => {
-                    const { date, time } = formatDateTime(event.startTime || event.createdAt);
+                    const { date, time } = formatDateTime(
+                      event.startTime || event.createdAt,
+                    );
 
                     return (
                       <tr
@@ -285,7 +300,9 @@ export default function EventManagementPage() {
                         </td>
 
                         <td className="py-6 text-center">
-                          <p className="text-sm font-black text-slate-700">{date}</p>
+                          <p className="text-sm font-black text-slate-700">
+                            {date}
+                          </p>
                           <p className="text-[10px] text-slate-400 font-bold uppercase">
                             {time}
                           </p>
@@ -346,7 +363,9 @@ export default function EventManagementPage() {
             </p>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setPage((currentPage) => Math.max(0, currentPage - 1))}
+                onClick={() =>
+                  setPage((currentPage) => Math.max(0, currentPage - 1))
+                }
                 disabled={page === 0 || isLoading}
                 className="px-4 py-2 rounded-xl border border-slate-100 text-xs font-black text-slate-600 hover:bg-slate-50 disabled:opacity-50"
               >

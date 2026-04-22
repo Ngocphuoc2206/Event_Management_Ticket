@@ -1,6 +1,10 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 /* eslint-disable @next/next/no-img-element */
 import AdminLayout from "@/components/templates/AdminLayout/AdminLayout";
-import { getPublicEvents, type PublicEventsQuery } from "@/features/admin/events.service";
+import {
+  getPublicEvents,
+  type PublicEventsQuery,
+} from "@/features/admin/events.service";
 import { Eye, RefreshCcw, Search, Filter } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -18,6 +22,7 @@ const CATEGORIES = [
 ];
 
 export default function EventsListingPage() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [events, setEvents] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [category, setCategory] = useState("All Categories");
@@ -46,7 +51,11 @@ export default function EventsListingPage() {
       setEvents(data.items);
       setTotalPages(Math.max(1, data.totalPages));
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Không thể tải danh sách sự kiện.");
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Không thể tải danh sách sự kiện.",
+      );
       setEvents([]);
       setTotalPages(1);
     } finally {
@@ -196,7 +205,9 @@ export default function EventsListingPage() {
                   </div>
 
                   <div className="text-xs text-slate-500 font-bold mb-4">
-                    {event.attendeeCount ? `${event.attendeeCount} attendees` : "No attendance data"}
+                    {event.attendeeCount
+                      ? `${event.attendeeCount} attendees`
+                      : "No attendance data"}
                   </div>
 
                   <Link href={`/admin/events/${event.id}`}>
@@ -224,7 +235,9 @@ export default function EventsListingPage() {
                 Prev
               </button>
               <button
-                onClick={() => setPage((p) => Math.min(Math.max(0, totalPages - 1), p + 1))}
+                onClick={() =>
+                  setPage((p) => Math.min(Math.max(0, totalPages - 1), p + 1))
+                }
                 disabled={page + 1 >= totalPages || isLoading}
                 className="px-4 py-2 rounded-xl border border-slate-100 text-xs font-black text-slate-600 hover:bg-slate-50 disabled:opacity-50"
               >

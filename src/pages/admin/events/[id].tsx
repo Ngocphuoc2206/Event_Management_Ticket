@@ -87,7 +87,11 @@ export default function EventDetailPage() {
       }
     } catch (error) {
       setCurrentEvent(null);
-      setErrorMessage(error instanceof Error ? error.message : "Không thể tải chi tiết sự kiện.");
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Không thể tải chi tiết sự kiện.",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -95,6 +99,7 @@ export default function EventDetailPage() {
 
   useEffect(() => {
     if (eventId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       void loadEvent();
     }
   }, [eventId, loadEvent]);
@@ -113,7 +118,9 @@ export default function EventDetailPage() {
       setCurrentEvent(updated ?? { ...currentEvent, status: "PUBLISHED" });
       setSuccessMessage("Duyệt sự kiện thành công.");
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Duyệt sự kiện thất bại.");
+      setErrorMessage(
+        error instanceof Error ? error.message : "Duyệt sự kiện thất bại.",
+      );
     } finally {
       setIsActionLoading(false);
     }
@@ -139,13 +146,22 @@ export default function EventDetailPage() {
     setSuccessMessage("");
 
     try {
-      const updated = await rejectAdminEvent(currentEvent.id, rejectReason.trim());
+      const updated = await rejectAdminEvent(
+        currentEvent.id,
+        rejectReason.trim(),
+      );
       setCurrentEvent(
-        updated ?? { ...currentEvent, status: "REJECTED", rejectReason: rejectReason.trim() },
+        updated ?? {
+          ...currentEvent,
+          status: "REJECTED",
+          rejectReason: rejectReason.trim(),
+        },
       );
       setSuccessMessage("Từ chối sự kiện thành công.");
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Từ chối sự kiện thất bại.");
+      setErrorMessage(
+        error instanceof Error ? error.message : "Từ chối sự kiện thất bại.",
+      );
     } finally {
       setIsActionLoading(false);
     }
@@ -183,7 +199,9 @@ export default function EventDetailPage() {
     );
   }
 
-  const { date, time } = formatDateTime(currentEvent.startTime || currentEvent.createdAt);
+  const { date, time } = formatDateTime(
+    currentEvent.startTime || currentEvent.createdAt,
+  );
 
   return (
     <AdminLayout title="Event Detail">
@@ -270,7 +288,9 @@ export default function EventDetailPage() {
                 <p className="text-[10px] font-black uppercase tracking-[0.18em] text-rose-500 mb-2">
                   Reject Reason
                 </p>
-                <p className="text-sm font-semibold text-rose-700">{currentEvent.rejectReason}</p>
+                <p className="text-sm font-semibold text-rose-700">
+                  {currentEvent.rejectReason}
+                </p>
               </div>
             )}
           </div>
@@ -316,7 +336,8 @@ export default function EventDetailPage() {
                   <AlertCircle size={14} /> Action Required
                 </h3>
                 <p className="text-sm font-bold text-slate-700 mb-6 leading-relaxed">
-                  Sự kiện này đang chờ bạn phê duyệt trước khi hiển thị công khai.
+                  Sự kiện này đang chờ bạn phê duyệt trước khi hiển thị công
+                  khai.
                 </p>
                 <div className="flex flex-col gap-3">
                   <button
