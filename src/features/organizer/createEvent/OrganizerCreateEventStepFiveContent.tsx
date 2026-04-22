@@ -316,7 +316,7 @@ export function OrganizerCreateEventStepFiveContent() {
         setOrganizerDraftEventId(createdEvent.id);
       }
 
-      setStatus(String(createdEvent?.status ?? "PENDING_APPROVAL"));
+      setStatus(String(createdEvent?.status ?? "PENDING"));
       showToast({
         tone: "success",
         message: "Sự kiện đã được tạo thành công.",

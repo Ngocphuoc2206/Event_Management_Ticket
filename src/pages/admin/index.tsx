@@ -70,7 +70,7 @@ export default function AdminDashboard() {
       try {
         const [stats, recentEventsResponse] = await Promise.all([
           getDashboardStats(),
-          getAdminEvents({ status: "PENDING_APPROVAL", page: 0, size: 4 }),
+          getAdminEvents({ status: "PENDING", page: 0, size: 4 }),
         ]);
 
         setData({
@@ -229,7 +229,7 @@ export default function AdminDashboard() {
                             className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
                               event.status === "PUBLISHED"
                                 ? "bg-emerald-50 text-emerald-600"
-                                : event.status === "PENDING_APPROVAL"
+                                : event.status === "PENDING"
                                   ? "bg-amber-50 text-amber-600"
                                   : "bg-rose-50 text-rose-500"
                             }`}

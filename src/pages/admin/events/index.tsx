@@ -50,7 +50,7 @@ export default function EventManagementPage() {
   const [events, setEvents] = useState<AdminEvent[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<AdminEventStatus | "ALL">(
-    "PENDING_APPROVAL",
+    "PENDING",
   );
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -207,7 +207,7 @@ export default function EventManagementPage() {
               setStatusFilter(event.target.value as AdminEventStatus | "ALL");
             }}
           >
-            <option value="PENDING_APPROVAL">PENDING_APPROVAL</option>
+            <option value="PENDING">PENDING_APPROVAL</option>
             <option value="PUBLISHED">PUBLISHED</option>
             <option value="REJECTED">REJECTED</option>
             <option value="ALL">ALL</option>
@@ -318,7 +318,7 @@ export default function EventManagementPage() {
 
                         <td className="py-6 px-4">
                           <div className="flex justify-end gap-2">
-                            {event.status === "PENDING_APPROVAL" && (
+                            {event.status === "PENDING" && (
                               <>
                                 <button
                                   onClick={() => void handleApprove(event.id)}

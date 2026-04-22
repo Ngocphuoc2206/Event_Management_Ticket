@@ -330,7 +330,7 @@ export default function EventDetailPage() {
               </div>
             </div>
 
-            {currentEvent.status === "PENDING_APPROVAL" && (
+            {currentEvent.status === "PENDING" && (
               <div className="bg-indigo-50 border border-indigo-100 rounded-[40px] p-8 shadow-sm">
                 <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400 mb-6 flex items-center gap-2">
                   <AlertCircle size={14} /> Action Required

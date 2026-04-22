@@ -3,15 +3,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import {
-  getApiErrorMessage,
-} from "@/features/auth/utils";
-import {
-  getOrganizerEvents,
-} from "@/features/organizer/events/services/create-event.service";
-import type {
-  OrganizerEvent,
-} from "@/features/organizer/events/types";
+import { getApiErrorMessage } from "@/features/auth/utils";
+import { getOrganizerEvents } from "@/features/organizer/events/services/create-event.service";
+import type { OrganizerEvent } from "@/features/organizer/events/types";
 import { OrganizerDashboardIcon } from "@/features/organizer/dashboard/OrganizerDashboardIcons";
 import { OrganizerMetaFooter } from "@/features/organizer/shared/OrganizerMetaFooter";
 
@@ -24,7 +18,7 @@ const DEFAULT_PAGE_SIZE = 10;
 
 const STATUS_STYLE: Record<string, string> = {
   DRAFT: "bg-zinc-200 text-gray-700",
-  PENDING_APPROVAL: "bg-amber-100 text-amber-700",
+  PENDING: "bg-amber-100 text-amber-700",
   APPROVED: "bg-emerald-100 text-emerald-700",
   PUBLISHED: "bg-green-100 text-green-700",
   REJECTED: "bg-rose-100 text-rose-700",

@@ -1,7 +1,7 @@
 export type OrganizerEventVisibility = "PUBLIC";
 export type OrganizerEventStatus =
   | "DRAFT"
-  | "PENDING_APPROVAL"
+  | "PENDING"
   | "APPROVED"
   | "REJECTED"
   | "CANCELLED";
