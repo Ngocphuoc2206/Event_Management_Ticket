@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import AdminLayout from "@/components/templates/AdminLayout/AdminLayout";
 import type { AdminUser, AdminUserStatus } from "@/features/admin/users.service";
-import { getAdminUsers, updateAdminUserStatus } from "@/features/admin/users.service";
+import { getAllAdminUsers, updateAdminUserStatus } from "@/features/admin/users.service";
 import { UserPlus, Search, Edit2, Trash2, Eye, RefreshCcw, Lock, Unlock } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -42,7 +42,7 @@ export default function UserManagementPage() {
     setErrorMessage("");
 
     try {
-      const nextUsers = await getAdminUsers();
+      const nextUsers = await getAllAdminUsers();
       setUsers(nextUsers);
     } catch {
       setErrorMessage("Không thể tải danh sách người dùng. Vui lòng thử lại.");

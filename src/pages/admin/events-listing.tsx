@@ -41,10 +41,17 @@ export default function EventsListingPage() {
       const query: PublicEventsQuery = {
         search: searchTerm.trim() || undefined,
         category: category !== "All Categories" ? category : undefined,
-        location: location.trim() || undefined,
+        city: location.trim() || undefined,
         page,
         size: PAGE_SIZE,
-        sortBy: sortBy !== "latest" ? sortBy : undefined,
+        sortBy:
+          sortBy === "latest" || sortBy === "oldest"
+            ? "startTime"
+            : sortBy === "price-low" || sortBy === "price-high"
+              ? "minPrice"
+              : "startTime",
+        sortDir:
+          sortBy === "oldest" || sortBy === "price-low" ? "asc" : "desc",
       };
 
       const data = await getPublicEvents(query);

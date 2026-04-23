@@ -1,11 +1,11 @@
 import type { ApiResult, UserRole } from "@/features/auth/types";
-import { getApiResultData } from "@/features/auth/utils";
+import { ensureApiResultSuccess, getApiResultData } from "@/features/auth/utils";
 import axiosClient from "@/features/httpClient/axiosClient";
 
 const ADMIN_USERS_ENDPOINT =
-  process.env.NEXT_PUBLIC_ADMIN_USERS_ENDPOINT || "/auth/admin/users";
+  process.env.NEXT_PUBLIC_ADMIN_USERS_ENDPOINT || "/api/admin/users";
 
-export type AdminUserStatus = "ACTIVE" | "INACTIVE" | "SUSPENDED";
+export type AdminUserStatus = "ACTIVE" | "INACTIVE" | "PENDING_VERIFICATION";
 
 export type AdminUser = {
   id: string;
@@ -16,12 +16,76 @@ export type AdminUser = {
   status?: AdminUserStatus | string | null;
 };
 
-export async function getAdminUsers() {
-  const response = await axiosClient.get<ApiResult<AdminUser[]>>(
-    ADMIN_USERS_ENDPOINT,
-  );
+export type AdminUsersPage = {
+  items: AdminUser[];
+  page: number;
+  size: number;
+  totalItems: number;
+  totalPages: number;
+  hasNext: boolean;
+};
 
-  return getApiResultData<AdminUser[]>(response.data) ?? [];
+type UnknownRecord = Record<string, unknown>;
+
+function toRecord(value: unknown): UnknownRecord {
+  return value && typeof value === "object"
+    ? (value as UnknownRecord)
+    : {};
+}
+
+function readString(value: unknown) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function readNumber(value: unknown, fallback = 0) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function mapAdminUser(value: unknown): AdminUser {
+  const raw = toRecord(value);
+
+  return {
+    id: readString(raw.id) || readString(raw.userId),
+    fullName:
+      readString(raw.fullName) ||
+      readString(raw.name) ||
+      "Unknown User",
+    email: readString(raw.email),
+    phone: readString(raw.phone),
+    role: (readString(raw.role) as UserRole) || null,
+    status: readString(raw.status) || "ACTIVE",
+  };
+}
+
+function parseAdminUsersPage(payload: unknown): AdminUsersPage {
+  const raw = toRecord(payload);
+  const rawItems = Array.isArray(raw.items) ? raw.items : [];
+  const items = rawItems.map((item) => mapAdminUser(item));
+
+  return {
+    items,
+    page: readNumber(raw.page, 0),
+    size: readNumber(raw.size, items.length || 10),
+    totalItems: readNumber(raw.totalItems, items.length),
+    totalPages: readNumber(raw.totalPages, 1),
+    hasNext: Boolean(raw.hasNext),
+  };
+}
+
+export async function getAdminUsers(params?: { page?: number; size?: number }) {
+  const response = await axiosClient.get<ApiResult<unknown>>(ADMIN_USERS_ENDPOINT, {
+    params,
+  });
+
+  ensureApiResultSuccess(response.data, "Cannot load admin users.");
+  const payload = getApiResultData<unknown>(response.data);
+  return parseAdminUsersPage(payload);
+}
+
+export async function getAllAdminUsers() {
+  const pageData = await getAdminUsers({ page: 0, size: 100 });
+  return pageData.items;
 }
 
 export async function getAdminUser(userId: string) {
@@ -88,13 +152,34 @@ export type EventReport = {
 
 export async function getDashboardStats(): Promise<DashboardStats> {
   try {
-    const response = await axiosClient.get<ApiResult<DashboardStats>>("/api/admin/stats");
-    return getApiResultData<DashboardStats>(response.data) ?? {
-      totalUsers: 0,
-      activeUsers: 0,
-      totalEvents: 0,
-      publishedEvents: 0,
-      pendingApprovalEvents: 0,
+    const [usersPage, pendingEventsResponse, publicEventsResponse] =
+      await Promise.all([
+        getAdminUsers({ page: 0, size: 200 }),
+        axiosClient.get<ApiResult<unknown>>("/api/admin/events/pending", {
+          params: { page: 0, size: 1 },
+        }),
+        axiosClient.get<ApiResult<unknown>>("/api/events", {
+          params: { page: 0, size: 1 },
+        }),
+      ]);
+
+    const pendingPayload = toRecord(
+      getApiResultData<unknown>(pendingEventsResponse.data),
+    );
+    const publicPayload = toRecord(getApiResultData<unknown>(publicEventsResponse.data));
+
+    const activeUsers = usersPage.items.filter(
+      (user) => readString(user.status) === "ACTIVE",
+    ).length;
+    const pendingApprovalEvents = readNumber(pendingPayload.totalItems, 0);
+    const publishedEvents = readNumber(publicPayload.totalItems, 0);
+
+    return {
+      totalUsers: usersPage.totalItems,
+      activeUsers,
+      totalEvents: publishedEvents + pendingApprovalEvents,
+      publishedEvents,
+      pendingApprovalEvents,
       totalRevenue: 0,
       monthlyRevenue: 0,
       totalTicketsSold: 0,
@@ -115,10 +200,10 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 
 export async function getRevenueReport(): Promise<RevenueReport> {
   try {
-    const response = await axiosClient.get<ApiResult<RevenueReport>>("/api/admin/reports/revenue");
-    return getApiResultData<RevenueReport>(response.data) ?? {
-      totalRevenue: 0,
-      monthlyRevenue: 0,
+    const stats = await getDashboardStats();
+    return {
+      totalRevenue: stats.totalRevenue,
+      monthlyRevenue: stats.monthlyRevenue,
     };
   } catch {
     return {
@@ -130,14 +215,20 @@ export async function getRevenueReport(): Promise<RevenueReport> {
 
 export async function getUserReport(): Promise<UserReport> {
   try {
-    const response = await axiosClient.get<ApiResult<UserReport>>("/api/admin/reports/users");
-    return getApiResultData<UserReport>(response.data) ?? {
-      totalUsers: 0,
-      activeUsers: 0,
-      inactiveUsers: 0,
-      customerCount: 0,
-      organizerCount: 0,
-      adminCount: 0,
+    const users = await getAllAdminUsers();
+    const activeUsers = users.filter((user) => readString(user.status) === "ACTIVE").length;
+    const inactiveUsers = users.filter((user) => readString(user.status) === "INACTIVE").length;
+    const customerCount = users.filter((user) => readString(user.role) === "CUSTOMER").length;
+    const organizerCount = users.filter((user) => readString(user.role) === "ORGANIZER").length;
+    const adminCount = users.filter((user) => readString(user.role) === "ADMIN").length;
+
+    return {
+      totalUsers: users.length,
+      activeUsers,
+      inactiveUsers,
+      customerCount,
+      organizerCount,
+      adminCount,
       newUsersThisMonth: 0,
     };
   } catch {
@@ -155,11 +246,11 @@ export async function getUserReport(): Promise<UserReport> {
 
 export async function getEventReport(): Promise<EventReport> {
   try {
-    const response = await axiosClient.get<ApiResult<EventReport>>("/api/admin/reports/events");
-    return getApiResultData<EventReport>(response.data) ?? {
-      totalEvents: 0,
-      publishedEvents: 0,
-      pendingApprovalEvents: 0,
+    const stats = await getDashboardStats();
+    return {
+      totalEvents: stats.totalEvents,
+      publishedEvents: stats.publishedEvents,
+      pendingApprovalEvents: stats.pendingApprovalEvents,
       rejectedEvents: 0,
       totalAttendees: 0,
       averageAttendeesPerEvent: 0,

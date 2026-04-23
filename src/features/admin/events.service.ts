@@ -8,7 +8,7 @@ import {
 } from "@/features/auth/utils";
 import axiosClient from "@/features/httpClient/axiosClient";
 
-export type AdminEventStatus = "PENDING_APPROVAL" | "PUBLISHED" | "REJECTED";
+export type AdminEventStatus = "PENDING" | "APPROVED" | "REJECTED" | "PUBLISHED";
 
 export type AdminEvent = {
   id: string;
@@ -42,7 +42,7 @@ export type AdminEventsPage = {
   hasNext: boolean;
 };
 
-const ADMIN_EVENTS_ENDPOINT = "/api/admin/events";
+const ADMIN_PENDING_EVENTS_ENDPOINT = "/api/admin/events/pending";
 
 type AdminApiErrorPayload = {
   code?: number | string;
@@ -81,7 +81,7 @@ function mapAdminEvent(item: unknown, index: number): AdminEvent {
   const status =
     readString(value.status) ||
     readString(value.eventStatus) ||
-    "PENDING_APPROVAL";
+    "PENDING";
 
   return {
     id,
@@ -149,11 +149,30 @@ function parseAdminEventsPage(payload: unknown): AdminEventsPage {
 export async function getAdminEvents(
   query: AdminEventsQuery,
 ): Promise<AdminEventsPage> {
+  const requestedStatus = query.status?.trim();
+  if (
+    requestedStatus &&
+    requestedStatus !== "PENDING" &&
+    requestedStatus !== "PENDING_APPROVAL"
+  ) {
+    return {
+      items: [],
+      page: query.page ?? 0,
+      size: query.size ?? 10,
+      totalElements: 0,
+      totalPages: 1,
+      hasNext: false,
+    };
+  }
+
   try {
     const response = await axiosClient.get<ApiResult<unknown>>(
-      ADMIN_EVENTS_ENDPOINT,
+      ADMIN_PENDING_EVENTS_ENDPOINT,
       {
-        params: query,
+        params: {
+          page: query.page,
+          size: query.size,
+        },
       },
     );
 
@@ -170,33 +189,16 @@ export async function getAdminEvents(
 }
 
 export async function getAdminEventById(
-  eventId: string,
+  _eventId: string,
 ): Promise<AdminEvent | null> {
-  try {
-    const response = await axiosClient.get<ApiResult<unknown>>(
-      `${ADMIN_EVENTS_ENDPOINT}/${eventId}`,
-    );
-    ensureApiResultSuccess(response.data, "Không thể tải chi tiết sự kiện.");
-
-    const payload =
-      getApiResultData(response.data as ApiResult<unknown>) ?? response.data;
-    return mapAdminEvent(payload, 0);
-  } catch (error) {
-    if (isAxiosError(error) && error.response?.status === 404) {
-      return null;
-    }
-
-    throw new Error(
-      getAdminErrorMessage(error, "Không thể tải chi tiết sự kiện."),
-    );
-  }
+  return null;
 }
 
 export async function findAdminEventByIdFromList(
   eventId: string,
 ): Promise<AdminEvent | null> {
   const statuses: Array<AdminEventStatus | undefined> = [
-    "PENDING_APPROVAL",
+    "PENDING",
     "PUBLISHED",
     "REJECTED",
     undefined,
@@ -216,8 +218,8 @@ export async function findAdminEventByIdFromList(
 
 export async function approveAdminEvent(eventId: string) {
   try {
-    const response = await axiosClient.put<ApiResult<unknown>>(
-      `${ADMIN_EVENTS_ENDPOINT}/${eventId}/approve`,
+    const response = await axiosClient.post<ApiResult<unknown>>(
+      `/api/admin/events/${eventId}/approve`,
       {},
     );
 
@@ -232,9 +234,9 @@ export async function approveAdminEvent(eventId: string) {
 
 export async function rejectAdminEvent(eventId: string, rejectReason: string) {
   try {
-    const response = await axiosClient.put<ApiResult<unknown>>(
-      `${ADMIN_EVENTS_ENDPOINT}/${eventId}/reject`,
-      { rejectReason },
+    const response = await axiosClient.post<ApiResult<unknown>>(
+      `/api/admin/events/${eventId}/reject`,
+      { reason: rejectReason },
     );
 
     ensureApiResultSuccess(response.data, "Từ chối sự kiện thất bại.");
@@ -295,10 +297,11 @@ export type PublicEventsPage = {
 export type PublicEventsQuery = {
   search?: string;
   category?: string;
-  location?: string;
+  city?: string;
   page?: number;
   size?: number;
   sortBy?: string;
+  sortDir?: "asc" | "desc";
 };
 
 function mapPublicEvent(item: unknown, index: number): PublicEvent {
@@ -386,7 +389,10 @@ export async function getPublicEvents(
 ): Promise<PublicEventsPage> {
   try {
     const response = await axiosClient.get<ApiResult<unknown>>("/api/events", {
-      params: query,
+      params: {
+        ...query,
+        sortDir: query.sortDir ?? "asc",
+      },
     });
 
     ensureApiResultSuccess(response.data, "Không thể tải danh sách sự kiện.");

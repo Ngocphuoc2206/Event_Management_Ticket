@@ -41,7 +41,7 @@ function formatDateTime(rawDate?: string) {
 }
 
 function getStatusClasses(status: string) {
-  if (status === "PUBLISHED") {
+  if (status === "PUBLISHED" || status === "APPROVED") {
     return "bg-emerald-50 text-emerald-600 border-emerald-100";
   }
 
@@ -115,7 +115,7 @@ export default function EventDetailPage() {
 
     try {
       const updated = await approveAdminEvent(currentEvent.id);
-      setCurrentEvent(updated ?? { ...currentEvent, status: "PUBLISHED" });
+      setCurrentEvent(updated ?? { ...currentEvent, status: "APPROVED" });
       setSuccessMessage("Duyệt sự kiện thành công.");
     } catch (error) {
       setErrorMessage(
@@ -358,7 +358,8 @@ export default function EventDetailPage() {
               </div>
             )}
 
-            {currentEvent.status === "PUBLISHED" && (
+            {(currentEvent.status === "PUBLISHED" ||
+              currentEvent.status === "APPROVED") && (
               <div className="bg-white rounded-[40px] p-8 border border-slate-100 shadow-sm">
                 <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-6">
                   Moderation

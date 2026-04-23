@@ -10,7 +10,7 @@ import type {
 } from "@/features/organizer/events/types";
 
 const ORGANIZER_API_BASE =
-  process.env.NEXT_PUBLIC_ORGANIZER_API_BASE || "http://100.25.101.12:8080/api/organizer";
+  process.env.NEXT_PUBLIC_ORGANIZER_API_BASE || "http://localhost:8080/api/organizer";
 
 type TicketTypeListQuery = {
   search?: string;
@@ -55,6 +55,36 @@ function mapTicketTypeItem(item: unknown, index: number): OrganizerTicketType {
   };
 }
 
+function getTicketItemsFromPayload(payload: unknown): unknown[] {
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+
+  if (!payload || typeof payload !== "object") {
+    return [];
+  }
+
+  const objectPayload = payload as {
+    items?: unknown[];
+    content?: unknown[];
+    ticketTypes?: unknown[];
+  };
+
+  if (Array.isArray(objectPayload.items)) {
+    return objectPayload.items;
+  }
+
+  if (Array.isArray(objectPayload.content)) {
+    return objectPayload.content;
+  }
+
+  if (Array.isArray(objectPayload.ticketTypes)) {
+    return objectPayload.ticketTypes;
+  }
+
+  return [];
+}
+
 export async function getOrganizerTicketTypes(eventId: string, params?: TicketTypeListQuery) {
   try {
     const response = await axiosClient.get<ApiResult<OrganizerTicketTypesPageData>>(
@@ -64,12 +94,7 @@ export async function getOrganizerTicketTypes(eventId: string, params?: TicketTy
 
     ensureApiResultSuccess(response.data, "Khong the tai danh sach loai ve.");
     const payload = getApiResultData(response.data as ApiResult<unknown>);
-    if (!payload || typeof payload !== "object") {
-      return [] as OrganizerTicketType[];
-    }
-
-    const objectPayload = payload as OrganizerTicketTypesPageData;
-    const items = Array.isArray(objectPayload.items) ? objectPayload.items : [];
+    const items = getTicketItemsFromPayload(payload);
     return items.map((item, index) => mapTicketTypeItem(item, index));
   } catch (error) {
     throw new Error(
