@@ -5,13 +5,15 @@ on:
     branches:
       - develop
       - main
-  pull_request: 
+  pull_request:
     branches:
       - develop
-      - main
+    types:
+      - closed
 
 jobs:
   deploy-frontend:
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
