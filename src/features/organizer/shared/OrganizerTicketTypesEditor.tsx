@@ -69,9 +69,15 @@ function toDateTimeLocal(value?: string) {
   return shifted.toISOString().slice(0, 16);
 }
 
-function toIsoString(value: string) {
+function toIsoString(value: string): string | null {
   const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+  // Convert to ISO 8601 LocalDateTime format (without timezone Z and milliseconds)
+  // Format: 2026-04-23T22:30:00
+  const isoString = parsed.toISOString();
+  return isoString.replace(/\.\d{3}Z$/, "");
 }
 
 function formatPrice(price: number) {

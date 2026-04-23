@@ -42,7 +42,7 @@ export type AdminEventsPage = {
   hasNext: boolean;
 };
 
-const ADMIN_PENDING_EVENTS_ENDPOINT = "/api/admin/events/pending";
+const ADMIN_PENDING_EVENTS_ENDPOINT = "http://localhost:8080/api/events";
 
 type AdminApiErrorPayload = {
   code?: number | string;
@@ -219,7 +219,7 @@ export async function findAdminEventByIdFromList(
 export async function approveAdminEvent(eventId: string) {
   try {
     const response = await axiosClient.post<ApiResult<unknown>>(
-      `/api/admin/events/${eventId}/approve`,
+      `http://localhost:8080/api/admin/events/${eventId}/approve`,
       {},
     );
 
@@ -235,7 +235,7 @@ export async function approveAdminEvent(eventId: string) {
 export async function rejectAdminEvent(eventId: string, rejectReason: string) {
   try {
     const response = await axiosClient.post<ApiResult<unknown>>(
-      `/api/admin/events/${eventId}/reject`,
+      `http://localhost:8080/api/admin/events/${eventId}/reject`,
       { reason: rejectReason },
     );
 

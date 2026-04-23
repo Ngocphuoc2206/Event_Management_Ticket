@@ -24,7 +24,7 @@ export type OrganizerCreateEventPayload = {
 
 export type OrganizerUpdateEventPayload = Partial<OrganizerCreateEventPayload>;
 
-export type OrganizerTicketTypeStatus = "ACTIVE" | "INACTIVE";
+export type OrganizerTicketTypeStatus = "ACTIVE" | "INACTIVE" | "SOLD_OUT" | "CANCELLED" | "EXPIRED";
 
 export type OrganizerTicketType = {
   id: string;
