@@ -49,7 +49,7 @@ function mapTicketTypeItem(item: unknown, index: number): OrganizerTicketType {
       (typeof value.event_id === "string" && value.event_id) ||
       undefined,
     status:
-      value.status === "ACTIVE" || value.status === "INACTIVE"
+      value.status === "ACTIVE" || value.status === "INACTIVE" || value.status === "SOLD_OUT" || value.status === "CANCELLED" || value.status === "EXPIRED"
         ? value.status
         : undefined,
   };
@@ -108,15 +108,29 @@ export async function createOrganizerTicketType(
   payload: OrganizerCreateTicketTypePayload,
 ) {
   try {
+    // Ensure eventId is not empty
+    if (!eventId || eventId.trim() === "") {
+      throw new Error("Event ID must be provided to create ticket type.");
+    }
+
+    // Prepare payload with correct format
+    const requestPayload = {
+      name: payload.name,
+      price: Number(payload.price),
+      quantity: Number(payload.quantity),
+      saleStart: payload.saleStart, // Already in ISO 8601 format from form
+      saleEnd: payload.saleEnd,     // Already in ISO 8601 format from form
+    };
+
     const response = await axiosClient.post<ApiResult<OrganizerTicketType>>(
       `${ORGANIZER_API_BASE}/events/${eventId}/ticket-types`,
-      payload,
+      requestPayload,
     );
 
-    ensureApiResultSuccess(response.data, "Khong the tao loai ve.");
+    ensureApiResultSuccess(response.data, "Cannot create ticket type.");
     return response.data;
   } catch (error) {
-    throw new Error(getApiErrorMessage(error, "Khong the tao loai ve."));
+    throw new Error(getApiErrorMessage(error, "Cannot create ticket type."));
   }
 }
 
@@ -125,15 +139,37 @@ export async function updateOrganizerTicketType(
   payload: OrganizerUpdateTicketTypePayload,
 ) {
   try {
+    // Prepare payload with correct data types
+    const requestPayload: Record<string, unknown> = {};
+    
+    if (payload.name !== undefined) {
+      requestPayload.name = payload.name;
+    }
+    if (payload.price !== undefined) {
+      requestPayload.price = Number(payload.price);
+    }
+    if (payload.quantity !== undefined) {
+      requestPayload.quantity = Number(payload.quantity);
+    }
+    if (payload.saleStart !== undefined) {
+      requestPayload.saleStart = payload.saleStart; // Already in ISO 8601 format
+    }
+    if (payload.saleEnd !== undefined) {
+      requestPayload.saleEnd = payload.saleEnd;     // Already in ISO 8601 format
+    }
+    if (payload.status !== undefined) {
+      requestPayload.status = payload.status;
+    }
+
     const response = await axiosClient.put<ApiResult<OrganizerTicketType>>(
       `${ORGANIZER_API_BASE}/ticket-types/${ticketTypeId}`,
-      payload,
+      requestPayload,
     );
 
-    ensureApiResultSuccess(response.data, "Khong the cap nhat loai ve.");
+    ensureApiResultSuccess(response.data, "Cannot update ticket type.");
     return response.data;
   } catch (error) {
-    throw new Error(getApiErrorMessage(error, "Khong the cap nhat loai ve."));
+    throw new Error(getApiErrorMessage(error, "Cannot update ticket type."));
   }
 }
 
