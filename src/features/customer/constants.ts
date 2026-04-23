@@ -8,7 +8,7 @@ import type {
 
 const CUSTOMER_NAVIGATION_ITEMS_BASE = [
   { label: "Dashboard", href: "/customer", icon: "grid" },
-  { label: "Events", href: "/customer/events", icon: "search" },
+  { label: "Events", href: "/api/events", icon: "search" },
   { label: "My Tickets", href: "/customer/my-tickets", icon: "ticket" },
   { label: "Order History", href: "/customer/order-history", icon: "history" },
   { label: "Notifications", href: "/customer/notifications", icon: "bell" },
