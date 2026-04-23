@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import AdminLayout from "@/components/templates/AdminLayout/AdminLayout";
 import {
   getAdminUser,
@@ -80,6 +81,7 @@ export default function UserDetailPage() {
 
   useEffect(() => {
     if (userId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       void loadUser();
     }
   }, [loadUser, userId]);

@@ -10,7 +10,6 @@ on:
       - develop
       - main
 
-
 jobs:
   deploy-frontend:
     runs-on: ubuntu-latest

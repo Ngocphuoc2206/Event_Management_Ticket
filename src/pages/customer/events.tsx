@@ -370,10 +370,10 @@ export default function CustomerEventsPage() {
       </Head>
 
       <CustomerPageShell
-        activeHref="/customer/events"
+        activeHref="/api/organizer/events?page=1&size=10"
         onLogout={() => void handleLogout()}
       >
-        <div className="relative overflow-hidden rounded-[32px] bg-gray-900 px-6 pb-16 pt-16 sm:px-8">
+        <div className="relative overflow-hidden rounded-4xl bg-gray-900 px-6 pb-16 pt-16 sm:px-8">
           <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1920')] bg-cover bg-center opacity-20" />
           <div className="relative z-10 mx-auto max-w-5xl text-center">
             <h1 className="text-4xl font-black text-white md:text-5xl">
