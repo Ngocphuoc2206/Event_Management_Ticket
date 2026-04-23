@@ -8,7 +8,7 @@ import com.envenHub.backend.entity.OrderItem;
 import com.envenHub.backend.exception.AppException;
 import com.envenHub.backend.repository.IssuedTicketRepository;
 import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -18,7 +18,9 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
+@Slf4j
 public class TicketIssuingService {
+
     @Autowired
     private IssuedTicketRepository issuedTicketRepository;
 
@@ -27,9 +29,19 @@ public class TicketIssuingService {
 
     @Transactional
     public void issueTicketsForOrder(Order order) {
-        if (issuedTicketRepository.existsByOrderId(order.getId())) {
-            return; // idempotent
+        log.info("issueTicketsForOrder called: orderId={}", order != null ? order.getId() : null);
+
+        if (order == null) {
+            log.warn("issueTicketsForOrder skipped: order is null");
+            return;
         }
+
+        if (issuedTicketRepository.existsByOrderId(order.getId())) {
+            log.info("issueTicketsForOrder skipped: tickets already issued, orderId={}", order.getId());
+            return;
+        }
+
+        int totalIssued = 0;
 
         for (OrderItem item : order.getItems()) {
             for (int i = 0; i < item.getQuantity(); i++) {
@@ -41,7 +53,12 @@ public class TicketIssuingService {
                 ticket.setUser(order.getUser());
                 ticket.setEvent(item.getTicketType().getEvent());
                 ticket.setTicketCode(ticketCode);
-                //Upload QR s3
+
+                log.info(
+                        "Generating QR for ticket: orderId={}, ticketCode={}, ticketTypeId={}",
+                        order.getId(), ticketCode, item.getTicketType().getId()
+                );
+
                 String qrUrl = qrCodeService.generateAndUploadTicketQr(ticketCode);
                 ticket.setQrCodeUrl(qrUrl);
 
@@ -49,26 +66,43 @@ public class TicketIssuingService {
                 ticket.setUsed(false);
 
                 issuedTicketRepository.save(ticket);
+
+                totalIssued++;
             }
         }
+
+        log.info(
+                "issueTicketsForOrder success: orderId={}, totalTicketsIssued={}",
+                order.getId(), totalIssued
+        );
     }
 
-    //User get ticket QR
-    public List<IssuedTicketResponse> getMyTickets(Authentication authentication, String type){
+    // User get ticket QR
+    public List<IssuedTicketResponse> getMyTickets(Authentication authentication, String type) {
         String userId = authentication.getName();
         LocalDateTime now = LocalDateTime.now();
+
+        log.info("getMyTickets called: userId={}, type={}", userId, type);
+
         List<IssuedTicket> tickets;
-        if (type == null || type.isBlank()){
+
+        if (type == null || type.isBlank()) {
             tickets = issuedTicketRepository.findByUserIdOrderByIssuedAtDesc(userId);
-        } else if ("upcoming".equalsIgnoreCase(type)){
+        } else if ("upcoming".equalsIgnoreCase(type)) {
             tickets = issuedTicketRepository
                     .findByUserIdAndEvent_StartTimeGreaterThanEqualOrderByIssuedAtDesc(userId, now);
-        }  else if ("past".equalsIgnoreCase(type)) {
+        } else if ("past".equalsIgnoreCase(type)) {
             tickets = issuedTicketRepository
                     .findByUserIdAndEvent_EndTimeLessThanOrderByIssuedAtDesc(userId, now);
         } else {
+            log.warn("getMyTickets failed: invalid type={}, userId={}", type, userId);
             throw new AppException(ErrorCode.VALIDATION_ERROR);
         }
+
+        log.info(
+                "getMyTickets success: userId={}, type={}, totalTickets={}",
+                userId, type, tickets.size()
+        );
 
         return tickets.stream()
                 .map(this::toResponse)
@@ -78,14 +112,26 @@ public class TicketIssuingService {
     public IssuedTicketResponse getMyTicketDetail(String ticketId, Authentication authentication) {
         String userId = authentication.getName();
 
+        log.info("getMyTicketDetail called: ticketId={}, userId={}", ticketId, userId);
+
         IssuedTicket ticket = issuedTicketRepository.findByIdAndUserId(ticketId, userId)
-                .orElseThrow(() -> new AppException(ErrorCode.TICKET_NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.warn(
+                            "getMyTicketDetail failed: ticket not found, ticketId={}, userId={}",
+                            ticketId, userId
+                    );
+                    return new AppException(ErrorCode.TICKET_NOT_FOUND);
+                });
+
+        log.info(
+                "getMyTicketDetail success: ticketId={}, userId={}, eventId={}",
+                ticketId, userId, ticket.getEvent().getId()
+        );
+
         return toResponse(ticket);
     }
 
-
-
-    private IssuedTicketResponse toResponse(IssuedTicket ticket){
+    private IssuedTicketResponse toResponse(IssuedTicket ticket) {
         IssuedTicketResponse response = new IssuedTicketResponse();
         response.setId(ticket.getId());
         response.setTicketCode(ticket.getTicketCode());
@@ -110,10 +156,11 @@ public class TicketIssuingService {
         return response;
     }
 
-    private String resolveTicketCategory(IssuedTicket ticket){
+    private String resolveTicketCategory(IssuedTicket ticket) {
         LocalDateTime now = LocalDateTime.now();
 
-        if (ticket.getEvent().getEndTime() != null && ticket.getEvent().getEndTime().isBefore(now)){
+        if (ticket.getEvent().getEndTime() != null &&
+                ticket.getEvent().getEndTime().isBefore(now)) {
             return "PAST";
         }
         return "UPCOMING";
@@ -125,6 +172,9 @@ public class TicketIssuingService {
             code = "TIX-" + UUID.randomUUID().toString()
                     .replace("-", "").substring(0, 12).toUpperCase();
         } while (issuedTicketRepository.existsByTicketCode(code));
+
+        log.info("Generated ticketCode={}", code);
+
         return code;
     }
 }
