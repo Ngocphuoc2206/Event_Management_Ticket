@@ -8,7 +8,7 @@ import org.springframework.data.jpa.domain.Specification;
 public class EventSpecification {
     public static Specification<Event> isPublishedAndPublic(){
         return ((root, query, cb) -> cb.and(
-                cb.equal(root.get("status"), EventStatus.PUBLISHED),
+                cb.equal(root.get("status"), EventStatus.APPROVED),
                 cb.equal(root.get("visibility"), EventVisibility.PUBLIC)
         ));
     }
