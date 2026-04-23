@@ -20,7 +20,7 @@ export type UpdateAdminProfilePayload = {
 
 export async function getAdminProfile(): Promise<AdminProfile | null> {
   try {
-    const response = await axiosClient.get<ApiResult<AdminProfile>>("/api/users/me");
+    const response = await axiosClient.get<ApiResult<AdminProfile>>("/api/auth/users/me");
     return getApiResultData<AdminProfile>(response.data) ?? null;
   } catch {
     return null;
@@ -32,7 +32,7 @@ export async function updateAdminProfile(
 ): Promise<AdminProfile | null> {
   try {
     const response = await axiosClient.put<ApiResult<AdminProfile>>(
-      "/api/users/me",
+      "/api/auth/users/me",
       payload,
     );
     return getApiResultData<AdminProfile>(response.data) ?? null;
