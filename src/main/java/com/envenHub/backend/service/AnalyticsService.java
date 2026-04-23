@@ -11,6 +11,7 @@ import com.envenHub.backend.repository.OrderItemRepository;
 import com.envenHub.backend.repository.OrderRepository;
 import com.envenHub.backend.repository.TicketTypeRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +21,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class AnalyticsService {
     private final UserService userService;
@@ -34,6 +36,8 @@ public class AnalyticsService {
             Authentication authentication
     ) {
         UserResponse user = userService.getCurrentUser(authentication);
+        log.info("Start fetching analytics for eventId={}, range={}, userId={}",
+                eventId, range, user.getId());
 
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(()-> new AppException(ErrorCode.EVENT_NOT_FOUND));
@@ -41,6 +45,8 @@ public class AnalyticsService {
         TimeRange rangeData = resolveRange(range);
 
         if(!event.getOrganizerId().equals(user.getId())) {
+            log.warn("Analytics access denied for eventId={}, organizerId={}, requesterId={}",
+                    eventId, event.getOrganizerId(), user.getId());
             throw new AppException(ErrorCode.FORBIDDEN_EVENT_ACCESS);
         }
 
@@ -78,12 +84,16 @@ public class AnalyticsService {
 
     public TimeRange resolveRange(String range) {
         LocalDateTime to = LocalDateTime.now();
+        log.debug("Resolving analytics range: range={}", range);
         LocalDateTime from = switch (range) {
             case "7d" -> to.minusDays(7);
             case "30d" -> to.minusDays(30);
             case "this_week" -> to.with(DayOfWeek.MONDAY);
             case "this_month" -> to.withDayOfMonth(1);
-            default -> throw new AppException(ErrorCode.INVALID_RANGE);
+            default -> {
+                log.warn("Invalid analytics range received: range={}", range);
+                throw new AppException(ErrorCode.INVALID_RANGE);
+            }
         };
 
         return new TimeRange(from, to);

@@ -32,6 +32,7 @@ WORKDIR /app
 
 COPY --from=builder /app/target/*.jar app.jar
 
+RUN mkdir -p /app/logs
 
 EXPOSE 8080
 

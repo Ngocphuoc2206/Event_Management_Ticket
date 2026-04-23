@@ -4,11 +4,11 @@ import com.envenHub.backend.common.ErrorCode;
 import com.envenHub.backend.dto.response.NotificationResponse;
 import com.envenHub.backend.entity.Notification;
 import com.envenHub.backend.entity.Order;
-import com.envenHub.backend.entity.User;
 import com.envenHub.backend.enums.NotificationType;
 import com.envenHub.backend.exception.AppException;
 import com.envenHub.backend.repository.NotificationRepository;
 import com.envenHub.backend.repository.UserRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@Slf4j
 public class NotificationService {
     @Autowired
     private NotificationRepository notificationRepository;
@@ -31,9 +32,16 @@ public class NotificationService {
             String content
     ){
         if (order == null || order.getUser() == null){
+            log.warn(
+                    "createNotification skipped: order or order.user is null, notificationType={}",
+                    notificationType
+            );
             return;
         }
-
+        log.info(
+                "createNotification called: orderId={}, userId={}, notificationType={}",
+                order.getId(), order.getUser().getId(), notificationType
+        );
         Notification notification = new Notification();
         notification.setUser(order.getUser());
         notification.setTitle(title);
@@ -42,11 +50,16 @@ public class NotificationService {
         notification.setRead(false);
         notification.setCreatedAt(LocalDateTime.now());
         notification.setOrderId(order.getId());
-
+        log.info(
+                "createNotification success: orderId={}, userId={}, notificationType={}",
+                order.getId(), order.getUser().getId(), notificationType
+        );
         notificationRepository.save(notification);
     }
 
     public void notifyTicketPurchaseSuccess(Order order) {
+        log.info("notifyTicketPurchaseSuccess called: orderId={}", order != null ? order.getId() : null);
+
         createNotification(
                 order,
                 NotificationType.TICKET_PURCHASE_SUCCESS,
@@ -55,6 +68,8 @@ public class NotificationService {
                         + order.getItems().getFirst().getTicketType().getEvent().getTitle()
                         + ". Mã đơn hàng: " + order.getId()
         );
+        log.info("notifyTicketPurchaseSuccess completed: orderId={}", order != null ? order.getId() : null);
+
     }
 
     public void notifyPaymentFailed(Order order) {
@@ -64,6 +79,8 @@ public class NotificationService {
                 "Thanh toán thất bại",
                 "Thanh toán cho đơn " + order.getId() + " đã thất bại"
         );
+        log.info("notifyPaymentFailed completed: orderId={}", order != null ? order.getId() : null);
+
     }
 
     public void notifyOrderCancelled(Order order) {
@@ -73,6 +90,8 @@ public class NotificationService {
                 "Đơn hàng bị hủy",
                 "Đơn hàng " + order.getId() + " đã bị hủy"
         );
+        log.info("notifyOrderCancelled completed: orderId={}", order != null ? order.getId() : null);
+
     }
 
     public void notifyEventReminder(Order order, String eventName) {
@@ -82,29 +101,52 @@ public class NotificationService {
                 "Sắp diễn ra sự kiện",
                 "Sự kiện " + eventName + " sắp diễn ra"
         );
+        log.info(
+                "notifyEventReminder completed: orderId={}, eventName={}",
+                order != null ? order.getId() : null, eventName
+        );
     }
 
     public List<NotificationResponse> getMyNotifications(Authentication authentication) {
         String userId = authentication.getName();
+        log.info("getMyNotifications called: userId={}", userId);
 
         userRepository.findById(userId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.warn("getMyNotifications failed: user not found, userId={}", userId);
+                    return new AppException(ErrorCode.USER_NOT_FOUND);
+                });
 
-        return notificationRepository.findByUserIdOrderByCreatedAtDesc(userId)
-                .stream().map(this::toResponse)
+        List<NotificationResponse> responses = notificationRepository.findByUserIdOrderByCreatedAtDesc(userId)
+                .stream()
+                .map(this::toResponse)
                 .toList();
+
+        log.info("getMyNotifications success: userId={}, totalNotifications={}", userId, responses.size());
+        return responses;
     }
 
     public NotificationResponse markAsRead(String notificationId, Authentication authentication){
         String userId = authentication.getName();
+        log.info("markAsRead called: notificationId={}, userId={}", notificationId, userId);
 
         Notification notification = notificationRepository.findByIdAndUserId(notificationId, userId)
-                .orElseThrow(() -> new AppException(ErrorCode.EVENT_NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.warn(
+                            "markAsRead failed: notification not found, notificationId={}, userId={}",
+                            notificationId, userId
+                    );
+                    return new AppException(ErrorCode.NOTIFICATION_NOT_FOUND);
+                });
 
         if (!notification.isRead()){
             notification.setRead(true);
             notification.setReadAt(LocalDateTime.now());
             notificationRepository.save(notification);
+            log.info("markAsRead success: notificationId={}, userId={}", notificationId, userId);
+
+        } else {
+            log.info("markAsRead skipped: notification already read, notificationId={}, userId={}", notificationId, userId);
         }
         return toResponse(notification);
     }
