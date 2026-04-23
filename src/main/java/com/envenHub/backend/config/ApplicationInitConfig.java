@@ -45,6 +45,19 @@ public class ApplicationInitConfig {
                 userRepository.save(user);
                 log.warn("admin user has been created with default password: admin, please change it");
             }
+
+            if (userRepository.findByRole(RoleName.ORGANIZER).isEmpty()){
+                User user = User.builder()
+                        .email(PredefinedAccount.ORGANIZER_USER_NAME)
+                        .password(passwordEncoder.encode(PredefinedAccount.ORGANIZER_PASSWORD))
+                        .role(RoleName.ORGANIZER)
+                        .fullName(RoleName.ORGANIZER)
+                        .phone("0000000000")
+                        .status(UserStatus.ACTIVE)
+                        .build();
+                userRepository.save(user);
+                log.warn("Organizer has been created with default password: organizer, please change it");
+            }
             log.info("Application initialization completed .....");
         };
     }
