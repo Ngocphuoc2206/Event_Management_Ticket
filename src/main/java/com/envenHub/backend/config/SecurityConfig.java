@@ -32,7 +32,10 @@ public class SecurityConfig {
             "/api/auth/register",
             "/api/auth/login",
             "/api/auth/refresh",
-            "/api/payments/webhook/**"
+            "/api/payments/webhook/**",
+            "/actuator/health",
+            "/actuator/info",
+            "/actuator/metrics",
     };
 
 
