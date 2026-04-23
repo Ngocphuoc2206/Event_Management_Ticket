@@ -9,13 +9,18 @@ import type {
   OrganizerUpdateTicketTypePayload,
 } from "@/features/organizer/events/types";
 
-const ORGANIZER_API_BASE =
-  process.env.NEXT_PUBLIC_ORGANIZER_API_BASE || "http://localhost:8080/api/organizer";
-
 type TicketTypeListQuery = {
   search?: string;
   status?: OrganizerTicketTypeStatus;
+  page?: number;
+  size?: number;
 };
+
+type UnknownRecord = Record<string, unknown>;
+
+function toRecord(value: unknown): UnknownRecord {
+  return value && typeof value === "object" ? (value as UnknownRecord) : {};
+}
 
 function toNumberOrZero(value: unknown) {
   const parsed = Number(value);
@@ -23,7 +28,7 @@ function toNumberOrZero(value: unknown) {
 }
 
 function mapTicketTypeItem(item: unknown, index: number): OrganizerTicketType {
-  const value = (item && typeof item === "object" ? item : {}) as Record<string, unknown>;
+  const value = toRecord(item);
 
   return {
     id:
@@ -60,15 +65,7 @@ function getTicketItemsFromPayload(payload: unknown): unknown[] {
     return payload;
   }
 
-  if (!payload || typeof payload !== "object") {
-    return [];
-  }
-
-  const objectPayload = payload as {
-    items?: unknown[];
-    content?: unknown[];
-    ticketTypes?: unknown[];
-  };
+  const objectPayload = toRecord(payload);
 
   if (Array.isArray(objectPayload.items)) {
     return objectPayload.items;
@@ -87,9 +84,16 @@ function getTicketItemsFromPayload(payload: unknown): unknown[] {
 
 export async function getOrganizerTicketTypes(eventId: string, params?: TicketTypeListQuery) {
   try {
-    const response = await axiosClient.get<ApiResult<OrganizerTicketTypesPageData>>(
-      `${ORGANIZER_API_BASE}/events/${eventId}/ticket-types`,
-      { params },
+    const response = await axiosClient.get<ApiResult<unknown>>(
+      `http://localhost:8080/api/organizer/events/${eventId}/ticket-types`,
+      { 
+        params: {
+          page: params?.page ?? 0,
+          size: params?.size ?? 100,
+          search: params?.search,
+          status: params?.status,
+        }
+      },
     );
 
     ensureApiResultSuccess(response.data, "Khong the tai danh sach loai ve.");
@@ -109,7 +113,7 @@ export async function createOrganizerTicketType(
 ) {
   try {
     const response = await axiosClient.post<ApiResult<OrganizerTicketType>>(
-      `${ORGANIZER_API_BASE}/events/${eventId}/ticket-types`,
+      `http://localhost:8080/api/organizer/events/${eventId}/ticket-types`,
       payload,
     );
 
@@ -126,7 +130,7 @@ export async function updateOrganizerTicketType(
 ) {
   try {
     const response = await axiosClient.put<ApiResult<OrganizerTicketType>>(
-      `${ORGANIZER_API_BASE}/ticket-types/${ticketTypeId}`,
+      `http://localhost:8080/api/organizer/ticket-types/${ticketTypeId}`,
       payload,
     );
 
@@ -140,7 +144,7 @@ export async function updateOrganizerTicketType(
 export async function deleteOrganizerTicketType(ticketTypeId: string) {
   try {
     const response = await axiosClient.delete<ApiResult<{ id?: string }>>(
-      `${ORGANIZER_API_BASE}/ticket-types/${ticketTypeId}`,
+      `http://localhost:8080/api/organizer/ticket-types/${ticketTypeId}`,
     );
 
     ensureApiResultSuccess(response.data, "Khong the xoa loai ve.");

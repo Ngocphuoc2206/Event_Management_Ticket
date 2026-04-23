@@ -3,7 +3,7 @@ import { ensureApiResultSuccess, getApiResultData } from "@/features/auth/utils"
 import axiosClient from "@/features/httpClient/axiosClient";
 
 const ADMIN_USERS_ENDPOINT =
-  process.env.NEXT_PUBLIC_ADMIN_USERS_ENDPOINT || "/api/admin/users";
+  process.env.NEXT_PUBLIC_ADMIN_USERS_ENDPOINT || "http://localhost:8080/api/admin/users";
 
 export type AdminUserStatus = "ACTIVE" | "INACTIVE" | "PENDING_VERIFICATION";
 

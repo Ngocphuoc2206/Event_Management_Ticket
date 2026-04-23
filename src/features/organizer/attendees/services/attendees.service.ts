@@ -10,11 +10,9 @@ type AttendeesQuery = {
   status?: "true" | "false";
   sortBy?: "fullName" | "ticketType" | "check-in";
   sortDir?: "asc" | "desc";
+  page?: number;
+  size?: number;
 };
-
-const ORGANIZER_API_BASE =
-  process.env.NEXT_PUBLIC_ORGANIZER_API_BASE ||
-  "http://100.25.101.12:8080/api/organizer";
 
 export async function getOrganizerAttendees(
   eventId: string,
@@ -22,8 +20,17 @@ export async function getOrganizerAttendees(
 ) {
   try {
     const response = await axiosClient.get<ApiResult<unknown>>(
-      `${ORGANIZER_API_BASE}/events/${eventId}/attendees`,
-      { params },
+      `http://localhost:8080/api/organizer/events/${eventId}/attendees`,
+      { 
+        params: {
+          page: params?.page ?? 0,
+          size: params?.size ?? 10,
+          search: params?.search,
+          status: params?.status,
+          sortBy: params?.sortBy ?? "fullName",
+          sortDir: params?.sortDir ?? "asc",
+        }
+      },
     );
 
     ensureApiResultSuccess(response.data, "Khong the tai danh sach attendee.");
@@ -38,7 +45,7 @@ export async function getOrganizerAttendees(
 export async function checkInOrganizerAttendee(orderItemId: string) {
   try {
     const response = await axiosClient.post<ApiResult<unknown>>(
-      `${ORGANIZER_API_BASE}/check-in`,
+      `http://localhost:8080/api/tickets/check-in`,
       { orderItemId },
     );
 
