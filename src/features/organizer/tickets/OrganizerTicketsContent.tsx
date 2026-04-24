@@ -262,9 +262,9 @@ export function OrganizerTicketsContent() {
 
         if (Object.keys(payload).length > 0) {
           await updateOrganizerTicketType(editingTicketId, payload);
-          showToast({ tone: "success", message: "Cap nhat loai ve thanh cong!" });
+          showToast({ tone: "success", message: "Ticket type updated." });
         } else {
-          showToast({ tone: "success", message: "Khong co thay doi nao de cap nhat." });
+          showToast({ tone: "success", message: "No changes to update." });
         }
       } else {
         await createOrganizerTicketType(selectedEventId, {
@@ -274,7 +274,7 @@ export function OrganizerTicketsContent() {
           saleStart,
           saleEnd,
         });
-        showToast({ tone: "success", message: "Tao loai ve thanh cong!" });
+        showToast({ tone: "success", message: "Ticket type created." });
       }
 
       resetForm();
@@ -294,14 +294,14 @@ export function OrganizerTicketsContent() {
       return;
     }
 
-    if (!window.confirm("Ban co chac chan muon xoa loai ve nay?")) {
+    if (!window.confirm("Delete this ticket type?")) {
       return;
     }
 
     setIsDeletingById((prev) => ({ ...prev, [ticketId]: true }));
     try {
       await deleteOrganizerTicketType(ticketId);
-      showToast({ tone: "success", message: "Xoa loai ve thanh cong!" });
+      showToast({ tone: "success", message: "Ticket type deleted." });
       await loadTickets();
     } catch (error) {
       showToast({
@@ -349,24 +349,24 @@ export function OrganizerTicketsContent() {
       <div className="mx-auto w-full max-w-[1104px] px-5 py-8 sm:px-8 lg:px-10">
         <section className="space-y-3">
           <h1 className="text-4xl font-bold leading-10 text-zinc-900">
-            Quan ly loai ve
+            Tickets Management
           </h1>
           <p className="text-base text-gray-700">
-            Chon su kien va quan ly cac loai ve tuong ung. Tao, cap nhat hoac xoa loai ve tren trang nay.
+            Manage ticket types with organizer APIs directly on this page.
           </p>
         </section>
 
         <section className="mt-8 grid gap-4 rounded-3xl bg-white p-6 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)] md:grid-cols-4">
           <label className="space-y-1 md:col-span-2">
             <span className="text-xs font-bold uppercase tracking-wider text-gray-700">
-              Su kien
+              Event
             </span>
             <select
               value={selectedEventId}
               onChange={(event) => setSelectedEventId(event.target.value)}
               className="h-11 w-full rounded-2xl bg-gray-100 px-4 text-sm font-medium text-zinc-900"
             >
-              <option value="">-- Chon su kien --</option>
+              <option value="">Select event</option>
               {events.map((eventItem) => (
                 <option key={eventItem.id} value={eventItem.id}>
                   {eventItem.title}
@@ -377,14 +377,14 @@ export function OrganizerTicketsContent() {
 
           <label className="space-y-1">
             <span className="text-xs font-bold uppercase tracking-wider text-gray-700">
-              Tim kiem
+              Search
             </span>
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-gray-500" />
               <input
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
-                placeholder="Tim theo ten loai ve..."
+                placeholder="Search by name"
                 className="w-full rounded-2xl bg-gray-100 py-3 pl-10 pr-4 text-sm text-zinc-900"
               />
             </div>
@@ -392,7 +392,7 @@ export function OrganizerTicketsContent() {
 
           <label className="space-y-1">
             <span className="text-xs font-bold uppercase tracking-wider text-gray-700">
-              Trang thai
+              Status
             </span>
             <select
               value={statusFilter}
@@ -403,9 +403,9 @@ export function OrganizerTicketsContent() {
               }
               className="h-11 w-full rounded-2xl bg-gray-100 px-4 text-sm font-medium text-zinc-900"
             >
-              <option value="ALL">Tat ca</option>
-              <option value="ACTIVE">Dang ban</option>
-              <option value="INACTIVE">Ngung ban</option>
+              <option value="ALL">ALL</option>
+              <option value="ACTIVE">ACTIVE</option>
+              <option value="INACTIVE">INACTIVE</option>
             </select>
           </label>
         </section>
@@ -413,7 +413,7 @@ export function OrganizerTicketsContent() {
         <section className="mt-4 grid gap-4 rounded-3xl bg-white p-6 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)] sm:grid-cols-3">
           <div>
             <p className="text-xs font-bold uppercase tracking-wide text-gray-700">
-              Su kien
+              Event
             </p>
             <p className="text-sm font-semibold text-zinc-900">
               {selectedEventName}
@@ -421,19 +421,19 @@ export function OrganizerTicketsContent() {
           </div>
           <div>
             <p className="text-xs font-bold uppercase tracking-wide text-gray-700">
-              So loai ve
+              Types
             </p>
             <p className="text-lg font-bold text-zinc-900">{tickets.length}</p>
           </div>
           <div>
             <p className="text-xs font-bold uppercase tracking-wide text-gray-700">
-              Gia thap nhat
+              Min Price
             </p>
             <p className="text-sm font-bold text-zinc-900">
               {formatCurrency(minPrice)}
             </p>
             <p className="text-xs text-gray-700">
-              Tong so luong: {totalQuantity}
+              Total quantity: {totalQuantity}
             </p>
           </div>
         </section>
@@ -441,7 +441,7 @@ export function OrganizerTicketsContent() {
         <section className="mt-6 grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
           <article className="space-y-4 rounded-3xl bg-white p-6 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-zinc-900">Danh sach loai ve</h2>
+              <h2 className="text-lg font-bold text-zinc-900">Ticket Types</h2>
               <button
                 type="button"
                 onClick={openCreateForm}
@@ -449,25 +449,20 @@ export function OrganizerTicketsContent() {
                 className="inline-flex items-center gap-2 rounded-full bg-blue-100 px-4 py-2 text-sm font-semibold text-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <Plus className="h-4 w-4" />
-                Tao moi
+                New
               </button>
             </div>
 
             {!selectedEventId ? (
-              <div className="rounded-2xl bg-amber-50 border border-amber-200 p-4">
-                <p className="text-sm font-medium text-amber-800">
-                  Vui long chon su kien de bat dau quan ly ve.
-                </p>
-                <p className="text-xs text-amber-600 mt-1">
-                  Please select an event from the dropdown above to view and manage ticket types.
-                </p>
-              </div>
+              <p className="text-sm text-gray-700">
+                Select an event to load ticket types.
+              </p>
             ) : null}
             {selectedEventId && isLoading ? (
-              <p className="text-sm text-gray-700">Dang tai danh sach loai ve...</p>
+              <p className="text-sm text-gray-700">Loading ticket types...</p>
             ) : null}
             {selectedEventId && !isLoading && tickets.length === 0 ? (
-              <p className="text-sm text-gray-700">Chua co loai ve nao. Hay tao loai ve moi!</p>
+              <p className="text-sm text-gray-700">No ticket types found.</p>
             ) : null}
 
             <div className="space-y-3">
@@ -526,53 +521,40 @@ export function OrganizerTicketsContent() {
 
           <article className="space-y-4 rounded-3xl bg-white p-6 shadow-[0px_0px_32px_0px_rgba(25,28,30,0.06)]">
             <h2 className="text-lg font-bold text-zinc-900">
-              {editingTicketId ? "Cap nhat loai ve" : "Tao loai ve moi"}
+              {editingTicketId ? "Update Ticket Type" : "Create Ticket Type"}
             </h2>
-
-            {!selectedEventId ? (
-              <div className="rounded-2xl bg-gray-100 p-4 text-center">
-                <p className="text-sm text-gray-600">
-                  Vui long chon su kien truoc khi tao loai ve.
-                </p>
-              </div>
-            ) : null}
 
             <label className="block space-y-1">
               <span className="text-xs font-bold uppercase tracking-wider text-gray-700">
-                Ten loai ve
+                Name
               </span>
               <input
                 value={form.name}
                 onChange={(event) =>
                   setForm((prev) => ({ ...prev, name: event.target.value }))
                 }
-                placeholder="VD: Ve Thuong, VIP, VVIP..."
-                disabled={!selectedEventId}
-                className="w-full rounded-2xl bg-gray-100 px-4 py-3 text-sm text-zinc-900 disabled:opacity-50"
+                className="w-full rounded-2xl bg-gray-100 px-4 py-3 text-sm text-zinc-900"
               />
             </label>
 
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="space-y-1">
                 <span className="text-xs font-bold uppercase tracking-wider text-gray-700">
-                  Gia ve (USD)
+                  Price
                 </span>
                 <input
                   type="number"
                   min="0"
-                  step="0.01"
                   value={form.price}
                   onChange={(event) =>
                     setForm((prev) => ({ ...prev, price: event.target.value }))
                   }
-                  placeholder="0.00"
-                  disabled={!selectedEventId}
-                  className="w-full rounded-2xl bg-gray-100 px-4 py-3 text-sm text-zinc-900 disabled:opacity-50"
+                  className="w-full rounded-2xl bg-gray-100 px-4 py-3 text-sm text-zinc-900"
                 />
               </label>
               <label className="space-y-1">
                 <span className="text-xs font-bold uppercase tracking-wider text-gray-700">
-                  So luong
+                  Quantity
                 </span>
                 <input
                   type="number"
@@ -584,9 +566,7 @@ export function OrganizerTicketsContent() {
                       quantity: event.target.value,
                     }))
                   }
-                  placeholder="100"
-                  disabled={!selectedEventId}
-                  className="w-full rounded-2xl bg-gray-100 px-4 py-3 text-sm text-zinc-900 disabled:opacity-50"
+                  className="w-full rounded-2xl bg-gray-100 px-4 py-3 text-sm text-zinc-900"
                 />
               </label>
             </div>
@@ -594,7 +574,7 @@ export function OrganizerTicketsContent() {
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="space-y-1">
                 <span className="text-xs font-bold uppercase tracking-wider text-gray-700">
-                  Bat dau ban
+                  Sale Start
                 </span>
                 <input
                   type="datetime-local"
@@ -605,13 +585,12 @@ export function OrganizerTicketsContent() {
                       saleStart: event.target.value,
                     }))
                   }
-                  disabled={!selectedEventId}
-                  className="w-full rounded-2xl bg-gray-100 px-4 py-3 text-sm text-zinc-900 disabled:opacity-50"
+                  className="w-full rounded-2xl bg-gray-100 px-4 py-3 text-sm text-zinc-900"
                 />
               </label>
               <label className="space-y-1">
                 <span className="text-xs font-bold uppercase tracking-wider text-gray-700">
-                  Ket thuc ban
+                  Sale End
                 </span>
                 <input
                   type="datetime-local"
@@ -622,8 +601,7 @@ export function OrganizerTicketsContent() {
                       saleEnd: event.target.value,
                     }))
                   }
-                  disabled={!selectedEventId}
-                  className="w-full rounded-2xl bg-gray-100 px-4 py-3 text-sm text-zinc-900 disabled:opacity-50"
+                  className="w-full rounded-2xl bg-gray-100 px-4 py-3 text-sm text-zinc-900"
                 />
               </label>
             </div>
@@ -635,7 +613,7 @@ export function OrganizerTicketsContent() {
                 disabled={!selectedEventId || isSaving || isLoading}
                 className="rounded-2xl bg-gradient-to-r from-sky-700 to-violet-700 px-6 py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isSaving ? "Dang luu..." : editingTicketId ? "Cap nhat" : "Tao loai ve"}
+                {isSaving ? "Saving..." : editingTicketId ? "Update" : "Create"}
               </button>
 
               <button
@@ -643,7 +621,7 @@ export function OrganizerTicketsContent() {
                 onClick={resetForm}
                 className="rounded-2xl bg-gray-200 px-6 py-3 text-sm font-bold text-zinc-900"
               >
-                Xoa form
+                Reset
               </button>
             </div>
           </article>
