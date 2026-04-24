@@ -42,7 +42,7 @@ export type AdminEventsPage = {
   hasNext: boolean;
 };
 
-const ADMIN_PENDING_EVENTS_ENDPOINT = "http://localhost:8080/api/events";
+const ADMIN_PENDING_EVENTS_ENDPOINT = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/events/pending` || "localhost:8080/api/admin/events/pending";
 
 type AdminApiErrorPayload = {
   code?: number | string;
