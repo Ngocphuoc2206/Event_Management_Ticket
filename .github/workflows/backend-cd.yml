@@ -1,63 +1,55 @@
-name: Deploy Backend to EC2 (Production Clean)
+name: Backend CD
 
 on:
-  push:
-    branches: ["master"]
+  pull_request:
+    branches:
+      - master
+    types:
+      - closed
 
 jobs:
-  deploy:
+  deploy-backend:
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Setup Java
-        uses: actions/setup-java@v3
+      - name: Copy backend source to server
+        uses: appleboy/scp-action@v0.1.7
         with:
-          distribution: temurin
-          java-version: 21
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "src,pom.xml,Dockerfile,docker-compose.yml,.dockerignore,mvnw,.mvn"
+          target: "/home/ubuntu/apps/eventhub/backend-prod/source"
 
-      - name: Build JAR
-        run: chmod +x mvnw && ./mvnw clean package -DskipTests
-
-      - name: Upload JAR to EC2
-        uses: appleboy/scp-action@v0.1.4
-        with:
-          host: ${{ secrets.EC2_IP }}
-          username: ubuntu
-          key: ${{ secrets.SSH_KEY }}
-          source: "target/*.jar"
-          target: "/home/ubuntu/app/"
-          strip_components: 1
-
-      - name: Deploy & Run on EC2
+      - name: Deploy backend on server
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.EC2_IP }}
-          username: ubuntu
-          key: ${{ secrets.SSH_KEY }}
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             set -e
-            cd /home/ubuntu/app
+            cd /home/ubuntu/apps/eventhub/backend-prod/source
 
-            echo "Stopping old app..."
-            if [ -f app.pid ]; then
-              kill $(cat app.pid) || true
-              rm -f app.pid
-            fi
+            cat > .env <<EOF
+            SERVER_PORT=8080
+            DB_HOST=${{ secrets.DB_HOST }}
+            DB_PORT=${{ secrets.DB_PORT }}
+            DB_NAME=${{ secrets.DB_NAME }}
+            DB_USERNAME=${{ secrets.DB_USERNAME }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            S3_BUCKET=${{ secrets.S3_BUCKET }}
+            S3_ACCESS_KEY=${{ secrets.S3_ACCESS_KEY }}
+            S3_SECRET_KEY=${{ secrets.S3_SECRET_KEY }}
+            S3_REGION=${{ secrets.S3_REGION }}
+            S3_PUBLIC_BASE_URL=${{ secrets.S3_PUBLIC_BASE_URL }}
+            MOCK_WEBHOOK_SECRET=${{ secrets.MOCK_WEBHOOK_SECRET }}
+            EOF
 
-            echo "Export env variables..."
-            export DB_HOST=${{ secrets.DB_HOST }}
-            export DB_PORT=${{ secrets.DB_PORT }}
-            export DB_NAME=${{ secrets.DB_NAME }}
-            export DB_USERNAME=${{ secrets.DB_USERNAME }}
-            export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-
-            echo "Starting new app..."
-            JAR_FILE=$(ls -t *.jar | head -n 1)
-
-            nohup java -jar $JAR_FILE \
-              > app.log 2>&1 & echo $! > app.pid
-
-            echo "Deployment SUCCESS"
+            docker compose down || true
+            docker compose up -d --build
+            docker image prune -af || true
