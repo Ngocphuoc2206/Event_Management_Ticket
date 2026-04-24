@@ -9,8 +9,8 @@ import type {
   OrganizerUpdateTicketTypePayload,
 } from "@/features/organizer/events/types";
 
-// Use absolute URL with port 8080 as required by backend
-const ORGANIZER_API_BASE = "http://localhost:8080/api/organizer";
+const ORGANIZER_API_BASE =
+  process.env.NEXT_PUBLIC_ORGANIZER_API_BASE || "http://localhost:8080/api/organizer";
 
 type TicketTypeListQuery = {
   search?: string;
