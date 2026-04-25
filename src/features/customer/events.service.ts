@@ -314,6 +314,16 @@ async function fetchTicketTypesByUrl(url: string) {
 
 async function getEventTicketTypesFromEndpoint(eventId: string) {
   try {
+    const publicTicketTypes = await fetchTicketTypesByUrl(
+      `${PUBLIC_EVENTS_ENDPOINT}/${eventId}/ticket-types`,
+    );
+    if (publicTicketTypes.length > 0) {
+      return publicTicketTypes;
+    }
+  } catch {
+    return [];
+  }
+  try {
     return await fetchTicketTypesByUrl(
       `${ORGANIZER_EVENTS_ENDPOINT}/${eventId}/ticket-types`,
     );
