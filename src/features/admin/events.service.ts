@@ -8,7 +8,11 @@ import {
 } from "@/features/auth/utils";
 import axiosClient from "@/features/httpClient/axiosClient";
 
-export type AdminEventStatus = "PENDING" | "APPROVED" | "REJECTED" | "PUBLISHED";
+export type AdminEventStatus =
+  | "PENDING"
+  | "APPROVED"
+  | "REJECTED"
+  | "PUBLISHED";
 
 export type AdminEvent = {
   id: string;
@@ -42,7 +46,9 @@ export type AdminEventsPage = {
   hasNext: boolean;
 };
 
-const ADMIN_PENDING_EVENTS_ENDPOINT = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/events/pending` || "localhost:8080/api/admin/events/pending";
+const ADMIN_PENDING_EVENTS_ENDPOINT =
+  `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/events/pending` ||
+  "localhost:8080/api/admin/events/pending";
 
 type AdminApiErrorPayload = {
   code?: number | string;
@@ -79,9 +85,7 @@ function mapAdminEvent(item: unknown, index: number): AdminEvent {
     "Untitled event";
 
   const status =
-    readString(value.status) ||
-    readString(value.eventStatus) ||
-    "PENDING";
+    readString(value.status) || readString(value.eventStatus) || "PENDING";
 
   return {
     id,
@@ -219,7 +223,7 @@ export async function findAdminEventByIdFromList(
 export async function approveAdminEvent(eventId: string) {
   try {
     const response = await axiosClient.post<ApiResult<unknown>>(
-      `http://localhost:8080/api/admin/events/${eventId}/approve`,
+      ADMIN_PENDING_EVENTS_ENDPOINT,
       {},
     );
 
@@ -235,7 +239,7 @@ export async function approveAdminEvent(eventId: string) {
 export async function rejectAdminEvent(eventId: string, rejectReason: string) {
   try {
     const response = await axiosClient.post<ApiResult<unknown>>(
-      `http://localhost:8080/api/admin/events/${eventId}/reject`,
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/events/${eventId}/reject`,
       { reason: rejectReason },
     );
 
