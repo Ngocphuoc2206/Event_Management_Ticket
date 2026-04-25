@@ -180,8 +180,23 @@ public class EventService {
             throw new AppException(ErrorCode.EVENT_CANNOT_BE_UPDATED);
         }
 
-        Event updatedEvent = eventRepository.save(event);
+        event.setTitle(request.getTitle());
+        event.setShortDescription(request.getShortDescription());
+        event.setDescription(request.getDescription());
+        event.setCategory(request.getCategory());
+        event.setVenueName(request.getVenueName());
+        event.setAddress(request.getAddress());
+        event.setCity(request.getCity());
+        event.setBannerUrl(request.getBannerUrl());
+        event.setStartTime(request.getStartTime());
+        event.setEndTime(request.getEndTime());
+        event.setVisibility(request.getVisibility());
+        event.setMinPrice(request.getMinPrice());
+        event.setTotalTickets(request.getTotalTickets());
+        event.setAvailableTickets(request.getAvailableTickets());
+        event.setFeatured(request.getFeatured());
 
+        Event updatedEvent = eventRepository.save(event);
         log.info(
                 "updateEvent success: eventId={}, organizerId={}, status={}",
                 updatedEvent.getId(), updatedEvent.getOrganizerId(), updatedEvent.getStatus()

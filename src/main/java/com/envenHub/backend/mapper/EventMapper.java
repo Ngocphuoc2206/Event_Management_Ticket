@@ -6,6 +6,7 @@ import com.envenHub.backend.dto.response.EventDetailResponse;
 import com.envenHub.backend.dto.response.EventListResponse;
 import com.envenHub.backend.entity.Event;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.springframework.stereotype.Component;
 
@@ -15,5 +16,6 @@ public interface EventMapper {
     EventDetailResponse toDetailResponse(Event event);
     Event toEvent(EventRequest request);
 
+    @Mapping(target = "id", ignore = true)
     void updateEvent(@MappingTarget Event event, EventRequest request);
 }
