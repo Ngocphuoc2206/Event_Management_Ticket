@@ -1,7 +1,6 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 import { AlertCircle, CheckCircle2, Save } from "lucide-react";
 import { useRouter } from "next/router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { getApiErrorMessage, getApiResultData } from "@/features/auth/utils";
 import type { ApiResult } from "@/features/auth/types";
@@ -10,11 +9,12 @@ import {
   getOrganizerDraftPayload,
   mergeOrganizerDraftPayload,
   setOrganizerDraftEventId,
+  setOrganizerDraftPayload,
 } from "@/features/organizer/events/services/draft-storage";
 import {
-  createOrganizerEvent,
   getOrganizerEventById,
   saveOrganizerEventDraft,
+  submitOrganizerEvent,
   updateOrganizerEvent,
 } from "@/features/organizer/events/services/create-event.service";
 import { getOrganizerTicketTypes } from "@/features/organizer/events/services/ticket-types.service";
@@ -114,6 +114,31 @@ function buildFallbackDraftPayload(): OrganizerCreateEventPayload {
   };
 }
 
+function mergePayloadWithFallback(
+  payload?: Partial<OrganizerCreateEventPayload>,
+): OrganizerCreateEventPayload {
+  const fallback = buildFallbackDraftPayload();
+
+  return {
+    ...fallback,
+    ...payload,
+    title: payload?.title?.trim() || fallback.title,
+    shortDescription:
+      payload?.shortDescription?.trim() || fallback.shortDescription,
+    description: payload?.description?.trim() || fallback.description,
+    category: payload?.category?.trim() || fallback.category,
+    venueName: payload?.venueName?.trim() || fallback.venueName,
+    address: payload?.address?.trim() || fallback.address,
+    city: payload?.city?.trim() || fallback.city,
+    bannerUrl: payload?.bannerUrl?.trim() || fallback.bannerUrl,
+    startTime: payload?.startTime?.trim() || fallback.startTime,
+    endTime: payload?.endTime?.trim() || fallback.endTime,
+    visibility: "PUBLIC",
+    minPrice: Number(payload?.minPrice ?? fallback.minPrice),
+    status: (payload?.status ?? "DRAFT") as OrganizerCreateEventPayload["status"],
+  };
+}
+
 export function OrganizerCreateEventStepFiveContent() {
   const router = useRouter();
   const [eventId, setEventId] = useState<string | null>(null);
@@ -130,15 +155,15 @@ export function OrganizerCreateEventStepFiveContent() {
     const storedEventId = getOrganizerDraftEventId();
     const resolvedEventId = queryEventId || storedEventId;
 
+    const localDraftPayload = mergePayloadWithFallback(
+      mapToCreatePayload(getOrganizerDraftPayload()),
+    );
+    setReviewPayload(localDraftPayload);
+
     if (!resolvedEventId) {
-      const localDraftPayload =
-        (getOrganizerDraftPayload() as OrganizerCreateEventPayload | null) ??
-        buildFallbackDraftPayload();
-      setReviewPayload(localDraftPayload);
       return;
     }
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setEventId(resolvedEventId);
     setOrganizerDraftEventId(resolvedEventId);
 
@@ -154,21 +179,18 @@ export function OrganizerCreateEventStepFiveContent() {
 
         if (eventData) {
           const normalizedEventPayload = mapToCreatePayload(eventData);
-          setReviewPayload((prev) => ({ ...prev, ...normalizedEventPayload }));
+          const hydratedPayload = mergePayloadWithFallback({
+            ...normalizedEventPayload,
+            ...mapToCreatePayload(getOrganizerDraftPayload()),
+          });
+
+          setReviewPayload(hydratedPayload);
+          setOrganizerDraftPayload(hydratedPayload);
         }
       } catch {
         // Keep default status when detail endpoint is not reachable.
       }
     })();
-
-    const localDraftPayload =
-      (getOrganizerDraftPayload() as OrganizerCreateEventPayload | null) ??
-      buildFallbackDraftPayload();
-    const normalizedLocalPayload = mapToCreatePayload(localDraftPayload);
-    setReviewPayload((prev) => ({
-      ...prev,
-      ...normalizedLocalPayload,
-    }));
   }, [router.query.eventId]);
 
   const showToast = (nextToast: ToastState) => {
@@ -177,14 +199,11 @@ export function OrganizerCreateEventStepFiveContent() {
   };
 
   const resolveDraftPayload = () => {
-    const payload =
-      (getOrganizerDraftPayload() as OrganizerCreateEventPayload | null) ??
-      buildFallbackDraftPayload();
-
-    return {
-      ...payload,
+    return mergePayloadWithFallback({
+      ...mapToCreatePayload(getOrganizerDraftPayload()),
+      ...mapToCreatePayload(reviewPayload),
       status: "DRAFT",
-    };
+    });
   };
 
   const toIsoOrFallback = (value: string | undefined, fallback: string) => {
@@ -318,10 +337,11 @@ export function OrganizerCreateEventStepFiveContent() {
       const id = await resolveEventId();
       const createPayload = await buildCreatePayload(id);
 
-      const result = await updateOrganizerEvent(id, {
+      await updateOrganizerEvent(id, {
         ...createPayload,
-        status: "PENDING",
+        status: "DRAFT",
       });
+      const result = await submitOrganizerEvent(id);
 
       const updatedEvent = getApiResultData(
         result as ApiResult<OrganizerEvent>,

@@ -1,15 +1,29 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useRouter } from "next/router";
 
 import { OrganizerTicketTypesEditor } from "@/features/organizer/shared/OrganizerTicketTypesEditor";
+import {
+  getOrganizerDraftEventId,
+  setOrganizerDraftEventId,
+} from "@/features/organizer/events/services/draft-storage";
 
 export function OrganizerCreateEventStepFourContent() {
   const router = useRouter();
 
   const eventId = useMemo(() => {
     const queryEventId = router.query.eventId;
-    return typeof queryEventId === "string" ? queryEventId : null;
+    if (typeof queryEventId === "string" && queryEventId.trim()) {
+      return queryEventId;
+    }
+
+    return getOrganizerDraftEventId();
   }, [router.query.eventId]);
+
+  useEffect(() => {
+    if (eventId) {
+      setOrganizerDraftEventId(eventId);
+    }
+  }, [eventId]);
 
   const previousHref = eventId
     ? {
