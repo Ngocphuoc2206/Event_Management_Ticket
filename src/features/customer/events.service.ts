@@ -314,16 +314,6 @@ async function fetchTicketTypesByUrl(url: string) {
 
 async function getEventTicketTypesFromEndpoint(eventId: string) {
   try {
-    const publicTicketTypes = await fetchTicketTypesByUrl(
-      `${PUBLIC_EVENTS_ENDPOINT}/${eventId}/ticket-types`,
-    );
-    if (publicTicketTypes.length > 0) {
-      return publicTicketTypes;
-    }
-  } catch {
-    return [];
-  }
-  try {
     return await fetchTicketTypesByUrl(
       `${ORGANIZER_EVENTS_ENDPOINT}/${eventId}/ticket-types`,
     );
@@ -398,10 +388,7 @@ export async function getPublicEventDetail(eventId: string) {
     ticketCount: ticketTypes.length || summary.ticketCount,
     availableTickets:
       ticketTypes.length > 0
-        ? ticketTypes.reduce(
-            (sum, ticketType) => sum + ticketType.availableQuantity,
-            0,
-          )
+        ? ticketTypes.reduce((sum, ticketType) => sum + ticketType.quantity, 0)
         : summary.availableTickets,
   } satisfies CustomerEventDetail;
 }
