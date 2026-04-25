@@ -120,6 +120,19 @@ export async function updateOrganizerEvent(eventId: string, payload: OrganizerUp
   }
 }
 
+export async function submitOrganizerEvent(eventId: string) {
+  try {
+    const response = await axiosClient.put<ApiResult<OrganizerEvent>>(
+      `${ORGANIZER_EVENTS_ENDPOINT}/${eventId}/submit`,
+    );
+
+    ensureApiResultSuccess(response.data, "Gui duyet su kien that bai.");
+    return response.data;
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, "Gui duyet su kien that bai."));
+  }
+}
+
 export async function saveOrganizerEventDraft(payload: OrganizerCreateEventPayload, eventId?: string) {
   if (eventId) {
     return updateOrganizerEvent(eventId, { ...payload, status: "DRAFT" });
