@@ -108,16 +108,23 @@ export function OrganizerCreateEventStepTwoContent() {
   };
 
   const handleContinue = async () => {
-    if (isSavingStep) {
-      return;
-    }
+    if (isSavingStep) return;
 
     setIsSavingStep(true);
     try {
-      const payload = mergeCurrentStepPayload();
-      if (eventId) {
+      const stepTwoPayload = mergeCurrentStepPayload();
+      const draftPayload = getOrganizerDraftPayload();
+
+      if (eventId && draftPayload) {
         await updateOrganizerEvent(eventId, {
-          ...payload,
+          ...draftPayload,
+          ...stepTwoPayload,
+          city: draftPayload.city || "Ho Chi Minh",
+          bannerUrl:
+            draftPayload.bannerUrl ||
+            "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1200&q=80",
+          visibility: "PUBLIC",
+          minPrice: draftPayload.minPrice ?? 0,
           status: "DRAFT",
         });
       }
