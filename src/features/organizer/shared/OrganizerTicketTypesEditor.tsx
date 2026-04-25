@@ -71,13 +71,10 @@ function toDateTimeLocal(value?: string) {
 
 function toIsoString(value: string): string | null {
   const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) {
-    return null;
-  }
-  // Convert to ISO 8601 LocalDateTime format (without timezone Z and milliseconds)
-  // Format: 2026-04-23T22:30:00
-  const isoString = parsed.toISOString();
-  return isoString.replace(/\.\d{3}Z$/, "");
+  if (Number.isNaN(parsed.getTime())) return null;
+  const offset = parsed.getTimezoneOffset() * 60000;
+  const localISOTime = new Date(parsed.getTime() - offset).toISOString().slice(0, 19);
+  return localISOTime;
 }
 
 function formatPrice(price: number) {
@@ -574,7 +571,8 @@ export function OrganizerTicketTypesEditor({
                   <button
                     type="button"
                     onClick={() => void handleSave()}
-                    disabled={isSaving || isLoading}
+                    // Đảm bảo chỉ khóa khi đang thực hiện lưu (isSaving)
+                  disabled={isSaving}
                     className="rounded-2xl bg-gradient-to-r from-sky-700 to-violet-700 px-6 py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {isSaving ? "Saving..." : editingId ? "Update" : "Create"}
