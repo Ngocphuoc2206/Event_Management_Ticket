@@ -13,9 +13,7 @@ import type {
   OrganizerUpdateTicketTypePayload,
 } from "@/features/organizer/events/types";
 
-const ORGANIZER_API_BASE =
-  process.env.NEXT_PUBLIC_ORGANIZER_EVENTS_ENDPOINT ||
-  `${process.env.NEXT_PUBLIC_BASE_URL}/api/organizer`;
+const ORGANIZER_API_BASE = process.env.NEXT_PUBLIC_ORGANIZER_EVENTS_ENDPOINT;
 
 type TicketTypeListQuery = {
   search?: string;
