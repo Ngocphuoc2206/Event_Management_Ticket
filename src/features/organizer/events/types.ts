@@ -32,6 +32,7 @@ export type OrganizerTicketType = {
   name: string;
   price: number;
   quantity: number;
+  soldQuantity?: number;
   saleStart: string;
   saleEnd: string;
   status?: OrganizerTicketTypeStatus;

@@ -36,6 +36,7 @@ function mapTicketTypeItem(item: unknown, index: number): OrganizerTicketType {
       "Unnamed Ticket",
     price: toNumberOrZero(value.price),
     quantity: toNumberOrZero(value.quantity),
+    soldQuantity: toNumberOrZero(value.soldQuantity),
     saleStart:
       (typeof value.saleStart === "string" && value.saleStart) ||
       (typeof value.sale_start === "string" && value.sale_start) ||
@@ -92,13 +93,16 @@ export async function getOrganizerTicketTypes(eventId: string, params?: TicketTy
       { params },
     );
 
-    ensureApiResultSuccess(response.data, "Khong the tai danh sach loai ve.");
-    const payload = getApiResultData(response.data as ApiResult<unknown>);
-    const items = getTicketItemsFromPayload(payload);
+    ensureApiResultSuccess(response.data, "Cannot load ticket types.");
+    const pagedData = getApiResultData(response.data as ApiResult<unknown>) as Record<string, unknown>;
+    
+    // Backend returns PagedResponse with "items" field
+    const items: unknown[] = Array.isArray(pagedData?.items) ? pagedData.items : [];
+    
     return items.map((item, index) => mapTicketTypeItem(item, index));
   } catch (error) {
     throw new Error(
-      getApiErrorMessage(error, "Khong the tai danh sach loai ve."),
+      getApiErrorMessage(error, "Cannot load ticket types."),
     );
   }
 }
@@ -122,13 +126,14 @@ export async function createOrganizerTicketType(
       saleEnd: payload.saleEnd,     // Already in ISO 8601 format from form
     };
 
-    const response = await axiosClient.post<ApiResult<OrganizerTicketType>>(
+    const response = await axiosClient.post<ApiResult<unknown>>(
       `${ORGANIZER_API_BASE}/events/${eventId}/ticket-types`,
       requestPayload,
     );
 
     ensureApiResultSuccess(response.data, "Cannot create ticket type.");
-    return response.data;
+    const data = getApiResultData(response.data as ApiResult<unknown>);
+    return mapTicketTypeItem(data, 0);
   } catch (error) {
     throw new Error(getApiErrorMessage(error, "Cannot create ticket type."));
   }
@@ -161,13 +166,14 @@ export async function updateOrganizerTicketType(
       requestPayload.status = payload.status;
     }
 
-    const response = await axiosClient.put<ApiResult<OrganizerTicketType>>(
+    const response = await axiosClient.put<ApiResult<unknown>>(
       `${ORGANIZER_API_BASE}/ticket-types/${ticketTypeId}`,
       requestPayload,
     );
 
     ensureApiResultSuccess(response.data, "Cannot update ticket type.");
-    return response.data;
+    const data = getApiResultData(response.data as ApiResult<unknown>);
+    return mapTicketTypeItem(data, 0);
   } catch (error) {
     throw new Error(getApiErrorMessage(error, "Cannot update ticket type."));
   }
