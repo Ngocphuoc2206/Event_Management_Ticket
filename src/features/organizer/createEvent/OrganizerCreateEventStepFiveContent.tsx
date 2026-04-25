@@ -135,7 +135,8 @@ function mergePayloadWithFallback(
     endTime: payload?.endTime?.trim() || fallback.endTime,
     visibility: "PUBLIC",
     minPrice: Number(payload?.minPrice ?? fallback.minPrice),
-    status: (payload?.status ?? "DRAFT") as OrganizerCreateEventPayload["status"],
+    status: (payload?.status ??
+      "DRAFT") as OrganizerCreateEventPayload["status"],
   };
 }
 
@@ -158,6 +159,7 @@ export function OrganizerCreateEventStepFiveContent() {
     const localDraftPayload = mergePayloadWithFallback(
       mapToCreatePayload(getOrganizerDraftPayload()),
     );
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setReviewPayload(localDraftPayload);
 
     if (!resolvedEventId) {

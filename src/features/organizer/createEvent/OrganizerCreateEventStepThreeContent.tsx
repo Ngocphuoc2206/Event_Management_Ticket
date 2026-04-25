@@ -55,6 +55,7 @@ export function OrganizerCreateEventStepThreeContent() {
   useEffect(() => {
     const draft = getOrganizerDraftPayload();
     if (draft?.bannerUrl) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setBannerUrl(draft.bannerUrl);
     }
   }, []);
