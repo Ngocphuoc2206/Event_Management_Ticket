@@ -111,20 +111,15 @@ export function OrganizerCreateEventStepTwoContent() {
     if (isSavingStep) return;
 
     setIsSavingStep(true);
+
     try {
-      const stepTwoPayload = mergeCurrentStepPayload();
+      const payload = mergeCurrentStepPayload();
       const draftPayload = getOrganizerDraftPayload();
 
-      if (eventId && draftPayload) {
+      if (eventId) {
         await updateOrganizerEvent(eventId, {
           ...draftPayload,
-          ...stepTwoPayload,
-          city: draftPayload.city || "Ho Chi Minh",
-          bannerUrl:
-            draftPayload.bannerUrl ||
-            "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1200&q=80",
-          visibility: "PUBLIC",
-          minPrice: draftPayload.minPrice ?? 0,
+          ...payload,
           status: "DRAFT",
         });
       }
@@ -138,12 +133,27 @@ export function OrganizerCreateEventStepTwoContent() {
           : "/organizer/create-event/visuals",
       );
     } catch (error) {
+      const message = getApiErrorMessage(
+        error,
+        "Không thể lưu thông tin Location & Time.",
+      );
+
+      if (message.includes("Event not found")) {
+        localStorage.removeItem("organizerDraftEventId");
+        localStorage.removeItem("organizerDraftPayload");
+
+        showToast({
+          tone: "error",
+          message: "Event không tồn tại. Vui lòng tạo lại từ bước 1.",
+        });
+
+        await router.push("/organizer/create-event");
+        return;
+      }
+
       showToast({
         tone: "error",
-        message: getApiErrorMessage(
-          error,
-          "Không thể lưu thông tin Location & Time.",
-        ),
+        message,
       });
     } finally {
       setIsSavingStep(false);
@@ -184,7 +194,7 @@ export function OrganizerCreateEventStepTwoContent() {
                 Search events, orders, or attendees...
               </div>
             </div>
-            <div className="absolute left-4 top-[10px] flex h-6 items-center">
+            <div className="absolute left-4 top-2.5 flex h-6 items-center">
               <Search className="h-4 w-4 text-gray-700" />
             </div>
           </div>
