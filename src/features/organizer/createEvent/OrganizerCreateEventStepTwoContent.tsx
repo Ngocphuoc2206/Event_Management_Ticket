@@ -113,10 +113,14 @@ export function OrganizerCreateEventStepTwoContent() {
     }
 
     setIsSavingStep(true);
+
     try {
       const payload = mergeCurrentStepPayload();
+      const draftPayload = getOrganizerDraftPayload();
+
       if (eventId) {
         await updateOrganizerEvent(eventId, {
+          ...draftPayload,
           ...payload,
           status: "DRAFT",
         });
@@ -131,12 +135,27 @@ export function OrganizerCreateEventStepTwoContent() {
           : "/organizer/create-event/visuals",
       );
     } catch (error) {
+      const message = getApiErrorMessage(
+        error,
+        "Không thể lưu thông tin Location & Time.",
+      );
+
+      if (message.includes("Event not found")) {
+        localStorage.removeItem("organizerDraftEventId");
+        localStorage.removeItem("organizerDraftPayload");
+
+        showToast({
+          tone: "error",
+          message: "Event không tồn tại. Vui lòng tạo lại từ bước 1.",
+        });
+
+        await router.push("/organizer/create-event");
+        return;
+      }
+
       showToast({
         tone: "error",
-        message: getApiErrorMessage(
-          error,
-          "Không thể lưu thông tin Location & Time.",
-        ),
+        message,
       });
     } finally {
       setIsSavingStep(false);
@@ -177,7 +196,7 @@ export function OrganizerCreateEventStepTwoContent() {
                 Search events, orders, or attendees...
               </div>
             </div>
-            <div className="absolute left-4 top-[10px] flex h-6 items-center">
+            <div className="absolute left-4 top-2.5 flex h-6 items-center">
               <Search className="h-4 w-4 text-gray-700" />
             </div>
           </div>
