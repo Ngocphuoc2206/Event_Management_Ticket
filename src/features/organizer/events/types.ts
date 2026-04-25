@@ -20,6 +20,8 @@ export type OrganizerCreateEventPayload = {
   visibility: OrganizerEventVisibility;
   minPrice: number;
   status?: OrganizerEventStatus;
+  total_tickets?: number;
+  availability_tickets?: number;
 };
 
 export type OrganizerEventTicketCountersPayload = {
@@ -75,7 +77,6 @@ export type OrganizerEvent = OrganizerCreateEventPayload & {
   availableTickets?: number;
   total_tickets?: number;
   availability_tickets?: number;
-  availibility_tickets?: number;
 };
 
 export type OrganizerEventsPageData = {
