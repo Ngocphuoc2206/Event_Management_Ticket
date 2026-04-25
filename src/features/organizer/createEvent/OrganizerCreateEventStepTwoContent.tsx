@@ -14,12 +14,13 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/router";
 
-import { getApiErrorMessage } from "@/features/auth/utils";
-import { updateOrganizerEvent } from "@/features/organizer/events/services/create-event.service";
+import { getApiErrorMessage, getApiResultData } from "@/features/auth/utils";
+import { createOrganizerEvent, updateOrganizerEvent } from "@/features/organizer/events/services/create-event.service";
 import {
   getOrganizerDraftEventId,
   getOrganizerDraftPayload,
   mergeOrganizerDraftPayload,
+  setOrganizerDraftEventId,
 } from "@/features/organizer/events/services/draft-storage";
 
 type ToastState = {
@@ -145,11 +146,32 @@ export function OrganizerCreateEventStepTwoContent() {
       }
 
       if (eventId) {
+        // Update existing event
         await updateOrganizerEvent(eventId, {
           ...draftPayload,
           ...payload,
-          status: "DRAFT",
         });
+      } else {
+        // Create new event if it doesn't exist
+        const draftData = {
+          ...draftPayload,
+          ...payload,
+          status: "DRAFT",
+        } as any;
+        
+        try {
+          const response = await createOrganizerEvent(draftData);
+          const eventData = getApiResultData(response);
+          const newEventId = eventData?.id;
+          if (newEventId) {
+            setOrganizerDraftEventId(newEventId);
+            console.log("[v0] Event created with ID:", newEventId);
+          }
+        } catch (error) {
+          // If creation fails, keep draft in localStorage as fallback
+          console.log("[v0] Event creation failed, keeping draft:", error);
+          mergeOrganizerDraftPayload(draftData);
+        }
       }
 
       await router.push(
