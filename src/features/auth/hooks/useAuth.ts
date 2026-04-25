@@ -42,15 +42,18 @@ export function useAuth() {
   ): Promise<AuthActionResult> => {
     const response = await loginUser(payload);
     const authPayload = getApiResultData<LoginResponse>(response);
+    localStorage.removeItem("organizerDraftEventId");
+    localStorage.removeItem("organizerDraftPayload");
     const session = createAuthSession(authPayload);
     const shouldRedirect = Boolean(session?.accessToken);
-    const redirectTo =
-      shouldRedirect
-        ? options?.redirectTo ?? getPostAuthRoute(session?.role ?? undefined)
-        : null;
+    const redirectTo = shouldRedirect
+      ? (options?.redirectTo ?? getPostAuthRoute(session?.role ?? undefined))
+      : null;
     const message =
       getApiResultMessage(response) ||
-      (shouldRedirect ? "Login successful. Redirecting..." : "Login successful.");
+      (shouldRedirect
+        ? "Login successful. Redirecting..."
+        : "Login successful.");
 
     persistResolvedAuthSession(session);
 
@@ -68,14 +71,17 @@ export function useAuth() {
   ): Promise<AuthActionResult> => {
     const response = await registerUser(payload);
     const authPayload = getApiResultData<RegisterResponse>(response);
-    const session = createAuthSession(authPayload, { fallbackRole: "CUSTOMER" });
+    const session = createAuthSession(authPayload, {
+      fallbackRole: "CUSTOMER",
+    });
     const hasRegisteredAccount = Boolean(authPayload);
-    const shouldRedirect = hasRegisteredAccount || Boolean(session?.accessToken);
+    const shouldRedirect =
+      hasRegisteredAccount || Boolean(session?.accessToken);
     const redirectTo = shouldRedirect
-      ? options?.redirectTo ??
+      ? (options?.redirectTo ??
         (session?.accessToken
           ? getPostAuthRoute(session?.role ?? undefined)
-          : "/auth/login")
+          : "/auth/login"))
       : null;
     const message =
       getApiResultMessage(response) ||
