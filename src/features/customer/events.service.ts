@@ -132,6 +132,10 @@ function extractCollection(data: unknown) {
     "data",
     "results",
     "events",
+    "ticketTypes",
+    "tickets",
+    "ticketTiers",
+    "eventTickets",
   ]);
 
   if (itemsCandidate.length > 0) {
@@ -146,7 +150,13 @@ function mapTicketType(rawTicketType: unknown): CustomerEventTicketType | null {
     return null;
   }
 
-  const id = getStringValue(rawTicketType, ["id", "ticketTypeId"]);
+  const id = getStringValue(rawTicketType, [
+    "id",
+    "ticketTypeId",
+    "ticket_type_id",
+    "uuid",
+    "code",
+  ]);
   if (!id) {
     return null;
   }
