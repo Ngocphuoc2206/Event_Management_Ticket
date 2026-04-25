@@ -195,6 +195,7 @@ export function OrganizerTicketTypesEditor({
         : 0;
 
     const eventResponse = await getOrganizerEventById(eventId);
+    console.log(eventResponse);
 
     await updateOrganizerEvent(eventId, {
       ...eventResponse,
