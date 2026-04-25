@@ -75,6 +75,7 @@ export type OrganizerEvent = OrganizerCreateEventPayload & {
   availableTickets?: number;
   total_tickets?: number;
   availability_tickets?: number;
+  availibility_tickets?: number;
 };
 
 export type OrganizerEventsPageData = {

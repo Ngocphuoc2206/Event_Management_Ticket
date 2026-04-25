@@ -214,12 +214,6 @@ export function OrganizerCreateEventStepFiveContent() {
       }
     }
 
-    const totalTickets = Number(
-      ticketTypes.reduce(
-        (sum, ticket) => sum + toNumberOrZero(ticket.quantity),
-        0,
-      ),
-    );
     const minPriceFromTickets =
       ticketTypes.length > 0
         ? Math.min(...ticketTypes.map((ticket) => toNumberOrZero(ticket.price)))
