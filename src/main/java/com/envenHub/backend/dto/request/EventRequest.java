@@ -27,6 +27,6 @@ public class EventRequest {
 
     private BigDecimal minPrice;
     private Integer totalTickets;
-
+    private Integer availableTickets;
     private Boolean featured;
 }
