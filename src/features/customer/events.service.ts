@@ -2,9 +2,16 @@ import type { ApiResult } from "@/features/auth/types";
 import { getApiResultData } from "@/features/auth/utils";
 import axiosClient from "@/features/httpClient/axiosClient";
 
-const PUBLIC_EVENTS_ENDPOINT =
-  process.env.NEXT_PUBLIC_ORGANIZER_EVENTS_ENDPOINT ||
-  `${process.env.NEXT_PUBLIC_BASE_URL}/api/events`;
+function normalizePublicEventsEndpoint() {
+  const rawEndpoint =
+    process.env.NEXT_PUBLIC_EVENTS_ENDPOINT ||
+    process.env.NEXT_PUBLIC_PUBLIC_EVENTS_ENDPOINT ||
+    "/api/events";
+
+  return rawEndpoint.replace(/\/+$/, "");
+}
+
+const PUBLIC_EVENTS_ENDPOINT = normalizePublicEventsEndpoint();
 
 type UnknownRecord = Record<string, unknown>;
 
