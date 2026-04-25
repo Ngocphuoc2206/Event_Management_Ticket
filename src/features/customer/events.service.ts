@@ -388,10 +388,7 @@ export async function getPublicEventDetail(eventId: string) {
     ticketCount: ticketTypes.length || summary.ticketCount,
     availableTickets:
       ticketTypes.length > 0
-        ? ticketTypes.reduce(
-            (sum, ticketType) => sum + ticketType.availableQuantity,
-            0,
-          )
+        ? ticketTypes.reduce((sum, ticketType) => sum + ticketType.quantity, 0)
         : summary.availableTickets,
   } satisfies CustomerEventDetail;
 }
