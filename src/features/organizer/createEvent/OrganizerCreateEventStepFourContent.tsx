@@ -5,7 +5,7 @@ import { OrganizerTicketTypesEditor } from "@/features/organizer/shared/Organize
 import {
   getOrganizerDraftEventId,
   setOrganizerDraftEventId,
-} from "../events/services/draft-storage";
+} from "@/features/organizer/events/services/draft-storage";
 
 export function OrganizerCreateEventStepFourContent() {
   const router = useRouter();
