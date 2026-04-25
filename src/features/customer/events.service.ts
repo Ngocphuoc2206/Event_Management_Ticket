@@ -3,7 +3,8 @@ import { getApiResultData } from "@/features/auth/utils";
 import axiosClient from "@/features/httpClient/axiosClient";
 
 const PUBLIC_EVENTS_ENDPOINT =
-  process.env.NEXT_PUBLIC_EVENTS_ENDPOINT || "/api/events";
+  process.env.NEXT_PUBLIC_ORGANIZER_EVENTS_ENDPOINT ||
+  `${process.env.NEXT_PUBLIC_BASE_URL}/api/events`;
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -87,11 +88,13 @@ function getArrayValue(record: UnknownRecord, keys: string[]) {
 
 function formatTicketTypeName(rawName: string, fallbackId: string) {
   const source = rawName || fallbackId;
-  return source
-    .replace(/^TICKET[_-]?/i, "")
-    .replace(/[_-]+/g, " ")
-    .trim()
-    .replace(/\b\w/g, (character) => character.toUpperCase()) || "Ticket";
+  return (
+    source
+      .replace(/^TICKET[_-]?/i, "")
+      .replace(/[_-]+/g, " ")
+      .trim()
+      .replace(/\b\w/g, (character) => character.toUpperCase()) || "Ticket"
+  );
 }
 
 function unwrapResponseData<T>(data: ApiResult<T> | T | null | undefined) {
@@ -171,7 +174,11 @@ function mapTicketType(rawTicketType: unknown): CustomerEventTicketType | null {
     : hasSoldQuantity
       ? Math.max(quantity - soldQuantity, 0)
       : quantity;
-  const rawName = getStringValue(rawTicketType, ["name", "title", "ticketTypeName"]);
+  const rawName = getStringValue(rawTicketType, [
+    "name",
+    "title",
+    "ticketTypeName",
+  ]);
 
   return {
     id,
@@ -179,10 +186,23 @@ function mapTicketType(rawTicketType: unknown): CustomerEventTicketType | null {
     price: getNumberValue(rawTicketType, ["price", "amount", "unitPrice"]),
     quantity,
     availableQuantity,
-    saleStart: getStringValue(rawTicketType, ["saleStart", "salesStart", "sale_start", "startTime"]),
-    saleEnd: getStringValue(rawTicketType, ["saleEnd", "salesEnd", "sale_end", "endTime"]),
+    saleStart: getStringValue(rawTicketType, [
+      "saleStart",
+      "salesStart",
+      "sale_start",
+      "startTime",
+    ]),
+    saleEnd: getStringValue(rawTicketType, [
+      "saleEnd",
+      "salesEnd",
+      "sale_end",
+      "endTime",
+    ]),
     status: getStringValue(rawTicketType, ["status"]),
-    description: getStringValue(rawTicketType, ["description", "shortDescription"]),
+    description: getStringValue(rawTicketType, [
+      "description",
+      "shortDescription",
+    ]),
   };
 }
 
@@ -203,7 +223,10 @@ function mapEventSummary(rawEvent: unknown): CustomerEventSummary | null {
     "eventTickets",
   ])
     .map(mapTicketType)
-    .filter((ticketType): ticketType is CustomerEventTicketType => ticketType !== null);
+    .filter(
+      (ticketType): ticketType is CustomerEventTicketType =>
+        ticketType !== null,
+    );
   const explicitAvailableTickets = getNumberValue(rawEvent, [
     "availableTickets",
     "remainingTickets",
@@ -213,7 +236,9 @@ function mapEventSummary(rawEvent: unknown): CustomerEventSummary | null {
 
   return {
     id,
-    title: getStringValue(rawEvent, ["title", "eventName", "name"]) || "Untitled event",
+    title:
+      getStringValue(rawEvent, ["title", "eventName", "name"]) ||
+      "Untitled event",
     shortDescription: getStringValue(rawEvent, [
       "shortDescription",
       "summary",
@@ -224,15 +249,26 @@ function mapEventSummary(rawEvent: unknown): CustomerEventSummary | null {
     venueName: getStringValue(rawEvent, ["venueName", "venue", "location"]),
     address: getStringValue(rawEvent, ["address"]),
     city: getStringValue(rawEvent, ["city"]),
-    bannerUrl: getStringValue(rawEvent, ["bannerUrl", "imageUrl", "thumbnailUrl"]),
-    startTime: getStringValue(rawEvent, ["startTime", "eventStartTime", "date"]),
+    bannerUrl: getStringValue(rawEvent, [
+      "bannerUrl",
+      "imageUrl",
+      "thumbnailUrl",
+    ]),
+    startTime: getStringValue(rawEvent, [
+      "startTime",
+      "eventStartTime",
+      "date",
+    ]),
     endTime: getStringValue(rawEvent, ["endTime", "eventEndTime"]),
     minPrice: getNumberValue(rawEvent, ["minPrice", "startingPrice", "price"]),
     status: getStringValue(rawEvent, ["status"]) || "PUBLISHED",
     ticketCount: embeddedTickets.length,
     availableTickets:
       explicitAvailableTickets ||
-      embeddedTickets.reduce((sum, ticketType) => sum + ticketType.availableQuantity, 0),
+      embeddedTickets.reduce(
+        (sum, ticketType) => sum + ticketType.availableQuantity,
+        0,
+      ),
   };
 }
 
@@ -244,7 +280,10 @@ async function getEventTicketTypesFromEndpoint(eventId: string) {
     const rawData = unwrapResponseData(response.data);
     return extractCollection(rawData)
       .map(mapTicketType)
-      .filter((ticketType): ticketType is CustomerEventTicketType => ticketType !== null);
+      .filter(
+        (ticketType): ticketType is CustomerEventTicketType =>
+          ticketType !== null,
+      );
   } catch {
     return [];
   }
@@ -255,9 +294,17 @@ function getEmbeddedTicketTypes(rawEvent: unknown) {
     return [];
   }
 
-  return getArrayValue(rawEvent, ["ticketTypes", "tickets", "ticketTiers", "eventTickets"])
+  return getArrayValue(rawEvent, [
+    "ticketTypes",
+    "tickets",
+    "ticketTiers",
+    "eventTickets",
+  ])
     .map(mapTicketType)
-    .filter((ticketType): ticketType is CustomerEventTicketType => ticketType !== null);
+    .filter(
+      (ticketType): ticketType is CustomerEventTicketType =>
+        ticketType !== null,
+    );
 }
 
 export async function getPublicEvents(params?: {

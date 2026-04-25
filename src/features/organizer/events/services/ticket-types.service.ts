@@ -1,5 +1,9 @@
 import type { ApiResult } from "@/features/auth/types";
-import { ensureApiResultSuccess, getApiErrorMessage, getApiResultData } from "@/features/auth/utils";
+import {
+  ensureApiResultSuccess,
+  getApiErrorMessage,
+  getApiResultData,
+} from "@/features/auth/utils";
 import axiosClient from "@/features/httpClient/axiosClient";
 import type {
   OrganizerCreateTicketTypePayload,
@@ -10,7 +14,8 @@ import type {
 } from "@/features/organizer/events/types";
 
 const ORGANIZER_API_BASE =
-  process.env.NEXT_PUBLIC_ORGANIZER_API_BASE || "http://localhost:8080/api/organizer";
+  process.env.NEXT_PUBLIC_ORGANIZER_EVENTS_ENDPOINT ||
+  `${process.env.NEXT_PUBLIC_BASE_URL}/api/organizer`;
 
 type TicketTypeListQuery = {
   search?: string;
@@ -23,7 +28,10 @@ function toNumberOrZero(value: unknown) {
 }
 
 function mapTicketTypeItem(item: unknown, index: number): OrganizerTicketType {
-  const value = (item && typeof item === "object" ? item : {}) as Record<string, unknown>;
+  const value = (item && typeof item === "object" ? item : {}) as Record<
+    string,
+    unknown
+  >;
 
   return {
     id:
@@ -50,7 +58,11 @@ function mapTicketTypeItem(item: unknown, index: number): OrganizerTicketType {
       (typeof value.event_id === "string" && value.event_id) ||
       undefined,
     status:
-      value.status === "ACTIVE" || value.status === "INACTIVE" || value.status === "SOLD_OUT" || value.status === "CANCELLED" || value.status === "EXPIRED"
+      value.status === "ACTIVE" ||
+      value.status === "INACTIVE" ||
+      value.status === "SOLD_OUT" ||
+      value.status === "CANCELLED" ||
+      value.status === "EXPIRED"
         ? value.status
         : undefined,
   };
@@ -86,24 +98,28 @@ function getTicketItemsFromPayload(payload: unknown): unknown[] {
   return [];
 }
 
-export async function getOrganizerTicketTypes(eventId: string, params?: TicketTypeListQuery) {
+export async function getOrganizerTicketTypes(
+  eventId: string,
+  params?: TicketTypeListQuery,
+) {
   try {
-    const response = await axiosClient.get<ApiResult<OrganizerTicketTypesPageData>>(
-      `${ORGANIZER_API_BASE}/events/${eventId}/ticket-types`,
-      { params },
-    );
+    const response = await axiosClient.get<
+      ApiResult<OrganizerTicketTypesPageData>
+    >(`${ORGANIZER_API_BASE}/events/${eventId}/ticket-types`, { params });
 
     ensureApiResultSuccess(response.data, "Cannot load ticket types.");
-    const pagedData = getApiResultData(response.data as ApiResult<unknown>) as Record<string, unknown>;
-    
+    const pagedData = getApiResultData(
+      response.data as ApiResult<unknown>,
+    ) as Record<string, unknown>;
+
     // Backend returns PagedResponse with "items" field
-    const items: unknown[] = Array.isArray(pagedData?.items) ? pagedData.items : [];
-    
+    const items: unknown[] = Array.isArray(pagedData?.items)
+      ? pagedData.items
+      : [];
+
     return items.map((item, index) => mapTicketTypeItem(item, index));
   } catch (error) {
-    throw new Error(
-      getApiErrorMessage(error, "Cannot load ticket types."),
-    );
+    throw new Error(getApiErrorMessage(error, "Cannot load ticket types."));
   }
 }
 
@@ -123,7 +139,7 @@ export async function createOrganizerTicketType(
       price: Number(payload.price),
       quantity: Number(payload.quantity),
       saleStart: payload.saleStart, // Already in ISO 8601 format from form
-      saleEnd: payload.saleEnd,     // Already in ISO 8601 format from form
+      saleEnd: payload.saleEnd, // Already in ISO 8601 format from form
     };
 
     const response = await axiosClient.post<ApiResult<unknown>>(
@@ -146,7 +162,7 @@ export async function updateOrganizerTicketType(
   try {
     // Prepare payload with correct data types
     const requestPayload: Record<string, unknown> = {};
-    
+
     if (payload.name !== undefined) {
       requestPayload.name = payload.name;
     }
@@ -160,7 +176,7 @@ export async function updateOrganizerTicketType(
       requestPayload.saleStart = payload.saleStart; // Already in ISO 8601 format
     }
     if (payload.saleEnd !== undefined) {
-      requestPayload.saleEnd = payload.saleEnd;     // Already in ISO 8601 format
+      requestPayload.saleEnd = payload.saleEnd; // Already in ISO 8601 format
     }
     if (payload.status !== undefined) {
       requestPayload.status = payload.status;
