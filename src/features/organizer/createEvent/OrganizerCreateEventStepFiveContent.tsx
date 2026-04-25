@@ -197,7 +197,9 @@ export function OrganizerCreateEventStepFiveContent() {
     return Number.isFinite(numeric) ? numeric : 0;
   };
 
-  const buildCreatePayload = async (): Promise<OrganizerCreateEventPayload> => {
+  const buildCreatePayload = async (
+    currentEventId: string,
+  ): Promise<OrganizerCreateEventPayload> => {
     const latestPayload = resolveDraftPayload();
     mergeOrganizerDraftPayload(latestPayload as OrganizerCreateEventPayload);
     setReviewPayload((prev) => ({
@@ -206,13 +208,22 @@ export function OrganizerCreateEventStepFiveContent() {
     }));
 
     let ticketTypes: OrganizerTicketType[] = [];
-    if (eventId) {
-      try {
-        ticketTypes = await getOrganizerTicketTypes(eventId);
-      } catch {
-        ticketTypes = [];
-      }
+
+    try {
+      ticketTypes = await getOrganizerTicketTypes(currentEventId);
+    } catch {
+      ticketTypes = [];
     }
+
+    const totalTickets = ticketTypes.reduce(
+      (sum, ticket) => sum + Number(ticket.quantity ?? 0),
+      0,
+    );
+
+    const availableTickets = ticketTypes.reduce(
+      (sum, ticket) => sum + Number(ticket.quantity ?? ticket.quantity ?? 0),
+      0,
+    );
 
     const minPriceFromTickets =
       ticketTypes.length > 0
@@ -242,6 +253,8 @@ export function OrganizerCreateEventStepFiveContent() {
       visibility: "PUBLIC",
       minPrice: Number(minPriceFromTickets),
       status: "DRAFT",
+      total_tickets: totalTickets,
+      availability_tickets: availableTickets,
     };
   };
 
@@ -303,7 +316,7 @@ export function OrganizerCreateEventStepFiveContent() {
 
     try {
       const id = await resolveEventId();
-      const createPayload = await buildCreatePayload();
+      const createPayload = await buildCreatePayload(id);
 
       const result = await updateOrganizerEvent(id, {
         ...createPayload,
