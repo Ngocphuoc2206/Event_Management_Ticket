@@ -15,7 +15,10 @@ import {
 import { useRouter } from "next/router";
 
 import { getApiErrorMessage, getApiResultData } from "@/features/auth/utils";
-import { createOrganizerEvent, updateOrganizerEvent } from "@/features/organizer/events/services/create-event.service";
+import {
+  createOrganizerEvent,
+  updateOrganizerEvent,
+} from "@/features/organizer/events/services/create-event.service";
 import {
   getOrganizerDraftEventId,
   getOrganizerDraftPayload,
@@ -157,8 +160,9 @@ export function OrganizerCreateEventStepTwoContent() {
           ...draftPayload,
           ...payload,
           status: "DRAFT",
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any;
-        
+
         try {
           const response = await createOrganizerEvent(draftData);
           const eventData = getApiResultData(response);
