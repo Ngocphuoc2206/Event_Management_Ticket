@@ -108,9 +108,7 @@ export function OrganizerCreateEventStepTwoContent() {
   };
 
   const handleContinue = async () => {
-    if (isSavingStep) {
-      return;
-    }
+    if (isSavingStep) return;
 
     setIsSavingStep(true);
 
