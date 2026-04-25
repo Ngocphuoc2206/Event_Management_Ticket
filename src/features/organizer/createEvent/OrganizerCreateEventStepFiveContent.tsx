@@ -15,6 +15,7 @@ import {
   createOrganizerEvent,
   getOrganizerEventById,
   saveOrganizerEventDraft,
+  updateOrganizerEvent,
 } from "@/features/organizer/events/services/create-event.service";
 import { getOrganizerTicketTypes } from "@/features/organizer/events/services/ticket-types.service";
 import type {
@@ -305,22 +306,27 @@ export function OrganizerCreateEventStepFiveContent() {
     }
 
     setIsSubmittingWorkflow(true);
-    try {
-      const createPayload = await buildCreatePayload();
-      const createResult = await createOrganizerEvent(createPayload);
-      const createdEvent = getApiResultData(
-        createResult as ApiResult<OrganizerEvent>,
-      );
-      if (createdEvent?.id) {
-        setEventId(createdEvent.id);
-        setOrganizerDraftEventId(createdEvent.id);
-      }
 
-      setStatus(String(createdEvent?.status ?? "PENDING"));
+    try {
+      const id = await resolveEventId();
+      const createPayload = await buildCreatePayload();
+
+      const result = await updateOrganizerEvent(id, {
+        ...createPayload,
+        status: "PENDING",
+      });
+
+      const updatedEvent = getApiResultData(
+        result as ApiResult<OrganizerEvent>,
+      );
+
+      setStatus(String(updatedEvent?.status ?? "PENDING"));
+
       showToast({
         tone: "success",
-        message: "Sự kiện đã được tạo thành công.",
+        message: "Sự kiện đã được gửi duyệt thành công.",
       });
+
       await router.push("/organizer/events");
     } catch (error) {
       showToast({

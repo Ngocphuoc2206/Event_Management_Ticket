@@ -174,11 +174,19 @@ export function OrganizerTicketTypesEditor({
     const { totalTickets, availableTickets } =
       calculateTicketCounters(latestTicketTypes);
 
+    const minPrice =
+      latestTicketTypes.length > 0
+        ? Math.min(
+            ...latestTicketTypes.map((ticket) => Number(ticket.price) || 0),
+          )
+        : 0;
+
     await updateOrganizerEvent(eventId, {
       totalTickets,
       availableTickets,
+      minPrice,
       total_tickets: totalTickets,
-      availability_tickets: availableTickets,
+      available_tickets: availableTickets,
     });
   }, [eventId]);
 
