@@ -13,7 +13,23 @@ import type {
   OrganizerUpdateTicketTypePayload,
 } from "@/features/organizer/events/types";
 
-const ORGANIZER_API_BASE = process.env.NEXT_PUBLIC_ORGANIZER_EVENTS_ENDPOINT;
+function normalizeOrganizerApiBase() {
+  const rawBase =
+    process.env.NEXT_PUBLIC_ORGANIZER_API_BASE ||
+    process.env.NEXT_PUBLIC_ORGANIZER_EVENTS_ENDPOINT ||
+    process.env.NEXT_PUBLIC_ORGANIZER_CREATE_EVENT_ENDPOINT ||
+    "/api/organizer";
+
+  const sanitizedBase = rawBase.replace(/\/+$/, "");
+
+  if (sanitizedBase.endsWith("/events")) {
+    return sanitizedBase.slice(0, -"/events".length);
+  }
+
+  return sanitizedBase;
+}
+
+const ORGANIZER_API_BASE = normalizeOrganizerApiBase();
 
 type TicketTypeListQuery = {
   search?: string;
