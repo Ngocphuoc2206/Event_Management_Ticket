@@ -300,39 +300,27 @@ export function OrganizerCreateEventStepFiveContent() {
     }
 
     setIsSubmittingWorkflow(true);
+
     try {
+      const id = await resolveEventId();
       const createPayload = await buildCreatePayload();
-      const payloadToSubmit = {
+
+      const result = await updateOrganizerEvent(id, {
         ...createPayload,
-        status: "PENDING" as const,
-      };
-      const resolvedEventId = await resolveEventId();
+        status: "PENDING",
+      });
 
-      const submitResult = await updateOrganizerEvent(
-        resolvedEventId,
-        payloadToSubmit,
-      );
-      let submittedEvent = getApiResultData(
-        submitResult as ApiResult<OrganizerEvent>,
+      const updatedEvent = getApiResultData(
+        result as ApiResult<OrganizerEvent>,
       );
 
-      if (!submittedEvent?.id) {
-        const fallbackCreateResult = await createOrganizerEvent(payloadToSubmit);
-        submittedEvent = getApiResultData(
-          fallbackCreateResult as ApiResult<OrganizerEvent>,
-        );
-      }
+      setStatus(String(updatedEvent?.status ?? "PENDING"));
 
-      if (submittedEvent?.id) {
-        setEventId(submittedEvent.id);
-        setOrganizerDraftEventId(submittedEvent.id);
-      }
-
-      setStatus(String(submittedEvent?.status ?? "PENDING"));
       showToast({
         tone: "success",
         message: "Sự kiện đã được gửi duyệt thành công.",
       });
+
       await router.push("/organizer/events");
     } catch (error) {
       showToast({

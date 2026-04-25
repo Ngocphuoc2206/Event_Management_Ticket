@@ -139,8 +139,8 @@ export function OrganizerCreateEventStepTwoContent() {
       );
 
       if (message.includes("Event not found")) {
-        localStorage.removeItem("organizerDraftEventId");
-        localStorage.removeItem("organizerDraftPayload");
+        localStorage.removeItem("organizer-create-event-id");
+        localStorage.removeItem("organizer-create-event-draft");
 
         showToast({
           tone: "error",
