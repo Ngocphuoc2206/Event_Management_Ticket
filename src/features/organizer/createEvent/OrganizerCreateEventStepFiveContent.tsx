@@ -14,6 +14,7 @@ import {
 import {
   getOrganizerEventById,
   saveOrganizerEventDraft,
+  submitOrganizerEvent,
   updateOrganizerEvent,
 } from "@/features/organizer/events/services/create-event.service";
 import { getOrganizerTicketTypes } from "@/features/organizer/events/services/ticket-types.service";
@@ -336,10 +337,11 @@ export function OrganizerCreateEventStepFiveContent() {
       const id = await resolveEventId();
       const createPayload = await buildCreatePayload(id);
 
-      const result = await updateOrganizerEvent(id, {
+      await updateOrganizerEvent(id, {
         ...createPayload,
-        status: "PENDING",
+        status: "DRAFT",
       });
+      const result = await submitOrganizerEvent(id);
 
       const updatedEvent = getApiResultData(
         result as ApiResult<OrganizerEvent>,
