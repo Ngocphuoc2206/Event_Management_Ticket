@@ -15,6 +15,7 @@ import {
   createOrganizerEvent,
   getOrganizerEventById,
   saveOrganizerEventDraft,
+  updateOrganizerEvent,
 } from "@/features/organizer/events/services/create-event.service";
 import { getOrganizerTicketTypes } from "@/features/organizer/events/services/ticket-types.service";
 import type {
@@ -213,12 +214,6 @@ export function OrganizerCreateEventStepFiveContent() {
       }
     }
 
-    const totalTickets = Number(
-      ticketTypes.reduce(
-        (sum, ticket) => sum + toNumberOrZero(ticket.quantity),
-        0,
-      ),
-    );
     const minPriceFromTickets =
       ticketTypes.length > 0
         ? Math.min(...ticketTypes.map((ticket) => toNumberOrZero(ticket.price)))
@@ -307,19 +302,36 @@ export function OrganizerCreateEventStepFiveContent() {
     setIsSubmittingWorkflow(true);
     try {
       const createPayload = await buildCreatePayload();
-      const createResult = await createOrganizerEvent(createPayload);
-      const createdEvent = getApiResultData(
-        createResult as ApiResult<OrganizerEvent>,
+      const payloadToSubmit = {
+        ...createPayload,
+        status: "PENDING" as const,
+      };
+      const resolvedEventId = await resolveEventId();
+
+      const submitResult = await updateOrganizerEvent(
+        resolvedEventId,
+        payloadToSubmit,
       );
-      if (createdEvent?.id) {
-        setEventId(createdEvent.id);
-        setOrganizerDraftEventId(createdEvent.id);
+      let submittedEvent = getApiResultData(
+        submitResult as ApiResult<OrganizerEvent>,
+      );
+
+      if (!submittedEvent?.id) {
+        const fallbackCreateResult = await createOrganizerEvent(payloadToSubmit);
+        submittedEvent = getApiResultData(
+          fallbackCreateResult as ApiResult<OrganizerEvent>,
+        );
       }
 
-      setStatus(String(createdEvent?.status ?? "PENDING"));
+      if (submittedEvent?.id) {
+        setEventId(submittedEvent.id);
+        setOrganizerDraftEventId(submittedEvent.id);
+      }
+
+      setStatus(String(submittedEvent?.status ?? "PENDING"));
       showToast({
         tone: "success",
-        message: "Sự kiện đã được tạo thành công.",
+        message: "Sự kiện đã được gửi duyệt thành công.",
       });
       await router.push("/organizer/events");
     } catch (error) {

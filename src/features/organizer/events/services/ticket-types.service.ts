@@ -58,7 +58,7 @@ function mapTicketTypeItem(item: unknown, index: number): OrganizerTicketType {
       "Unnamed Ticket",
     price: toNumberOrZero(value.price),
     quantity: toNumberOrZero(value.quantity),
-    soldQuantity: toNumberOrZero(value.soldQuantity),
+    soldQuantity: toNumberOrZero(value.soldQuantity ?? value.sold_quantity),
     saleStart:
       (typeof value.saleStart === "string" && value.saleStart) ||
       (typeof value.sale_start === "string" && value.sale_start) ||
@@ -122,14 +122,8 @@ export async function getOrganizerTicketTypes(
     >(`${ORGANIZER_API_BASE}/events/${eventId}/ticket-types`, { params });
 
     ensureApiResultSuccess(response.data, "Cannot load ticket types.");
-    const pagedData = getApiResultData(
-      response.data as ApiResult<unknown>,
-    ) as Record<string, unknown>;
-
-    // Backend returns PagedResponse with "items" field
-    const items: unknown[] = Array.isArray(pagedData?.items)
-      ? pagedData.items
-      : [];
+    const payload = getApiResultData(response.data as ApiResult<unknown>);
+    const items = getTicketItemsFromPayload(payload);
 
     return items.map((item, index) => mapTicketTypeItem(item, index));
   } catch (error) {

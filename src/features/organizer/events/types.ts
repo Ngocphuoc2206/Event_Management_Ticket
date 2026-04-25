@@ -27,6 +27,7 @@ export type OrganizerEventTicketCountersPayload = {
   availableTickets?: number;
   total_tickets?: number;
   availability_tickets?: number;
+  availibility_tickets?: number;
 };
 
 export type OrganizerUpdateEventPayload = Partial<
@@ -74,6 +75,7 @@ export type OrganizerEvent = OrganizerCreateEventPayload & {
   availableTickets?: number;
   total_tickets?: number;
   availability_tickets?: number;
+  availibility_tickets?: number;
 };
 
 export type OrganizerEventsPageData = {
