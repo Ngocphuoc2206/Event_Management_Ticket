@@ -223,7 +223,7 @@ export async function findAdminEventByIdFromList(
 export async function approveAdminEvent(eventId: string) {
   try {
     const response = await axiosClient.post<ApiResult<unknown>>(
-      ADMIN_PENDING_EVENTS_ENDPOINT,
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/events/${eventId}/approve`,
       {},
     );
 
