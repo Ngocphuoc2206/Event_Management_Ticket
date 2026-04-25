@@ -96,11 +96,17 @@ export function OrganizerCreateEventStepTwoContent() {
   };
 
   const mergeCurrentStepPayload = () => {
+    const currentDraftPayload = getOrganizerDraftPayload() ?? {};
+    const nextStartTime =
+      toIsoString(startDateTime) ?? currentDraftPayload.startTime;
+    const nextEndTime = toIsoString(endDateTime) ?? currentDraftPayload.endTime;
+
     const payload = {
       venueName: venueName.trim() || "TBD Venue",
       address: address.trim() || "TBD Address",
-      startTime: toIsoString(startDateTime),
-      endTime: toIsoString(endDateTime),
+      city: currentDraftPayload.city || "Ho Chi Minh",
+      startTime: nextStartTime,
+      endTime: nextEndTime,
     };
 
     mergeOrganizerDraftPayload(payload);
@@ -115,6 +121,28 @@ export function OrganizerCreateEventStepTwoContent() {
     try {
       const payload = mergeCurrentStepPayload();
       const draftPayload = getOrganizerDraftPayload();
+      const startTimestamp = payload.startTime
+        ? new Date(payload.startTime).getTime()
+        : Number.NaN;
+      const endTimestamp = payload.endTime
+        ? new Date(payload.endTime).getTime()
+        : Number.NaN;
+
+      if (Number.isNaN(startTimestamp) || Number.isNaN(endTimestamp)) {
+        showToast({
+          tone: "error",
+          message: "Vui lòng nhập đầy đủ thời gian bắt đầu và kết thúc.",
+        });
+        return;
+      }
+
+      if (endTimestamp <= startTimestamp) {
+        showToast({
+          tone: "error",
+          message: "Thời gian kết thúc phải sau thời gian bắt đầu.",
+        });
+        return;
+      }
 
       if (eventId) {
         await updateOrganizerEvent(eventId, {
