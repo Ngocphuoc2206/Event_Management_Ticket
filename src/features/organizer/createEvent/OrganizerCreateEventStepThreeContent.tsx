@@ -12,7 +12,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { getApiErrorMessage } from "@/features/auth/utils";
 import {
+  getOrganizerDraftEventId,
   getOrganizerDraftPayload,
+  setOrganizerDraftEventId,
   setOrganizerDraftPayload,
 } from "@/features/organizer/events/services/draft-storage";
 import { updateOrganizerEvent } from "@/features/organizer/events/services/create-event.service";
@@ -37,8 +39,18 @@ export function OrganizerCreateEventStepThreeContent() {
 
   const eventId = useMemo(() => {
     const queryEventId = router.query.eventId;
-    return typeof queryEventId === "string" ? queryEventId : null;
+    if (typeof queryEventId === "string" && queryEventId.trim()) {
+      return queryEventId;
+    }
+
+    return getOrganizerDraftEventId();
   }, [router.query.eventId]);
+
+  useEffect(() => {
+    if (eventId) {
+      setOrganizerDraftEventId(eventId);
+    }
+  }, [eventId]);
 
   useEffect(() => {
     const draft = getOrganizerDraftPayload();
