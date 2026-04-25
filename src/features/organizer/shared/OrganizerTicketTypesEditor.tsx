@@ -179,6 +179,7 @@ export function OrganizerTicketTypesEditor({
       availableTickets,
       total_tickets: totalTickets,
       availability_tickets: availableTickets,
+      availibility_tickets: availableTickets,
     });
   }, [eventId]);
 
