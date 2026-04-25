@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { OrganizerCreateEventPayload } from "@/features/organizer/events/types";
 import { useMemo, useState, useEffect } from "react";
 import {
   Bell,
@@ -117,98 +118,67 @@ export function OrganizerCreateEventStepTwoContent() {
     return payload;
   };
 
-  const handleContinue = async () => {
+const handleContinue = async () => {
     if (isSavingStep) return;
-
     setIsSavingStep(true);
 
     try {
-      const payload = mergeCurrentStepPayload();
-      const draftPayload = getOrganizerDraftPayload();
-      const startTimestamp = payload.startTime
-        ? new Date(payload.startTime).getTime()
-        : Number.NaN;
-      const endTimestamp = payload.endTime
-        ? new Date(payload.endTime).getTime()
-        : Number.NaN;
-
-      if (Number.isNaN(startTimestamp) || Number.isNaN(endTimestamp)) {
-        showToast({
-          tone: "error",
-          message: "Vui lòng nhập đầy đủ thời gian bắt đầu và kết thúc.",
-        });
+      // 1. Lưu data bước hiện tại vào LocalStorage
+      const currentStepPayload = mergeCurrentStepPayload();
+      
+      // 2. Lấy toàn bộ data 5 bước
+      const fullDraftPayload = getOrganizerDraftPayload();
+      
+      if (!fullDraftPayload) {
+        showToast({ tone: "error", message: "Không tìm thấy dữ liệu nháp." });
         return;
       }
 
+      // 3. Logic kiểm tra thời gian (Giữ nguyên)
+      const startTimestamp = new Date(currentStepPayload.startTime || "").getTime();
+      const endTimestamp = new Date(currentStepPayload.endTime || "").getTime();
+
+      if (isNaN(startTimestamp) || isNaN(endTimestamp)) {
+        showToast({ tone: "error", message: "Vui lòng nhập đầy đủ thời gian." });
+        return;
+      }
       if (endTimestamp <= startTimestamp) {
-        showToast({
-          tone: "error",
-          message: "Thời gian kết thúc phải sau thời gian bắt đầu.",
-        });
+        showToast({ tone: "error", message: "Thời gian kết thúc phải sau bắt đầu." });
         return;
       }
 
-      if (eventId) {
-        // Update existing event
-        await updateOrganizerEvent(eventId, {
-          ...draftPayload,
-          ...payload,
-        });
-      } else {
-        // Create new event if it doesn't exist
-        const draftData = {
-          ...draftPayload,
-          ...payload,
-          status: "DRAFT",
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } as any;
+      // 4. DÙNG "AS" ĐỂ ÉP KIỂU - Cách này sẽ xóa sạch lỗi đỏ của ông
+      const apiPayload = {
+        ...fullDraftPayload,
+        ...currentStepPayload, // Ưu tiên lấy data mới nhất vừa nhập ở Step 2
+        status: "DRAFT",
+        visibility: fullDraftPayload.visibility || "PUBLIC",
+      } as OrganizerCreateEventPayload; 
 
-        try {
-          const response = await createOrganizerEvent(draftData);
-          const eventData = getApiResultData(response);
-          const newEventId = eventData?.id;
-          if (newEventId) {
-            setOrganizerDraftEventId(newEventId);
-            console.log("[v0] Event created with ID:", newEventId);
-          }
-        } catch (error) {
-          // If creation fails, keep draft in localStorage as fallback
-          console.log("[v0] Event creation failed, keeping draft:", error);
-          mergeOrganizerDraftPayload(draftData);
+      let finalEventId = eventId;
+
+      if (finalEventId) {
+        // Cập nhật lên Database
+        await updateOrganizerEvent(finalEventId, apiPayload);
+      } else {
+        // Tạo mới nếu lỡ tay xóa mất ID
+        const response = await createOrganizerEvent(apiPayload);
+        const eventData = getApiResultData(response);
+        if (eventData?.id) {
+          finalEventId = eventData.id;
+          setOrganizerDraftEventId(finalEventId);
         }
       }
 
-      await router.push(
-        eventId
-          ? {
-              pathname: "/organizer/create-event/visuals",
-              query: { eventId },
-            }
-          : "/organizer/create-event/visuals",
-      );
-    } catch (error) {
-      const message = getApiErrorMessage(
-        error,
-        "Không thể lưu thông tin Location & Time.",
-      );
-
-      if (message.includes("Event not found")) {
-        localStorage.removeItem("organizer-create-event-id");
-        localStorage.removeItem("organizer-create-event-draft");
-
-        showToast({
-          tone: "error",
-          message: "Event không tồn tại. Vui lòng tạo lại từ bước 1.",
-        });
-
-        await router.push("/organizer/create-event");
-        return;
-      }
-
-      showToast({
-        tone: "error",
-        message,
+      // 5. Chuyển bước
+      await router.push({
+        pathname: "/organizer/create-event/visuals",
+        query: { eventId: finalEventId },
       });
+
+    } catch (error) {
+      const message = getApiErrorMessage(error, "Lỗi lưu dữ liệu.");
+      showToast({ tone: "error", message });
     } finally {
       setIsSavingStep(false);
     }
