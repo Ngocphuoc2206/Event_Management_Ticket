@@ -236,7 +236,7 @@ export function OrganizerCreateEventStepTwoContent() {
               </div>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-gray-200">
-              <div className="h-full w-2/5 rounded-full bg-gradient-to-r from-sky-700 to-violet-700" />
+              <div className="h-full w-2/5 rounded-full bg-linear-to-r from-sky-700 to-violet-700" />
             </div>
           </section>
 
@@ -369,9 +369,9 @@ export function OrganizerCreateEventStepTwoContent() {
 
             <aside className="space-y-8">
               <article className="relative h-72 overflow-hidden rounded-3xl bg-white shadow-lg outline outline-1 outline-slate-300/10">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,_#9bd1ff_0%,_transparent_45%),linear-gradient(145deg,#2d74d9,#7a4de2)] opacity-90" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                <div className="absolute left-[163px] top-[126px] flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-2xl">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,#9bd1ff_0%,transparent_45%),linear-gradient(145deg,#2d74d9,#7a4de2)] opacity-90" />
+                <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
+                <div className="absolute left-40.75 top-31.5 flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-2xl">
                   <MapPin className="h-5 w-5 text-rose-700" />
                 </div>
                 <div className="absolute bottom-6 left-6">
