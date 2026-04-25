@@ -1,6 +1,9 @@
 import { isAxiosError } from "axios";
 
-import { AUTH_REDIRECT_ROUTES, AUTH_STORAGE_KEYS } from "@/features/auth/constants";
+import {
+  AUTH_REDIRECT_ROUTES,
+  AUTH_STORAGE_KEYS,
+} from "@/features/auth/constants";
 import type {
   ApiResponse,
   ApiResult,
@@ -19,8 +22,14 @@ function expireCookie(name: string) {
   document.cookie = `${name}=; Max-Age=0; path=/;`;
 }
 
-export function isApiResponse<T>(response: ApiResult<T>): response is ApiResponse<T> {
-  return typeof response === "object" && response !== null && !Array.isArray(response);
+export function isApiResponse<T>(
+  response: ApiResult<T>,
+): response is ApiResponse<T> {
+  return (
+    typeof response === "object" &&
+    response !== null &&
+    !Array.isArray(response)
+  );
 }
 
 export function getApiResultData<T>(response: ApiResult<T>): T | undefined {
@@ -31,7 +40,9 @@ export function getApiResultData<T>(response: ApiResult<T>): T | undefined {
   return response.results ?? response.result ?? response.data;
 }
 
-export function getApiResultMessage<T>(response: ApiResult<T>): string | undefined {
+export function getApiResultMessage<T>(
+  response: ApiResult<T>,
+): string | undefined {
   if (!isApiResponse(response)) {
     return undefined;
   }
@@ -39,7 +50,10 @@ export function getApiResultMessage<T>(response: ApiResult<T>): string | undefin
   return response.message;
 }
 
-export function ensureApiResultSuccess<T>(response: ApiResult<T>, fallback: string): void {
+export function ensureApiResultSuccess<T>(
+  response: ApiResult<T>,
+  fallback: string,
+): void {
   if (!isApiResponse(response)) {
     return;
   }
@@ -53,7 +67,10 @@ export function ensureApiResultSuccess<T>(response: ApiResult<T>, fallback: stri
   }
 }
 
-export function getApiErrorMessage<T>(error: unknown, fallback: string): string {
+export function getApiErrorMessage<T>(
+  error: unknown,
+  fallback: string,
+): string {
   if (error instanceof Error && error.message.trim()) {
     return error.message;
   }
@@ -76,7 +93,11 @@ export function getApiErrorMessage<T>(error: unknown, fallback: string): string 
     return responseData;
   }
 
-  if (responseData && typeof responseData === "object" && "message" in responseData) {
+  if (
+    responseData &&
+    typeof responseData === "object" &&
+    "message" in responseData
+  ) {
     const message = responseData.message;
     if (typeof message === "string" && message.trim()) {
       return message;
@@ -231,6 +252,8 @@ export function clearAuthSession() {
   localStorage.removeItem(AUTH_STORAGE_KEYS.accessToken);
   localStorage.removeItem(AUTH_STORAGE_KEYS.refreshToken);
   localStorage.removeItem(AUTH_STORAGE_KEYS.userRole);
+  localStorage.removeItem("organizer-create-event-draft");
+  localStorage.removeItem("organizer-create-event-id");
 }
 
 export function getStoredAccessToken() {

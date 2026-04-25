@@ -42,8 +42,8 @@ export function useAuth() {
   ): Promise<AuthActionResult> => {
     const response = await loginUser(payload);
     const authPayload = getApiResultData<LoginResponse>(response);
-    localStorage.removeItem("organizerDraftEventId");
-    localStorage.removeItem("organizerDraftPayload");
+    localStorage.removeItem("organizer-create-event-draft");
+    localStorage.removeItem("organizer-create-event-id");
     const session = createAuthSession(authPayload);
     const shouldRedirect = Boolean(session?.accessToken);
     const redirectTo = shouldRedirect
