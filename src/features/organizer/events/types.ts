@@ -22,9 +22,23 @@ export type OrganizerCreateEventPayload = {
   status?: OrganizerEventStatus;
 };
 
-export type OrganizerUpdateEventPayload = Partial<OrganizerCreateEventPayload>;
+export type OrganizerEventTicketCountersPayload = {
+  totalTickets?: number;
+  availableTickets?: number;
+  total_tickets?: number;
+  availability_tickets?: number;
+};
 
-export type OrganizerTicketTypeStatus = "ACTIVE" | "INACTIVE" | "SOLD_OUT" | "CANCELLED" | "EXPIRED";
+export type OrganizerUpdateEventPayload = Partial<
+  OrganizerCreateEventPayload & OrganizerEventTicketCountersPayload
+>;
+
+export type OrganizerTicketTypeStatus =
+  | "ACTIVE"
+  | "INACTIVE"
+  | "SOLD_OUT"
+  | "CANCELLED"
+  | "EXPIRED";
 
 export type OrganizerTicketType = {
   id: string;
@@ -56,6 +70,10 @@ export type OrganizerEvent = OrganizerCreateEventPayload & {
   createdAt?: string;
   updatedAt?: string;
   status?: OrganizerEventStatus | string;
+  totalTickets?: number;
+  availableTickets?: number;
+  total_tickets?: number;
+  availability_tickets?: number;
 };
 
 export type OrganizerEventsPageData = {

@@ -23,6 +23,8 @@ import type {
   OrganizerTicketTypeStatus,
 } from "@/features/organizer/events/types";
 
+import { updateOrganizerEvent } from "@/features/organizer/events/services/create-event.service";
+
 type ToastState = {
   tone: "success" | "error";
   message: string;
@@ -82,6 +84,20 @@ function toIsoString(value: string): string | null {
 
 function formatPrice(price: number) {
   return `$${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function calculateTicketCounters(ticketTypes: OrganizerTicketType[]) {
+  const totalTickets = ticketTypes.reduce(
+    (sum, ticketType) => sum + Math.max(Number(ticketType.quantity) || 0, 0),
+    0,
+  );
+  const availableTickets = ticketTypes.reduce((sum, ticketType) => {
+    const quantity = Math.max(Number(ticketType.quantity) || 0, 0);
+    const sold = Math.max(Number(ticketType.soldQuantity) || 0, 0);
+    return sum + Math.max(quantity - sold, 0);
+  }, 0);
+
+  return { totalTickets, availableTickets };
 }
 
 export function OrganizerTicketTypesEditor({
@@ -149,6 +165,23 @@ export function OrganizerTicketTypesEditor({
     void refreshTickets();
   }, [refreshTickets]);
 
+  const syncEventTicketCounters = useCallback(async () => {
+    if (!eventId) {
+      return;
+    }
+
+    const latestTicketTypes = await getOrganizerTicketTypes(eventId);
+    const { totalTickets, availableTickets } =
+      calculateTicketCounters(latestTicketTypes);
+
+    await updateOrganizerEvent(eventId, {
+      totalTickets,
+      availableTickets,
+      total_tickets: totalTickets,
+      availability_tickets: availableTickets,
+    });
+  }, [eventId]);
+
   const metrics = useMemo(() => {
     const totalQuantity = tickets.reduce(
       (sum, ticket) => sum + (ticket.quantity || 0),
@@ -212,7 +245,9 @@ export function OrganizerTicketTypesEditor({
     setIsSaving(true);
     try {
       if (editingId) {
-        const existingTicket = tickets.find((ticket) => ticket.id === editingId);
+        const existingTicket = tickets.find(
+          (ticket) => ticket.id === editingId,
+        );
         if (!existingTicket) {
           throw new Error("Ticket type no longer exists.");
         }
@@ -242,7 +277,6 @@ export function OrganizerTicketTypesEditor({
         }
 
         await updateOrganizerTicketType(editingId, updatePayload);
-        showToast({ tone: "success", message: "Ticket type updated." });
       } else {
         await createOrganizerTicketType(eventId, {
           name: form.name.trim(),
@@ -251,11 +285,19 @@ export function OrganizerTicketTypesEditor({
           saleStart,
           saleEnd,
         });
-        showToast({ tone: "success", message: "Ticket type created." });
       }
+
+      await syncEventTicketCounters();
 
       resetForm();
       await refreshTickets();
+
+      showToast({
+        tone: "success",
+        message: editingId
+          ? "Ticket type updated and event totals synced."
+          : "Ticket type created and event totals synced.",
+      });
     } catch (error) {
       showToast({
         tone: "error",
@@ -278,8 +320,12 @@ export function OrganizerTicketTypesEditor({
     setIsDeletingById((prev) => ({ ...prev, [ticketTypeId]: true }));
     try {
       await deleteOrganizerTicketType(ticketTypeId);
-      showToast({ tone: "success", message: "Ticket type deleted." });
+      await syncEventTicketCounters();
       await refreshTickets();
+      showToast({
+        tone: "success",
+        message: "Ticket type deleted and event totals synced.",
+      });
     } catch (error) {
       showToast({
         tone: "error",
