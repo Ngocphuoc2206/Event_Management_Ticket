@@ -144,7 +144,7 @@ public class EventService {
         log.info("createEvent called: organizerId={}, organizerName={}", user.getId(), user.getFullName());
 
         Event event = eventMapper.toEvent(request);
-        event.setStatus(EventStatus.PENDING);
+        event.setStatus(EventStatus.DRAFT);
         event.setOrganizerName(user.getFullName());
         event.setOrganizerId(user.getId());
 
