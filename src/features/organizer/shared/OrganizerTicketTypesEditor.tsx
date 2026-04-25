@@ -23,7 +23,10 @@ import type {
   OrganizerTicketTypeStatus,
 } from "@/features/organizer/events/types";
 
-import { updateOrganizerEvent } from "@/features/organizer/events/services/create-event.service";
+import {
+  getOrganizerEventById,
+  updateOrganizerEvent,
+} from "@/features/organizer/events/services/create-event.service";
 
 type ToastState = {
   tone: "success" | "error";
@@ -171,8 +174,18 @@ export function OrganizerTicketTypesEditor({
     }
 
     const latestTicketTypes = await getOrganizerTicketTypes(eventId);
-    const { totalTickets, availableTickets } =
-      calculateTicketCounters(latestTicketTypes);
+
+    const totalTickets = latestTicketTypes.reduce(
+      (sum, ticket) => sum + Math.max(Number(ticket.quantity) || 0, 0),
+      0,
+    );
+
+    const availableTickets = latestTicketTypes.reduce((sum, ticket) => {
+      const quantity = Math.max(Number(ticket.quantity) || 0, 0);
+      const soldQuantity = Math.max(Number(ticket.soldQuantity) || 0, 0);
+
+      return sum + Math.max(quantity - soldQuantity, 0);
+    }, 0);
 
     const minPrice =
       latestTicketTypes.length > 0
@@ -181,12 +194,13 @@ export function OrganizerTicketTypesEditor({
           )
         : 0;
 
+    const eventResponse = await getOrganizerEventById(eventId);
+
     await updateOrganizerEvent(eventId, {
+      ...eventResponse,
+      minPrice,
       totalTickets,
       availableTickets,
-      minPrice,
-      total_tickets: totalTickets,
-      available_tickets: availableTickets,
     });
   }, [eventId]);
 
