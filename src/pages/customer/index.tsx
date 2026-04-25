@@ -26,7 +26,10 @@ export default function CustomerDashboardPage() {
         <title>Customer Dashboard | EventHub</title>
       </Head>
 
-      <CustomerPageShell activeHref="/customer" onLogout={() => void handleLogout()}>
+      <CustomerPageShell
+        activeHref="/customer"
+        onLogout={() => void handleLogout()}
+      >
         <CustomerDashboardContent
           customerName={customerProfile.name}
           statCards={customerStatCards}

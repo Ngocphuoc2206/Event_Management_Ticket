@@ -13,6 +13,17 @@ function normalizePublicEventsEndpoint() {
 
 const PUBLIC_EVENTS_ENDPOINT = normalizePublicEventsEndpoint();
 
+function normalizeOrganizerEventsEndpoint() {
+  const rawEndpoint =
+    process.env.NEXT_PUBLIC_ORGANIZER_EVENTS_ENDPOINT ||
+    process.env.NEXT_PUBLIC_ORGANIZER_CREATE_EVENT_ENDPOINT ||
+    "/api/organizer/events";
+
+  return rawEndpoint.replace(/\/+$/, "");
+}
+
+const ORGANIZER_EVENTS_ENDPOINT = normalizeOrganizerEventsEndpoint();
+
 type UnknownRecord = Record<string, unknown>;
 
 export type CustomerEventTicketType = {
@@ -289,18 +300,33 @@ function mapEventSummary(rawEvent: unknown): CustomerEventSummary | null {
   };
 }
 
+async function fetchTicketTypesByUrl(url: string) {
+  const response = await axiosClient.get<ApiResult<unknown> | unknown>(url);
+  const rawData = unwrapResponseData(response.data);
+
+  return extractCollection(rawData)
+    .map(mapTicketType)
+    .filter(
+      (ticketType): ticketType is CustomerEventTicketType =>
+        ticketType !== null,
+    );
+}
+
 async function getEventTicketTypesFromEndpoint(eventId: string) {
   try {
-    const response = await axiosClient.get<ApiResult<unknown> | unknown>(
+    const publicTicketTypes = await fetchTicketTypesByUrl(
       `${PUBLIC_EVENTS_ENDPOINT}/${eventId}/ticket-types`,
     );
-    const rawData = unwrapResponseData(response.data);
-    return extractCollection(rawData)
-      .map(mapTicketType)
-      .filter(
-        (ticketType): ticketType is CustomerEventTicketType =>
-          ticketType !== null,
-      );
+    if (publicTicketTypes.length > 0) {
+      return publicTicketTypes;
+    }
+  } catch {
+    return [];
+  }
+  try {
+    return await fetchTicketTypesByUrl(
+      `${ORGANIZER_EVENTS_ENDPOINT}/${eventId}/ticket-types`,
+    );
   } catch {
     return [];
   }
