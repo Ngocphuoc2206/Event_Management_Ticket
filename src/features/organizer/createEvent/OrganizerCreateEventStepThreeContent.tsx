@@ -21,6 +21,7 @@ import {
   ORGANIZER_MAX_IMAGE_SIZE_BYTES,
   uploadOrganizerBanner,
 } from "@/features/organizer/events/services/media-upload.service";
+import { OrganizerCreateEventPayload } from "../events";
 
 type ToastState = {
   tone: "success" | "error";
@@ -81,13 +82,19 @@ export function OrganizerCreateEventStepThreeContent() {
       setBannerUrl(uploadedUrl);
 
       const draftPayload = getOrganizerDraftPayload() ?? {};
-      setOrganizerDraftPayload({ ...draftPayload, bannerUrl: uploadedUrl });
+      const nextPayload = {
+        ...draftPayload,
+        bannerUrl: uploadedUrl,
+        status: "DRAFT",
+      };
+
+      setOrganizerDraftPayload(nextPayload as OrganizerCreateEventPayload);
 
       if (eventId) {
-        await updateOrganizerEvent(eventId, {
-          bannerUrl: uploadedUrl,
-          status: "DRAFT",
-        });
+        await updateOrganizerEvent(
+          eventId,
+          nextPayload as OrganizerCreateEventPayload,
+        );
       }
 
       showToast({ tone: "success", message: "Tải ảnh lên thành công" });

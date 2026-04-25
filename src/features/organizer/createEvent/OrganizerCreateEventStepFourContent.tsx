@@ -25,6 +25,27 @@ export function OrganizerCreateEventStepFourContent() {
       }
     : "/organizer/create-event/review-publish";
 
+  if (!eventId) {
+    return (
+      <section className="flex-1 bg-slate-50 p-10">
+        <div className="rounded-3xl bg-white p-8">
+          <h1 className="text-2xl font-bold text-zinc-900">Chưa có Event ID</h1>
+          <p className="mt-2 text-gray-700">
+            Vui lòng quay lại Step 1 để lưu draft event trước khi tạo ticket
+            type.
+          </p>
+          <button
+            type="button"
+            onClick={() => void router.push("/organizer/create-event")}
+            className="mt-6 rounded-2xl bg-blue-600 px-6 py-3 font-bold text-white"
+          >
+            Quay lại Step 1
+          </button>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <OrganizerTicketTypesEditor
       title="Tickets & Pricing"
