@@ -9,6 +9,7 @@ export {
 } from "./constants";
 export { OrganizerDashboardContent } from "./dashboard/OrganizerDashboardContent";
 export { OrganizerDashboardSidebar } from "./dashboard/OrganizerDashboardSidebar";
+export * from "./organizer-dashboard.service";
 export { OrganizerAnalyticsContent } from "./analytics/OrganizerAnalyticsContent";
 export { OrganizerAttendeesContent } from "./attendees/OrganizerAttendeesContent";
 export { OrganizerCreateEventContent } from "./createEvent/OrganizerCreateEventContent";
