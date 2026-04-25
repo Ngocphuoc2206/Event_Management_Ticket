@@ -157,14 +157,50 @@ export function OrganizerCreateEventContent() {
       }
     : "/organizer/create-event/location-time";
 
-  const handleContinueToLocation = () => {
-    mergeOrganizerDraftPayload({
-      title: form.title.trim(),
-      category: form.category.trim(),
-      description: form.description.trim(),
-      shortDescription: form.description.trim().slice(0, 160),
-      visibility: form.visibility,
-    });
+  const handleContinueToLocation = async () => {
+    if (!canSaveDraft || isSavingDraft) {
+      return;
+    }
+
+    setIsSavingDraft(true);
+
+    try {
+      const payload = buildDraftPayload(form);
+
+      const apiResult = await saveOrganizerEventDraft(
+        payload,
+        draftEventId ?? undefined,
+      );
+
+      const saved = getApiResultData(apiResult as ApiResult<{ id?: string }>);
+
+      if (!saved?.id) {
+        showToast({
+          tone: "error",
+          message: "Không lấy được Event ID sau khi lưu draft.",
+        });
+        return;
+      }
+
+      setDraftEventId(saved.id);
+      setOrganizerDraftEventId(saved.id);
+      setOrganizerDraftPayload(payload);
+
+      await router.push({
+        pathname: "/organizer/create-event/location-time",
+        query: { eventId: saved.id },
+      });
+    } catch (error) {
+      showToast({
+        tone: "error",
+        message: getApiErrorMessage(
+          error,
+          "Không thể lưu draft. Vui lòng thử lại.",
+        ),
+      });
+    } finally {
+      setIsSavingDraft(false);
+    }
   };
 
   return (
@@ -324,14 +360,15 @@ export function OrganizerCreateEventContent() {
                   {isSavingDraft ? "Dang luu..." : "Save Draft"}
                 </button>
 
-                <Link
-                  href={nextStepHref}
-                  onClick={handleContinueToLocation}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-sky-700 to-violet-700 px-12 py-4 text-base font-bold text-white shadow-[0px_8px_10px_-6px_rgba(0,88,190,0.20),0px_20px_25px_-5px_rgba(0,88,190,0.20)]"
+                <button
+                  type="button"
+                  onClick={() => void handleContinueToLocation()}
+                  disabled={!canSaveDraft || isSavingDraft}
+                  className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-sky-700 to-violet-700 px-12 py-4 text-base font-bold text-white shadow-[0px_8px_10px_-6px_rgba(0,88,190,0.20),0px_20px_25px_-5px_rgba(0,88,190,0.20)] disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Continue to Location
+                  {isSavingDraft ? "Dang luu..." : "Continue to Location"}
                   <ChevronDown className="h-4 w-4 -rotate-90" />
-                </Link>
+                </button>
               </div>
             </div>
 
