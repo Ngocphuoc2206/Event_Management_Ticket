@@ -274,8 +274,8 @@ export function OrganizerCreateEventStepFiveContent() {
       visibility: "PUBLIC",
       minPrice: Number(minPriceFromTickets),
       status: "DRAFT",
-      total_tickets: totalTickets,
-      availability_tickets: availableTickets,
+      totalTickets: totalTickets,
+      availableTickets: availableTickets,
     };
   };
 
