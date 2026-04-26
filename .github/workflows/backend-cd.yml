@@ -48,6 +48,8 @@ jobs:
             S3_REGION=${{ secrets.S3_REGION }}
             S3_PUBLIC_BASE_URL=${{ secrets.S3_PUBLIC_BASE_URL }}
             MOCK_WEBHOOK_SECRET=${{ secrets.MOCK_WEBHOOK_SECRET }}
+            REDIS_HOST=${{ secrets.REDIS_HOST }}
+            REDIS_PORT=${{ secrets.REDIS_PORT }}
             EOF
 
             docker compose down || true
