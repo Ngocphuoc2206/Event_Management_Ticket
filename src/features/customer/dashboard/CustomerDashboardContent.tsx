@@ -119,9 +119,9 @@ function TicketQr({ ticket }: { ticket: CustomerTicketCard }) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         src={(ticket as any).qrCodeUrl || getTicketQrSrc(ticket)}
         alt={`QR for ${ticket.ticketCode}`}
-        width={28}
-        height={28}
-        className="rounded-sm"
+        width={32}
+        height={32}
+        className="rounded-sm object-contain"
       />
     </button>
   );
