@@ -15,6 +15,8 @@ import com.envenHub.backend.repository.EventRepository;
 import com.envenHub.backend.repository.TicketTypeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -40,6 +42,7 @@ public class TicketTypeService {
     @Autowired
     private UserService userService;
 
+    @CacheEvict(value = {"publicTicketTypes", "publicEventDetail"}, allEntries = true)
     public TicketTypeResponse createTicketType(
             TicketTypeRequest request,
             String eventId,
@@ -61,6 +64,10 @@ public class TicketTypeService {
         return ticketMapper.toTicketTypeResponse(ticketType);
     }
 
+    @Cacheable(
+            value = "publicTicketTypes",
+            key = "#eventId + ':page=' + #page + ':size=' + #size"
+    )
     public PagedResponse<TicketTypeResponse> getPublicTicketTypesByEvent(
             String eventId,
             int page,
@@ -88,6 +95,7 @@ public class TicketTypeService {
                 .build();
     }
 
+    @CacheEvict(value = {"publicTicketTypes", "publicEventDetail"}, allEntries = true)
     public TicketTypeResponse updateTicketType(
             TicketTypeRequest request,
             String ticketId,
@@ -120,6 +128,7 @@ public class TicketTypeService {
         return ticketMapper.toTicketTypeResponse(ticketTypeRepository.save(ticketType));
     }
 
+    @CacheEvict(value = {"publicTicketTypes", "publicEventDetail"}, allEntries = true)
     public void deleteTicketType(String ticketId, Authentication authentication) {
         UserResponse user = userService.getCurrentUser(authentication);
 
