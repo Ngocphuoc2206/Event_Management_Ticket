@@ -205,6 +205,14 @@ export function OrganizerAttendeesContent() {
       const code = error?.response?.data?.code;
 
       if (code === 1039) {
+        setAttendees((prev) =>
+          prev.map((item) =>
+            item.ticketCode === ticketCode
+              ? { ...item, checkedIn: true }
+              : item,
+          ),
+        );
+
         showToast({
           tone: "error",
           message: "Ticket already checked in.",
@@ -215,6 +223,11 @@ export function OrganizerAttendeesContent() {
           message,
         });
       }
+    } finally {
+      setIsCheckingInByOrderItemId((prev) => ({
+        ...prev,
+        [ticketCode]: false,
+      }));
     }
   };
 
