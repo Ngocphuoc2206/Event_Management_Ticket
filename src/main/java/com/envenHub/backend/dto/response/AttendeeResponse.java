@@ -10,11 +10,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class AttendeeResponse {
+    private String ticketId;
+    private String ticketCode;
+
     private String userId;
     private String fullName;
     private String email;
 
     private String ticketTypeName;
     private Boolean checkedIn;
-    private String ticketCode;
 }
