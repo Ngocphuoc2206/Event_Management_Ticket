@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { ApiResult } from "@/features/auth/types";
 import {
   ensureApiResultSuccess,
@@ -40,7 +41,17 @@ export async function checkInOrganizerAttendee(ticketCode: string) {
 
     ensureApiResultSuccess(response.data, "Check-in attendee thất bại.");
     return response.data;
-  } catch (error) {
-    throw new Error(getApiErrorMessage(error, "Check-in attendee thất bại."));
+  } catch (error: any) {
+    const data = error?.response?.data;
+
+    const customError: any = new Error(
+      data?.message || getApiErrorMessage(error, "Check-in failed."),
+    );
+
+    customError.response = {
+      data,
+    };
+
+    throw customError;
   }
 }
