@@ -1,73 +1,388 @@
+/* eslint-disable @next/next/no-img-element */
 import UserLayout from "@/components/templates/UserLayout/UserLayout";
-import { createOrder, type OrderResponse } from "@/features/customer/orders.service";
-import { initPayment, mockPaymentWebhook, type PaymentResponse } from "@/features/customer/payments.service";
+import {
+  getPublicEventDetail,
+  type CustomerEventDetail,
+  type CustomerEventTicketType,
+} from "@/features/customer/events.service";
+import {
+  getMyTickets,
+  type CustomerTicketResponse,
+} from "@/features/customer/tickets.service";
+import {
+  createOrder,
+} from "@/features/customer/orders.service";
+import {
+  initPayment,
+  mockPaymentWebhook,
+} from "@/features/customer/payments.service";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type ChangeEvent,
+} from "react";
+import {
+  ArrowRight,
+  Banknote,
+  CalendarDays,
+  Check,
+  ChevronLeft,
+  CircleDollarSign,
+  CreditCard,
+  Lock,
+  Mail,
+  MapPin,
+  Receipt,
+  ShieldCheck,
+  Smartphone,
+  UserRound,
+} from "lucide-react";
 
 const DEFAULT_QUANTITY = 1;
+const DEFAULT_EVENT_BANNER =
+  "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1600&auto=format&fit=crop";
+const DEFAULT_EVENT_CARD =
+  "https://images.unsplash.com/photo-1574169208507-84376144848b?q=80&w=600&auto=format&fit=crop";
+
+type BuyerFormState = {
+  fullName: string;
+  email: string;
+  phone: string;
+  cardNumber: string;
+  expiryDate: string;
+  cvv: string;
+  saveCard: boolean;
+};
+
+type PaymentOption = {
+  id: "card" | "wallet" | "bank";
+  label: string;
+  helper: string;
+  icon: typeof CreditCard;
+};
+
+const PAYMENT_OPTIONS: PaymentOption[] = [
+  {
+    id: "card",
+    label: "Card",
+    helper: "Visa, MasterCard",
+    icon: CreditCard,
+  },
+  {
+    id: "wallet",
+    label: "Wallet",
+    helper: "Apple Pay, Momo",
+    icon: Smartphone,
+  },
+  {
+    id: "bank",
+    label: "Bank Transfer",
+    helper: "Instant transfer",
+    icon: Banknote,
+  },
+];
+
+const INITIAL_FORM_STATE: BuyerFormState = {
+  fullName: "",
+  email: "",
+  phone: "",
+  cardNumber: "",
+  expiryDate: "",
+  cvv: "",
+  saveCard: false,
+};
 
 function getOrderErrorMessage(error: unknown) {
   if (error instanceof Error && error.message.trim()) {
     return error.message;
   }
 
-  const responseData = (error as { response?: { data?: { code?: number; message?: string } } })?.response?.data;
+  const responseData = (error as {
+    response?: { data?: { code?: number; message?: string } };
+  })?.response?.data;
 
   if (responseData?.message) {
     return responseData.message;
   }
 
   if (responseData?.code === 1017) {
-    return "Ticket type not found";
+    return "Ticket type not found.";
   }
 
   if (responseData?.code === 1019) {
-    return "Not enough tickets available";
+    return "Not enough tickets available.";
   }
 
-  return "Could not create order. Please try again.";
+  return "Could not complete checkout. Please try again.";
 }
 
-function formatCurrency(amount?: number) {
-  if (typeof amount !== "number") return "Pending";
+function formatCurrency(amount?: number, fallback = "Pending") {
+  if (typeof amount !== "number" || !Number.isFinite(amount)) {
+    return fallback;
+  }
 
   return new Intl.NumberFormat("vi-VN", {
-    currency: "VND",
     style: "currency",
+    currency: "VND",
+    maximumFractionDigits: 0,
   }).format(amount);
+}
+
+function formatEventSchedule(startTime?: string, endTime?: string) {
+  if (!startTime) {
+    return "Schedule will be announced soon";
+  }
+
+  const start = new Date(startTime);
+  if (Number.isNaN(start.getTime())) {
+    return startTime;
+  }
+
+  const dateLabel = new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(start);
+  const timeLabel = new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(start);
+
+  if (!endTime) {
+    return `${dateLabel} • ${timeLabel}`;
+  }
+
+  const end = new Date(endTime);
+  if (Number.isNaN(end.getTime())) {
+    return `${dateLabel} • ${timeLabel}`;
+  }
+
+  const endTimeLabel = new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(end);
+
+  return `${dateLabel} • ${timeLabel} - ${endTimeLabel}`;
+}
+
+function getEventLocation(
+  event?: Pick<CustomerEventDetail, "venueName" | "address" | "city"> | null,
+) {
+  if (!event) {
+    return "Venue details will be updated";
+  }
+
+  const location = [event.venueName, event.address, event.city]
+    .filter(Boolean)
+    .join(", ");
+
+  return location || "Venue details will be updated";
+}
+
+function getTicketLabel(ticketType?: CustomerEventTicketType | null) {
+  if (!ticketType) {
+    return "Selected ticket";
+  }
+
+  return ticketType.name || ticketType.id || "Selected ticket";
+}
+
+function getTicketQrValue(ticket: CustomerTicketResponse) {
+  return (
+    ticket.qrPublicUrl ||
+    ticket.qrCodeUrl ||
+    ticket.qrImageUrl ||
+    ticket.publicUrl ||
+    ticket.imageUrl ||
+    ticket.qrCode ||
+    ""
+  );
+}
+
+async function waitForIssuedTicket(orderId: string) {
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const [upcomingTickets, pastTickets] = await Promise.all([
+      getMyTickets({ type: "upcoming" }),
+      getMyTickets({ type: "past" }),
+    ]);
+    const matchedTicket = [...upcomingTickets, ...pastTickets].find(
+      (ticket) => ticket.orderId === orderId,
+    );
+
+    if (matchedTicket) {
+      return matchedTicket;
+    }
+
+    await new Promise((resolve) => {
+      setTimeout(resolve, 800);
+    });
+  }
+
+  return null;
 }
 
 export default function CheckoutPage() {
   const router = useRouter();
+  const [buyerForm, setBuyerForm] = useState(INITIAL_FORM_STATE);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] =
+    useState<PaymentOption["id"]>("card");
+  const [promoCode, setPromoCode] = useState("");
+  const [promoMessage, setPromoMessage] = useState("");
+  const [eventDetail, setEventDetail] = useState<CustomerEventDetail | null>(
+    null,
+  );
+  const [isLoadingEvent, setIsLoadingEvent] = useState(false);
+  const [eventError, setEventError] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-  const [createdOrder, setCreatedOrder] = useState<OrderResponse | null>(null);
-  const [createdOrderEventId, setCreatedOrderEventId] = useState("");
-  const [createdPayment, setCreatedPayment] = useState<PaymentResponse | null>(null);
-  const [isMockingWebhook, setIsMockingWebhook] = useState(false);
-  const [webhookMessage, setWebhookMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
   const ticketTypeId =
-    typeof router.query.ticketTypeId === "string" && router.query.ticketTypeId.trim()
+    typeof router.query.ticketTypeId === "string" &&
+    router.query.ticketTypeId.trim()
       ? router.query.ticketTypeId.trim()
       : "";
-  const eventIdFromQuery =
+  const eventId =
     typeof router.query.eventId === "string" && router.query.eventId.trim()
       ? router.query.eventId.trim()
       : "";
-  const quantityQuery = typeof router.query.quantity === "string" ? Number(router.query.quantity) : DEFAULT_QUANTITY;
-  const quantity = Number.isFinite(quantityQuery) && quantityQuery > 0 ? Math.floor(quantityQuery) : DEFAULT_QUANTITY;
+  const quantityQuery =
+    typeof router.query.quantity === "string"
+      ? Number(router.query.quantity)
+      : DEFAULT_QUANTITY;
+  const quantity =
+    Number.isFinite(quantityQuery) && quantityQuery > 0
+      ? Math.floor(quantityQuery)
+      : DEFAULT_QUANTITY;
 
-  const handlePayment = async () => {
-    if (!ticketTypeId) {
-      setErrorMessage("Ticket type is missing. Please choose a valid ticket before checkout.");
+  useEffect(() => {
+    if (!eventId) {
       return;
     }
 
-    if (!eventIdFromQuery) {
-      setErrorMessage("Event information is missing. Please start checkout from the event details page.");
+    let isMounted = true;
+
+    const loadEventDetail = async () => {
+      setIsLoadingEvent(true);
+      setEventError("");
+
+      try {
+        const response = await getPublicEventDetail(eventId);
+        if (isMounted) {
+          setEventDetail(response);
+        }
+      } catch {
+        if (isMounted) {
+          setEventDetail(null);
+          setEventError("Cannot load event details right now.");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingEvent(false);
+        }
+      }
+    };
+
+    void loadEventDetail();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [eventId]);
+
+  const selectedTicketType = useMemo(
+    () =>
+      eventDetail?.ticketTypes.find(
+        (ticketType) => ticketType.id === ticketTypeId,
+      ) || null,
+    [eventDetail, ticketTypeId],
+  );
+
+  const eventTitle = eventDetail?.title || "Secure ticket purchase";
+  const eventImage = eventDetail?.bannerUrl || DEFAULT_EVENT_BANNER;
+  const ticketLabel = getTicketLabel(selectedTicketType);
+  const subtotal = (selectedTicketType?.price || 0) * quantity;
+  const serviceFee = selectedTicketType ? 12000 * quantity : 0;
+  const taxAmount = Math.round(subtotal * 0.08);
+  const previewTotal = subtotal + serviceFee + taxAmount;
+
+  const handleFieldChange =
+    (field: keyof BuyerFormState) =>
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const value =
+        field === "saveCard" ? event.target.checked : event.target.value;
+
+      setBuyerForm((current) => ({
+        ...current,
+        [field]: value,
+      }));
+    };
+
+  const handleApplyPromo = () => {
+    if (!promoCode.trim()) {
+      setPromoMessage("Enter a promo code to continue.");
+      return;
+    }
+
+    setPromoMessage("Promo validation will be added with backend support.");
+  };
+
+  const navigateToResult = async (status: "success" | "failed", extras?: {
+    amount?: number;
+    orderId?: string;
+    paymentId?: string;
+    provider?: string;
+    paymentStatus?: string;
+    qrCode?: string;
+    ticketId?: string;
+    ticketCode?: string;
+    message?: string;
+  }) => {
+    await router.push({
+      pathname: "/checkout/result",
+      query: {
+        status,
+        eventId,
+        ticketTypeId,
+        quantity: String(quantity),
+        buyerEmail: buyerForm.email,
+        amount:
+          typeof extras?.amount === "number"
+            ? String(extras.amount)
+            : String(previewTotal),
+        ...(extras?.orderId ? { orderId: extras.orderId } : {}),
+        ...(extras?.paymentId ? { paymentId: extras.paymentId } : {}),
+        ...(extras?.provider ? { provider: extras.provider } : {}),
+        ...(extras?.paymentStatus
+          ? { paymentStatus: extras.paymentStatus }
+          : {}),
+        ...(extras?.qrCode ? { qrCode: extras.qrCode } : {}),
+        ...(extras?.ticketId ? { ticketId: extras.ticketId } : {}),
+        ...(extras?.ticketCode ? { ticketCode: extras.ticketCode } : {}),
+        ...(extras?.message ? { message: extras.message } : {}),
+      },
+    });
+  };
+
+  const handlePayment = async () => {
+    if (!ticketTypeId) {
+      setErrorMessage(
+        "Ticket type is missing. Please choose a valid ticket before checkout.",
+      );
+      return;
+    }
+
+    if (!buyerForm.fullName.trim() || !buyerForm.email.trim()) {
+      setErrorMessage("Please complete your full name and email address.");
+      return;
+    }
+
+    if (!eventId) {
+      setErrorMessage(
+        "Event information is missing. Please start checkout from the event page.",
+      );
       return;
     }
 
@@ -84,8 +399,6 @@ export default function CheckoutPage() {
         ],
       });
 
-      setCreatedOrder(order ?? null);
-      setCreatedOrderEventId(eventIdFromQuery);
       if (!order?.id) {
         throw new Error("Order response does not include an order id.");
       }
@@ -95,285 +408,435 @@ export default function CheckoutPage() {
         method: "MOCK",
       });
 
-      setCreatedPayment(payment ?? null);
-      setShowModal(true);
+      if (!payment?.paymentId || !payment.orderId) {
+        throw new Error("Payment information is missing.");
+      }
+
+      const amount = payment.amount ?? order.totalAmount ?? previewTotal;
+      const providerTransactionId =
+        payment.providerTransactionId ?? `mock-txn-${payment.paymentId}`;
+      const webhookResponse = await mockPaymentWebhook({
+        paymentId: payment.paymentId,
+        orderId: payment.orderId,
+        providerTransactionId,
+        provider: payment.provider || "MOCK_GATEWAY",
+        status: "SUCCESS",
+        amount,
+        signature: `${payment.paymentId}|${payment.orderId}|SUCCESS|${amount}`,
+        eventId,
+        rawData: JSON.stringify({
+          buyer: buyerForm.email,
+          paymentMethod: selectedPaymentMethod,
+        }),
+      });
+      const issuedTicket = await waitForIssuedTicket(order.id);
+
+      await navigateToResult("success", {
+        amount,
+        orderId: order.id,
+        paymentId: payment.paymentId,
+        provider: payment.provider || "MOCK_GATEWAY",
+        paymentStatus: "SUCCESS",
+        qrCode: issuedTicket ? getTicketQrValue(issuedTicket) : "",
+        ticketId: issuedTicket?.id,
+        ticketCode: issuedTicket?.ticketCode || issuedTicket?.code,
+        message:
+          issuedTicket
+            ? webhookResponse?.message ||
+              "Payment confirmed and your QR ticket is ready."
+            : "Payment confirmed, but the ticket QR is still being generated.",
+      });
     } catch (error) {
-      setErrorMessage(getOrderErrorMessage(error));
+      const message = getOrderErrorMessage(error);
+      await navigateToResult("failed", {
+        amount: previewTotal,
+        paymentStatus: "FAILED",
+        message,
+      });
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const handleMockPaymentSuccess = async () => {
-    if (!createdPayment?.paymentId || !createdPayment.orderId) {
-      setErrorMessage("Payment information is missing.");
-      return;
-    }
-
-    setIsMockingWebhook(true);
-    setErrorMessage("");
-    setWebhookMessage("");
-
-    const amount = createdPayment.amount ?? createdOrder?.totalAmount ?? 0;
-    const providerTransactionId =
-      createdPayment.providerTransactionId ??
-      `mock-txn-${createdPayment.paymentId}`;
-    const eventId = createdOrderEventId || eventIdFromQuery;
-
-    if (!eventId) {
-      setErrorMessage("Missing event information for payment callback.");
-      setIsMockingWebhook(false);
-      return;
-    }
-
-    try {
-      const response = await mockPaymentWebhook({
-        paymentId: createdPayment.paymentId,
-        orderId: createdPayment.orderId,
-        providerTransactionId,
-        provider: createdPayment.provider || "MOCK_GATEWAY",
-        status: "SUCCESS",
-        amount,
-        signature: `${createdPayment.paymentId}|${createdPayment.orderId}|SUCCESS|${amount}`,
-        eventId,
-        rawData: JSON.stringify({ demo: true }),
-      });
-
-      setCreatedPayment((current) =>
-        current ? { ...current, providerTransactionId, status: "SUCCESS" } : current,
-      );
-      setCreatedOrder((current) =>
-        current ? { ...current, status: "PAID", paymentStatus: "SUCCESS" } : current,
-      );
-      setWebhookMessage(response?.message || "Webhook processed successfully");
-    } catch (error) {
-      setErrorMessage(getOrderErrorMessage(error));
-    } finally {
-      setIsMockingWebhook(false);
-    }
-  };
-
   return (
     <UserLayout title="Secure Checkout">
-      <div className="bg-[#F9FAFB] min-h-screen py-16 px-6 relative">
-        <div className="max-w-7xl mx-auto">
-          <div className="mb-10">
-            <h1 className="text-4xl font-black text-gray-900">Secure Checkout</h1>
-            <p className="text-gray-500 mt-2 font-medium">Please review your information and complete your ticket purchase.</p>
-          </div>
-          
-          <div className="flex flex-col lg:flex-row gap-10">
-            {/* LEFT COLUMN: INFORMATION FORM */}
-            <div className="flex-1 space-y-8">
-              {/* Buyer Info */}
-              <div className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm">
-                <h3 className="text-lg font-black text-gray-900 flex items-center gap-3 mb-6">
-                  <span className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">👤</span>
-                  Buyer Information
-                </h3>
-                <div className="space-y-5">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Full Name</label>
-                    <input type="text" defaultValue="Alex Johnson" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 font-medium transition-all" />
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Email Address</label>
-                      <input type="email" defaultValue="alex@example.com" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 font-medium transition-all" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Phone Number</label>
-                      <input type="tel" defaultValue="+1 (555) 000-0000" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 font-medium transition-all" />
-                    </div>
-                  </div>
+      <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.18),_transparent_28%),linear-gradient(180deg,_#f8fbff_0%,_#f5f7fb_45%,_#f8fafc_100%)] px-4 py-10 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="rounded-[36px] border border-white/70 bg-white/80 shadow-[0_30px_100px_rgba(148,163,184,0.18)] backdrop-blur">
+            <div className="flex flex-col gap-5 border-b border-slate-100 px-6 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+              <div>
+                <div className="text-[11px] font-black uppercase tracking-[0.28em] text-blue-600">
+                  Secure Checkout
                 </div>
+                <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-900">
+                  Complete your ticket purchase
+                </h1>
+                <p className="mt-2 text-sm font-medium text-slate-500">
+                  Review attendee details, choose a payment method, and confirm
+                  your order.
+                </p>
               </div>
 
-              {/* Payment Method */}
-              <div className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm">
-                <h3 className="text-lg font-black text-gray-900 flex items-center gap-3 mb-6">
-                  <span className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">💳</span>
-                  Payment Method
-                </h3>
-                
-                <div className="space-y-4">
-                  {/* Credit Card Active */}
-                  <div className="border-2 border-indigo-500 rounded-2xl p-6 bg-indigo-50/30">
-                    <label className="flex items-center gap-3 cursor-pointer mb-5">
-                      <input type="radio" name="payment" defaultChecked className="w-5 h-5 text-indigo-600 focus:ring-indigo-500" />
-                      <span className="font-bold text-gray-900">Credit / Debit Card</span>
-                    </label>
-                    
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Card Number</label>
-                        <input type="text" placeholder="0000 0000 0000 0000" className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-indigo-500" />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Expiry Date</label>
-                          <input type="text" placeholder="MM/YY" className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-indigo-500" />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">CVV</label>
-                          <input type="text" placeholder="123" className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-indigo-500" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Paypal Inactive */}
-                  <div className="border border-gray-200 rounded-2xl p-4 hover:border-indigo-300 transition-colors">
-                    <label className="flex items-center justify-between cursor-pointer">
-                      <div className="flex items-center gap-3">
-                        <input type="radio" name="payment" className="w-5 h-5 text-indigo-600 focus:ring-indigo-500" />
-                        <span className="font-bold text-gray-700">PayPal</span>
-                      </div>
-                      <span className="text-xl">🅿️</span>
-                    </label>
-                  </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <Link
+                  href={eventId ? "/customer/events" : "/events"}
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-600 transition hover:border-slate-300 hover:text-slate-900"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Back
+                </Link>
+                <div className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-4 py-2 text-[11px] font-black uppercase tracking-[0.24em] text-white">
+                  <Lock className="h-3.5 w-3.5" />
+                  SSL Protected
                 </div>
               </div>
             </div>
 
-            {/* RIGHT COLUMN: BILLING SUMMARY */}
-            <div className="w-full lg:w-[400px]">
-              <div className="bg-white rounded-[32px] border border-gray-100 shadow-2xl overflow-hidden sticky top-28">
-                {/* Image header */}
-                <div className="relative h-40 bg-gray-900 p-6 flex flex-col justify-end">
-                  <img src="https://images.unsplash.com/photo-1574169208507-84376144848b?q=80&w=600&auto=format&fit=crop" className="absolute inset-0 w-full h-full object-cover opacity-40" alt="Event" />
-                  <div className="relative z-10">
-                    <span className="bg-white/20 backdrop-blur-md text-white text-[10px] font-black px-3 py-1 rounded-md uppercase tracking-widest mb-2 inline-block">Concert</span>
-                    <h3 className="text-xl font-black text-white leading-tight">Neon Nights: Underground Techno</h3>
-                  </div>
-                </div>
-
-                <div className="p-8">
-                  <div className="flex justify-between items-start mb-6 border-b border-gray-100 pb-6">
+            <div className="grid gap-8 px-6 py-8 lg:grid-cols-[minmax(0,1fr)_390px] lg:px-8">
+              <div className="space-y-6">
+                <section className="rounded-[30px] border border-slate-100 bg-white p-6 shadow-[0_18px_44px_rgba(148,163,184,0.12)] sm:p-7">
+                  <div className="mb-6 flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+                      <UserRound className="h-5 w-5" />
+                    </div>
                     <div>
-                      <p className="font-black text-gray-900">{ticketTypeId}</p>
-                      <p className="text-sm text-gray-500 font-medium">Quantity: {quantity}</p>
+                      <div className="text-[11px] font-black uppercase tracking-[0.28em] text-slate-400">
+                        Step 1
+                      </div>
+                      <h2 className="text-xl font-black text-slate-900">
+                        Buyer information
+                      </h2>
                     </div>
-                    <p className="font-black text-gray-900">Calculated by server</p>
                   </div>
 
-                  {/* Promo code */}
-                  <div className="flex bg-gray-50 rounded-xl p-1 mb-6 border border-gray-100">
-                    <input type="text" placeholder="Discount code" className="bg-transparent flex-1 px-4 text-sm outline-none font-medium" />
-                    <button className="bg-white text-indigo-600 text-xs font-black px-4 py-2 rounded-lg shadow-sm hover:bg-indigo-50">APPLY</button>
-                  </div>
-
-                  <div className="space-y-3 text-sm font-bold text-gray-500 mb-6">
-                    <div className="flex justify-between"><span>Ticket Type</span><span className="text-gray-900">{ticketTypeId}</span></div>
-                    <div className="flex justify-between"><span>Quantity</span><span className="text-gray-900">{quantity}</span></div>
-                    <div className="flex justify-between"><span>Payment Method</span><span className="text-gray-900">MOCK</span></div>
-                    <div className="flex justify-between"><span>Status</span><span className="text-gray-900">Pending payment</span></div>
-                  </div>
-
-                  <div className="flex justify-between items-end mb-8 pt-6 border-t border-gray-100">
-                    <span className="text-lg font-bold text-gray-900">Total</span>
-                    <span className="text-3xl font-black text-indigo-600">Server total</span>
-                  </div>
-
-                  {errorMessage ? (
-                    <div className="mb-5 rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-600">
-                      {errorMessage}
+                  <div className="grid gap-5 md:grid-cols-2">
+                    <div>
+                      <label className="mb-2 block text-[11px] font-black uppercase tracking-[0.22em] text-slate-500">
+                        Full name
+                      </label>
+                      <input
+                        type="text"
+                        value={buyerForm.fullName}
+                        onChange={handleFieldChange("fullName")}
+                        placeholder="Nguyen Van A"
+                        className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-medium text-slate-900 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
+                      />
                     </div>
-                  ) : null}
+                    <div>
+                      <label className="mb-2 block text-[11px] font-black uppercase tracking-[0.22em] text-slate-500">
+                        Email address
+                      </label>
+                      <input
+                        type="email"
+                        value={buyerForm.email}
+                        onChange={handleFieldChange("email")}
+                        placeholder="you@example.com"
+                        className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-medium text-slate-900 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="mb-2 block text-[11px] font-black uppercase tracking-[0.22em] text-slate-500">
+                        Phone number
+                      </label>
+                      <input
+                        type="tel"
+                        value={buyerForm.phone}
+                        onChange={handleFieldChange("phone")}
+                        placeholder="+84 912 345 678"
+                        className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm font-medium text-slate-900 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
+                      />
+                    </div>
+                  </div>
+                </section>
 
-                  {/* PAYMENT BUTTON WITH LOADING STATE */}
-                  <button 
-                    onClick={() => void handlePayment()}
-                    disabled={isProcessing}
-                    className={`w-full py-4 rounded-2xl font-black text-lg transition-all shadow-lg flex justify-center items-center gap-2 ${
-                      isProcessing 
-                        ? "bg-indigo-400 text-white cursor-not-allowed" 
-                        : "bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-indigo-200 active:scale-95"
-                    }`}
-                  >
-                    {isProcessing ? (
-                      <>
-                        <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Processing...
-                      </>
-                    ) : (
-                      <>
-                        Confirm Purchase <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                      </>
-                    )}
-                  </button>
+                <section className="rounded-[30px] border border-slate-100 bg-white p-6 shadow-[0_18px_44px_rgba(148,163,184,0.12)] sm:p-7">
+                  <div className="mb-6 flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+                      <CircleDollarSign className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="text-[11px] font-black uppercase tracking-[0.28em] text-slate-400">
+                        Step 2
+                      </div>
+                      <h2 className="text-xl font-black text-slate-900">
+                        Payment method
+                      </h2>
+                    </div>
+                  </div>
 
-                  <p className="text-center text-[10px] text-gray-400 mt-4 font-bold">
-                    By confirming, you agree to our Terms and Refund Policy.
-                  </p>
+                  <div className="grid gap-3 md:grid-cols-3">
+                    {PAYMENT_OPTIONS.map((option) => {
+                      const Icon = option.icon;
+                      const isSelected = option.id === selectedPaymentMethod;
+
+                      return (
+                        <button
+                          key={option.id}
+                          type="button"
+                          onClick={() => setSelectedPaymentMethod(option.id)}
+                          className={`rounded-[24px] border px-4 py-4 text-left transition ${
+                            isSelected
+                              ? "border-blue-500 bg-blue-50 shadow-[0_16px_32px_rgba(59,130,246,0.12)]"
+                              : "border-slate-200 bg-slate-50 hover:border-slate-300"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <Icon
+                              className={`h-5 w-5 ${
+                                isSelected ? "text-blue-600" : "text-slate-500"
+                              }`}
+                            />
+                            {isSelected ? (
+                              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-white">
+                                <Check className="h-3.5 w-3.5" />
+                              </div>
+                            ) : null}
+                          </div>
+                          <div className="mt-5 text-sm font-black text-slate-900">
+                            {option.label}
+                          </div>
+                          <div className="mt-1 text-xs font-medium text-slate-500">
+                            {option.helper}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="mt-5 rounded-[26px] border border-slate-200 bg-slate-50/80 p-5">
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="md:col-span-2">
+                        <label className="mb-2 block text-[11px] font-black uppercase tracking-[0.22em] text-slate-500">
+                          Card number
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            value={buyerForm.cardNumber}
+                            onChange={handleFieldChange("cardNumber")}
+                            placeholder="0000 0000 0000 0000"
+                            disabled={selectedPaymentMethod !== "card"}
+                            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 pr-12 text-sm font-medium text-slate-900 outline-none transition disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                          />
+                          <CreditCard className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="mb-2 block text-[11px] font-black uppercase tracking-[0.22em] text-slate-500">
+                          Expiry date
+                        </label>
+                        <input
+                          type="text"
+                          value={buyerForm.expiryDate}
+                          onChange={handleFieldChange("expiryDate")}
+                          placeholder="MM/YY"
+                          disabled={selectedPaymentMethod !== "card"}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-medium text-slate-900 outline-none transition disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-2 block text-[11px] font-black uppercase tracking-[0.22em] text-slate-500">
+                          CVC
+                        </label>
+                        <input
+                          type="text"
+                          value={buyerForm.cvv}
+                          onChange={handleFieldChange("cvv")}
+                          placeholder="123"
+                          disabled={selectedPaymentMethod !== "card"}
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-medium text-slate-900 outline-none transition disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                        />
+                      </div>
+                    </div>
+
+                    <label className="mt-4 flex items-center gap-3 text-sm font-medium text-slate-500">
+                      <input
+                        type="checkbox"
+                        checked={buyerForm.saveCard}
+                        onChange={handleFieldChange("saveCard")}
+                        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      Securely save card information for future bookings.
+                    </label>
+                  </div>
+                </section>
+
+                <div className="grid gap-3 rounded-[28px] border border-slate-100 bg-white px-5 py-5 text-sm font-semibold text-slate-500 shadow-[0_18px_44px_rgba(148,163,184,0.1)] sm:grid-cols-3">
+                  <div className="flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3">
+                    <ShieldCheck className="h-4 w-4 text-blue-600" />
+                    Secure SSL
+                  </div>
+                  <div className="flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3">
+                    <Lock className="h-4 w-4 text-blue-600" />
+                    PCI aligned
+                  </div>
+                  <div className="flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3">
+                    <Receipt className="h-4 w-4 text-blue-600" />
+                    Instant e-ticket
+                  </div>
                 </div>
               </div>
+
+              <aside className="space-y-6">
+                <section className="overflow-hidden rounded-[30px] border border-slate-100 bg-white shadow-[0_22px_60px_rgba(148,163,184,0.18)]">
+                  <div className="relative h-40 overflow-hidden">
+                    <img
+                      src={eventImage}
+                      alt={eventTitle}
+                      className="h-full w-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/30 to-transparent" />
+                    <div className="absolute bottom-4 left-5 right-5">
+                      <div className="inline-flex rounded-full bg-white/15 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-white backdrop-blur">
+                        {eventDetail?.category || "Event"}
+                      </div>
+                      <h2 className="mt-3 text-xl font-black leading-tight text-white">
+                        {eventTitle}
+                      </h2>
+                    </div>
+                  </div>
+
+                  <div className="space-y-5 p-5">
+                    <div className="flex gap-4 rounded-[24px] border border-slate-100 bg-slate-50 p-4">
+                      <img
+                        src={eventDetail?.bannerUrl || DEFAULT_EVENT_CARD}
+                        alt={eventTitle}
+                        className="h-20 w-20 rounded-2xl object-cover"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="text-[10px] font-black uppercase tracking-[0.26em] text-blue-600">
+                          Order summary
+                        </div>
+                        <div className="mt-2 text-base font-black text-slate-900">
+                          {ticketLabel}
+                        </div>
+                        <div className="mt-2 flex items-start gap-2 text-sm font-medium text-slate-500">
+                          <CalendarDays className="mt-0.5 h-4 w-4 flex-shrink-0 text-slate-400" />
+                          <span>
+                            {formatEventSchedule(
+                              eventDetail?.startTime,
+                              eventDetail?.endTime,
+                            )}
+                          </span>
+                        </div>
+                        <div className="mt-2 flex items-start gap-2 text-sm font-medium text-slate-500">
+                          <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-slate-400" />
+                          <span>{getEventLocation(eventDetail)}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3 border-b border-slate-100 pb-5 text-sm font-semibold text-slate-500">
+                      <div className="flex items-center justify-between gap-4">
+                        <span>
+                          {ticketLabel} x {quantity}
+                        </span>
+                        <span className="text-slate-900">
+                          {formatCurrency(subtotal, "TBD")}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between gap-4">
+                        <span>Service fee</span>
+                        <span className="text-slate-900">
+                          {formatCurrency(serviceFee, "TBD")}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between gap-4">
+                        <span>Tax</span>
+                        <span className="text-slate-900">
+                          {formatCurrency(taxAmount, "TBD")}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={promoCode}
+                        onChange={(event) => setPromoCode(event.target.value)}
+                        placeholder="Promo code"
+                        className="min-w-0 flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleApplyPromo}
+                        className="rounded-2xl bg-slate-900 px-4 py-3 text-xs font-black uppercase tracking-[0.18em] text-white transition hover:bg-blue-600"
+                      >
+                        Apply
+                      </button>
+                    </div>
+
+                    {promoMessage ? (
+                      <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700">
+                        {promoMessage}
+                      </div>
+                    ) : null}
+
+                    {eventError ? (
+                      <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-600">
+                        {eventError}
+                      </div>
+                    ) : null}
+
+                    {isLoadingEvent ? (
+                      <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-500">
+                        Loading event summary...
+                      </div>
+                    ) : null}
+
+                    <div className="rounded-[24px] bg-slate-950 px-5 py-5 text-white">
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <div className="text-[10px] font-black uppercase tracking-[0.24em] text-sky-200">
+                            Total amount
+                          </div>
+                          <div className="mt-2 text-3xl font-black tracking-tight">
+                            {formatCurrency(previewTotal)}
+                          </div>
+                        </div>
+                        <div className="rounded-full bg-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-slate-200">
+                          Estimated before payment
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => void handlePayment()}
+                        disabled={isProcessing || !ticketTypeId || !eventId}
+                        className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-[22px] bg-white px-5 py-4 text-sm font-black text-slate-950 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {isProcessing ? "Processing..." : "Confirm purchase"}
+                        <ArrowRight className="h-4 w-4" />
+                      </button>
+
+                      <p className="mt-4 text-xs leading-5 text-slate-300">
+                        By confirming, you agree to the terms of service and
+                        privacy policy. Tickets are sent to your email after
+                        payment succeeds.
+                      </p>
+                    </div>
+
+                    {errorMessage ? (
+                      <div className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-600">
+                        {errorMessage}
+                      </div>
+                    ) : null}
+
+                    <div className="rounded-[24px] border border-blue-100 bg-blue-50 px-4 py-4">
+                      <div className="flex items-start gap-3">
+                        <Mail className="mt-0.5 h-4 w-4 text-blue-600" />
+                        <p className="text-sm font-medium leading-6 text-blue-900">
+                          Confirmation email and QR ticket will be issued
+                          immediately after successful payment.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              </aside>
             </div>
           </div>
         </div>
-
-        {/* SUCCESS MODAL */}
-        {showModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-gray-900/60 backdrop-blur-sm transition-opacity">
-            <div className="bg-white rounded-[40px] p-10 max-w-md w-full shadow-2xl relative transform transition-all duration-300 scale-100">
-              
-              {/* Green checkmark circle */}
-              <div className="mx-auto w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6 shadow-inner">
-                <svg className="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path>
-                </svg>
-              </div>
-              
-              <h2 className="text-3xl font-black text-gray-900 text-center mb-2">Success!</h2>
-              <p className="text-gray-500 text-center font-medium mb-8 leading-relaxed">
-                Order <strong className="text-gray-900">{createdOrder?.id}</strong> was created with status <strong className="text-indigo-600">{createdOrder?.status ?? "PENDING_PAYMENT"}</strong>. Payment <strong className="text-gray-900">{createdPayment?.paymentId}</strong> is <strong className="text-indigo-600">{createdPayment?.status ?? "PENDING"}</strong> for <strong className="text-gray-900">{formatCurrency(createdPayment?.amount ?? createdOrder?.totalAmount)}</strong>.
-              </p>
-
-              <div className="space-y-3">
-                {webhookMessage ? (
-                  <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-center text-sm font-bold text-emerald-600">
-                    {webhookMessage}
-                  </div>
-                ) : null}
-                {createdPayment?.paymentUrl ? (
-                  <a href={createdPayment.paymentUrl}>
-                    <button className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-base hover:bg-slate-800 transition-colors shadow-md">
-                      Open Payment Link
-                    </button>
-                  </a>
-                ) : null}
-                <button
-                  type="button"
-                  onClick={() => void handleMockPaymentSuccess()}
-                  disabled={isMockingWebhook || createdPayment?.status === "SUCCESS"}
-                  className="w-full bg-emerald-600 text-white py-4 rounded-2xl font-black text-base hover:bg-emerald-700 transition-colors shadow-md disabled:cursor-not-allowed disabled:bg-emerald-300"
-                >
-                  {isMockingWebhook ? "Processing Webhook..." : createdPayment?.status === "SUCCESS" ? "Payment Success" : "Mock Payment Success"}
-                </button>
-                <Link href="/events">
-                  <button className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black text-base hover:bg-indigo-700 transition-colors shadow-md">
-                    Continue Browsing
-                  </button>
-                </Link>
-                <Link href="/customer/my-tickets">
-                  <button className="w-full bg-white text-indigo-600 py-4 rounded-2xl font-black text-base hover:bg-indigo-50 transition-colors border border-indigo-100">
-                    View My Tickets
-                  </button>
-                </Link>
-                <button 
-                  onClick={() => setShowModal(false)}
-                  className="w-full bg-gray-50 text-gray-600 py-4 rounded-2xl font-bold text-base hover:bg-gray-100 transition-colors"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
       </div>
     </UserLayout>
   );
