@@ -418,7 +418,7 @@ public class EventService {
             throw new AppException(ErrorCode.FORBIDDEN_EVENT_ACCESS);
         }
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), "issuedAt");
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page, size, sort);
 
         Page<IssuedTicket> result = issuedTicketRepository.findAttendeesByEvent(
                 eventId,
