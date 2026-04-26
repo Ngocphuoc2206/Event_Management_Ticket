@@ -25,5 +25,6 @@ public class IssuedTicketResponse {
     private String ticketTypeId;
     private String ticketTypeName;
     private String ticketCategory; // UPCOMING / PAST
+    private String eventBannerUrl;
 
 }

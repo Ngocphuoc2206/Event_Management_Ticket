@@ -153,6 +153,7 @@ public class TicketIssuingService {
         response.setTicketTypeName(ticket.getOrderItem().getTicketType().getName());
 
         response.setTicketCategory(resolveTicketCategory(ticket));
+        response.setEventBannerUrl(ticket.getEvent().getBannerUrl());
         return response;
     }
 
