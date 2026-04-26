@@ -104,7 +104,7 @@ export function OrganizerAttendeesContent() {
     setIsLoadingEvents(true);
     try {
       const pageData = await getOrganizerEvents({
-        page: 1,
+        page: 0,
         size: DEFAULT_PAGE_SIZE,
       });
 

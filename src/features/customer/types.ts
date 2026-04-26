@@ -25,7 +25,10 @@ export type CustomerStatCard = {
   value: string;
   note: string;
   accent: string;
-  icon: Extract<CustomerDashboardIconName, "calendar" | "history" | "star" | "ticket">;
+  icon: Extract<
+    CustomerDashboardIconName,
+    "calendar" | "history" | "star" | "ticket"
+  >;
 };
 
 export type CustomerTicketCard = {
@@ -34,6 +37,7 @@ export type CustomerTicketCard = {
   date: string;
   venue: string;
   ticketCode: string;
+  qrCodeUrl?: string;
   palette: string;
   artTitle: string;
   imageSrc?: string;
