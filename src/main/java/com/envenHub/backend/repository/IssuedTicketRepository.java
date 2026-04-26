@@ -23,6 +23,7 @@ public interface IssuedTicketRepository extends JpaRepository<IssuedTicket, Stri
 
     Optional<IssuedTicket> findByIdAndUserId(String id, String userId);
     Optional<IssuedTicket> findByTicketCode(String ticketCode);
+    Optional<IssuedTicket> findFirstByOrderItemId(String orderItemId);
 
     List<IssuedTicket> findByOrderId(String orderId);
 }

@@ -121,6 +121,16 @@ public class OrganizerController {
                 .build();
     }
 
+    @PostMapping("/check-in")
+    public ApiResponse<CheckInResponse> organizerCheckIn(
+            @RequestBody CheckInRequest request,
+            Authentication authentication
+    ) {
+        return ApiResponse.<CheckInResponse>builder()
+                .results(eventService.organizerCheckIn(request, authentication))
+                .build();
+    }
+
     @PutMapping("/ticket-types/{id}")
     public ApiResponse<TicketTypeResponse> updateTicket(
             @RequestBody TicketTypeRequest request,
