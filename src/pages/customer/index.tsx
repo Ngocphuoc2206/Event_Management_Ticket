@@ -57,6 +57,7 @@ export default function CustomerDashboardPage() {
           getMyTickets({ type: "past" }),
           getMyOrders(),
         ]);
+        console.log("DASHBOARD UPCOMING TICKETS:", upcoming);
 
         if (!mounted) return;
 
