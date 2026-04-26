@@ -34,11 +34,14 @@ services:
     volumes:
       - ./logs:/app/logs
     restart: unless-stopped
-  redis:
-    image: redis:7-alpine
-    container_name: event-redis
-    ports:
-      - "6379:6379"
-    restart: unless-stopped
+#  redis:
+#    image: redis:7-alpine
+#    container_name: event-redis
+#    environment:
+#      REDIS_HOST: eventhub-redis-gepwp0.serverless.use1.cache.amazonaws.com
+#      REDIS_PORT: 6379
+#    ports:
+#      - "6379:6379"
+#    restart: unless-stopped
 volumes:
   mysql_data:
