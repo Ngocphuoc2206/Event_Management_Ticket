@@ -198,11 +198,31 @@ export function OrganizerAttendeesContent() {
         tone: "success",
         message: "Check-in successful.",
       });
-    } catch (error) {
-      showToast({
-        tone: "error",
-        message: getApiErrorMessage(error, "Check-in failed."),
-      });
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message || error?.message || "Check-in failed.";
+
+      const code = error?.response?.data?.code;
+
+      if (code === 1039) {
+        setAttendees((prev) =>
+          prev.map((item) =>
+            item.ticketCode === ticketCode
+              ? { ...item, checkedIn: true }
+              : item,
+          ),
+        );
+
+        showToast({
+          tone: "error",
+          message: "Ticket already checked in.",
+        });
+      } else {
+        showToast({
+          tone: "error",
+          message,
+        });
+      }
     } finally {
       setIsCheckingInByOrderItemId((prev) => ({
         ...prev,
