@@ -417,33 +417,27 @@ public class EventService {
             );
             throw new AppException(ErrorCode.FORBIDDEN_EVENT_ACCESS);
         }
-
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDir), "issuedAt");
         Pageable pageable = PageRequest.of(page, size);
 
-        Specification<OrderItem> specification = Specification
-                .where(AttendeesSpecification.hasEvent(eventId))
-                .and(AttendeesSpecification.hasSearch(search))
-                .and(AttendeesSpecification.hasStatus(status))
-                .and(AttendeesSpecification.sortBy(sortBy, sortDir));
-
-        Page<OrderItem> result = orderItemRepository.findAll(specification, pageable);
-
-
-        List<AttendeeResponse> attendees = attendeesMapper.toAttendeesResponseList(result.getContent());
-        for (int i = 0; i < attendees.size(); i++) {
-            OrderItem item = result.getContent().get(i);
-
-            int finalI = i;
-            issuedTicketRepository.findFirstByOrderItemId(item.getId())
-                    .ifPresent(ticket -> {
-                        attendees.get(finalI).setTicketCode(ticket.getTicketCode());
-                        attendees.get(finalI).setCheckedIn(ticket.isUsed());
-                    });
-        }
-        log.info(
-                "getAttendees success: eventId={}, returnedItems={}, totalItems={}, totalPages={}",
-                eventId, attendees.size(), result.getTotalElements(), result.getTotalPages()
+        Page<IssuedTicket> result = issuedTicketRepository.findAttendeesByEvent(
+                eventId,
+                search == null || search.isBlank() ? null : search,
+                status,
+                pageable
         );
+
+        List<AttendeeResponse> attendees = result.getContent().stream()
+                .map(ticket -> AttendeeResponse.builder()
+                        .ticketId(ticket.getId())
+                        .ticketCode(ticket.getTicketCode())
+                        .userId(ticket.getUser().getId())
+                        .fullName(ticket.getUser().getFullName())
+                        .email(ticket.getUser().getEmail())
+                        .ticketTypeName(ticket.getOrderItem().getTicketType().getName())
+                        .checkedIn(ticket.isUsed())
+                        .build())
+                .toList();
 
         return PagedResponse.<AttendeeResponse>builder()
                 .items(attendees)
