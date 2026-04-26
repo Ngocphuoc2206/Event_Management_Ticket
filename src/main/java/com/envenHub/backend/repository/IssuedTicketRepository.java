@@ -52,6 +52,4 @@ public interface IssuedTicketRepository extends JpaRepository<IssuedTicket, Stri
             Pageable pageable
     );
     List<IssuedTicket> findByOrderId(String orderId);
-
-    Page<IssuedTicket> findAttendeesByEvent(Event event);
 }
