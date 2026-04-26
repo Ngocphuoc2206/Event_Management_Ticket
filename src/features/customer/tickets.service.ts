@@ -24,7 +24,7 @@ export type CustomerTicketResponse = {
   qrImageUrl?: string;
   qrPublicUrl?: string;
   publicUrl?: string;
-  imageUrl?: string;
+  eventBannerUrl?: string;
   status?: string;
   startTime?: string;
   ticketCategory?: string;
