@@ -83,7 +83,8 @@ export default function CustomerDashboardPage() {
               ticket.qrCodeUrl ||
               ticket.qrImageUrl ||
               ticket.qrPublicUrl ||
-              ticket.qrCode,
+              ticket.qrCode ||
+              "",
             palette: "from-white via-white to-slate-100",
             artTitle: "EVENTHUB",
             imageSrc: ticket.imageUrl || "",
