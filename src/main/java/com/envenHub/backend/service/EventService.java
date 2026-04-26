@@ -255,6 +255,45 @@ public class EventService {
                 .build();
     }
 
+    @Transactional
+    public CheckInResponse organizerCheckIn(CheckInRequest request, Authentication authentication) {
+        UserResponse user = userService.getCurrentUser(authentication);
+        String organizerId = user.getId();
+
+        IssuedTicket ticket = issuedTicketRepository.findByTicketCode(request.getTicketCode())
+                .orElseThrow(() -> new AppException(ErrorCode.INVALID_TICKET_CODE));
+
+        Event event = ticket.getEvent();
+
+        if (!event.getOrganizerId().equals(organizerId)) {
+            throw new AppException(ErrorCode.FORBIDDEN_EVENT_ACCESS);
+        }
+
+        if (ticket.isUsed()) {
+            throw new AppException(ErrorCode.TICKET_ALREADY_USED);
+        }
+
+        ticket.setUsed(true);
+        issuedTicketRepository.save(ticket);
+
+        OrderItem orderItem = ticket.getOrderItem();
+        if (orderItem != null) {
+            orderItem.setCheckedIn(true);
+            orderItem.setCheckedAt(LocalDateTime.now());
+            orderItemRepository.save(orderItem);
+        }
+
+        return CheckInResponse.builder()
+                .checkInTime(LocalDateTime.now())
+                .message("Check in success")
+                .ticketCode(ticket.getTicketCode())
+                .attendeeName(ticket.getUser().getFullName())
+                .ticketTypeName(ticket.getOrderItem().getTicketType().getName())
+                .eventName(event.getTitle())
+                .success(true)
+                .build();
+    }
+
     public EventDetailResponse getOrganizerEventDetail(String eventId, Authentication authentication) {
         UserResponse user = userService.getCurrentUser(authentication);
 
@@ -391,6 +430,16 @@ public class EventService {
 
 
         List<AttendeeResponse> attendees = attendeesMapper.toAttendeesResponseList(result.getContent());
+        for (int i = 0; i < attendees.size(); i++) {
+            OrderItem item = result.getContent().get(i);
+
+            int finalI = i;
+            issuedTicketRepository.findFirstByOrderItemId(item.getId())
+                    .ifPresent(ticket -> {
+                        attendees.get(finalI).setTicketCode(ticket.getTicketCode());
+                        attendees.get(finalI).setCheckedIn(ticket.isUsed());
+                    });
+        }
         log.info(
                 "getAttendees success: eventId={}, returnedItems={}, totalItems={}, totalPages={}",
                 eventId, attendees.size(), result.getTotalElements(), result.getTotalPages()

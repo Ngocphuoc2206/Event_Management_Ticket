@@ -16,4 +16,5 @@ public class AttendeeResponse {
 
     private String ticketTypeName;
     private Boolean checkedIn;
+    private String ticketCode;
 }
