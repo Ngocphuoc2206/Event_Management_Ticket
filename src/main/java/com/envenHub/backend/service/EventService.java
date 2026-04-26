@@ -143,7 +143,7 @@ public class EventService {
                 .build();
     }
 
-    @CacheEvict(value = {"publicEvents", "publicEventDetail"}, allEntries = true)
+    //    @CacheEvict(value = {"publicEvents", "publicEventDetail"}, allEntries = true)
     public EventDetailResponse createEvent(
             EventRequest request,
             Authentication authentication)
@@ -166,7 +166,7 @@ public class EventService {
         return eventMapper.toDetailResponse(savedEvent);
     }
 
-    @CacheEvict(value = {"publicEvents", "publicEventDetail"}, allEntries = true)
+    //    @CacheEvict(value = {"publicEvents", "publicEventDetail"}, allEntries = true)
     public EventDetailResponse updateEvent(
             EventRequest request,
             String eventId,
@@ -320,7 +320,7 @@ public class EventService {
         return eventMapper.toDetailResponse(event);
     }
 
-    @CacheEvict(value = {"publicEvents", "publicEventDetail"}, allEntries = true)
+    //    @CacheEvict(value = {"publicEvents", "publicEventDetail"}, allEntries = true)
     public EventDetailResponse submitEvent(String eventId, Authentication authentication) {
         UserResponse user = userService.getCurrentUser(authentication);
         log.info("submitEvent called: eventId={}, organizerId={}", eventId, user.getId());
@@ -349,7 +349,7 @@ public class EventService {
         return eventMapper.toDetailResponse(event);
     }
 
-    @CacheEvict(value = {"publicEvents", "publicEventDetail"}, allEntries = true)
+    //    @CacheEvict(value = {"publicEvents", "publicEventDetail"}, allEntries = true)
     public void approveEvent(String id){
         log.info("approveEvent called: eventId={}", id);
         Event event = eventRepository.findById(id)
@@ -371,7 +371,7 @@ public class EventService {
 
     }
 
-    @CacheEvict(value = {"publicEvents", "publicEventDetail"}, allEntries = true)
+  //    @CacheEvict(value = {"publicEvents", "publicEventDetail"}, allEntries = true)
     public void rejectEvent(String id, String reason) {
         log.info("rejectEvent called: eventId={}, reason={}", id, reason);
 
