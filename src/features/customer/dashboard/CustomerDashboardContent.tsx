@@ -116,11 +116,12 @@ function TicketQr({ ticket }: { ticket: CustomerTicketCard }) {
       title="Open QR"
     >
       <Image
-        src={getTicketQrSrc(ticket)}
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        src={(ticket as any).qrCodeUrl || getTicketQrSrc(ticket)}
         alt={`QR for ${ticket.ticketCode}`}
         width={28}
         height={28}
-        className="rounded-[4px]"
+        className="rounded-sm"
       />
     </button>
   );
@@ -179,9 +180,9 @@ export function CustomerDashboardContent({
   const [selectedQrTicket, setSelectedQrTicket] =
     useState<CustomerTicketCard | null>(null);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const [notifications, setNotifications] = useState<DashboardNotificationItem[]>(
-    [],
-  );
+  const [notifications, setNotifications] = useState<
+    DashboardNotificationItem[]
+  >([]);
   const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
   const [notificationsError, setNotificationsError] = useState("");
   const notificationPanelRef = useRef<HTMLDivElement | null>(null);
@@ -347,7 +348,9 @@ export function CustomerDashboardContent({
                     <>
                       <span className="absolute right-2.5 top-2.5 h-2 w-2 animate-pulse rounded-full border-2 border-white bg-blue-500"></span>
                       <span className="absolute -right-1 -top-1 inline-flex min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-black leading-none text-white">
-                        {unreadNotificationCount > 9 ? "9+" : unreadNotificationCount}
+                        {unreadNotificationCount > 9
+                          ? "9+"
+                          : unreadNotificationCount}
                       </span>
                     </>
                   ) : null}
@@ -402,7 +405,9 @@ export function CustomerDashboardContent({
                               <div className="flex items-start gap-3">
                                 <span
                                   className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${
-                                    notification.unread ? "bg-blue-500" : "bg-slate-200"
+                                    notification.unread
+                                      ? "bg-blue-500"
+                                      : "bg-slate-200"
                                   }`}
                                 />
                                 <div className="min-w-0 flex-1">
@@ -432,7 +437,9 @@ export function CustomerDashboardContent({
                                     <Link
                                       href={notification.href}
                                       className="text-xs font-semibold text-blue-600"
-                                      onClick={() => setIsNotificationOpen(false)}
+                                      onClick={() =>
+                                        setIsNotificationOpen(false)
+                                      }
                                     >
                                       Open
                                     </Link>
@@ -603,7 +610,7 @@ export function CustomerDashboardContent({
 
             {/* RECENT ORDERS */}
             <section id="orders" className="mt-12">
-              <div className="rounded-[32px] border border-slate-100 bg-white p-6 shadow-sm">
+              <div className="rounded-4xl border border-slate-100 bg-white p-6 shadow-sm">
                 <h2 className="mb-6 text-xl font-black tracking-tight text-slate-900">
                   Recent Orders
                 </h2>
@@ -695,7 +702,11 @@ export function CustomerDashboardContent({
             <div className="mt-8 rounded-3xl border border-slate-100 bg-slate-50 p-6 text-center">
               <div className="mx-auto flex w-fit rounded-2xl bg-white p-4 shadow-sm border border-slate-100">
                 <Image
-                  src={getTicketQrSrc(selectedQrTicket)}
+                  src={
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    (selectedQrTicket as any).qrCodeUrl ||
+                    getTicketQrSrc(selectedQrTicket)
+                  }
                   alt={`Large QR for ${selectedQrTicket.ticketCode}`}
                   width={240}
                   height={240}

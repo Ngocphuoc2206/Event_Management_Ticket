@@ -12,39 +12,35 @@ type AttendeesQuery = {
   sortDir?: "asc" | "desc";
 };
 
-const ORGANIZER_API_BASE =
-  process.env.NEXT_PUBLIC_ORGANIZER_API_BASE ||
-  "http://100.25.101.12:8080/api/organizer";
-
 export async function getOrganizerAttendees(
   eventId: string,
   params?: AttendeesQuery,
 ) {
   try {
     const response = await axiosClient.get<ApiResult<unknown>>(
-      `${ORGANIZER_API_BASE}/events/${eventId}/attendees`,
+      `/api/organizer/events/${eventId}/attendees`,
       { params },
     );
 
-    ensureApiResultSuccess(response.data, "Khong the tai danh sach attendee.");
+    ensureApiResultSuccess(response.data, "Không thể tải danh sách attendee.");
     return response.data;
   } catch (error) {
     throw new Error(
-      getApiErrorMessage(error, "Khong the tai danh sach attendee."),
+      getApiErrorMessage(error, "Không thể tải danh sách attendee."),
     );
   }
 }
 
-export async function checkInOrganizerAttendee(orderItemId: string) {
+export async function checkInOrganizerAttendee(ticketCode: string) {
   try {
     const response = await axiosClient.post<ApiResult<unknown>>(
-      `${ORGANIZER_API_BASE}/check-in`,
-      { orderItemId },
+      `/api/organizer/check-in`,
+      { ticketCode },
     );
 
-    ensureApiResultSuccess(response.data, "Check-in attendee that bai.");
+    ensureApiResultSuccess(response.data, "Check-in attendee thất bại.");
     return response.data;
   } catch (error) {
-    throw new Error(getApiErrorMessage(error, "Check-in attendee that bai."));
+    throw new Error(getApiErrorMessage(error, "Check-in attendee thất bại."));
   }
 }

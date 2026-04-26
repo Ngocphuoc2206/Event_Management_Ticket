@@ -4,9 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ApiResult } from "@/features/auth/types";
 import { getApiErrorMessage, getApiResultData } from "@/features/auth/utils";
 import { getOrganizerEvents } from "@/features/organizer/events/services/create-event.service";
-import type {
-  OrganizerEvent,
-} from "@/features/organizer/events/types";
+import type { OrganizerEvent } from "@/features/organizer/events/types";
 import {
   checkInOrganizerAttendee,
   getOrganizerAttendees,
@@ -19,6 +17,7 @@ type ToastState = {
 
 type OrganizerAttendee = {
   orderItemId: string;
+  ticketCode: string;
   fullName: string;
   ticketType: string;
   checkedIn: boolean;
@@ -38,6 +37,9 @@ function normalizeAttendeesPayload(payload: unknown): OrganizerAttendee[] {
   return payload.map((item, index) => {
     const obj = item as Record<string, unknown>;
 
+    const ticketCode =
+      (typeof obj.ticketCode === "string" && obj.ticketCode) || "";
+
     const orderItemId =
       (typeof obj.orderItemId === "string" && obj.orderItemId) ||
       (typeof obj.id === "string" && obj.id) ||
@@ -49,13 +51,16 @@ function normalizeAttendeesPayload(payload: unknown): OrganizerAttendee[] {
       "Unknown attendee";
 
     const ticketType =
-      typeof obj.ticketType === "string" ? obj.ticketType : "-";
+      (typeof obj.ticketTypeName === "string" && obj.ticketTypeName) ||
+      (typeof obj.ticketType === "string" && obj.ticketType) ||
+      "-";
 
     const checkedInRaw = obj.checkedIn ?? obj.checkIn ?? obj.status;
     const checkedIn = checkedInRaw === true || checkedInRaw === "true";
 
     return {
       orderItemId,
+      ticketCode,
       fullName,
       ticketType,
       checkedIn,
@@ -118,7 +123,6 @@ export function OrganizerAttendeesContent() {
   }, [selectedEventId]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadEvents();
   }, [loadEvents]);
 
@@ -162,24 +166,20 @@ export function OrganizerAttendeesContent() {
     [attendees],
   );
 
-  const handleCheckIn = async (orderItemId: string) => {
-    if (!orderItemId) {
-      return;
-    }
+  const handleCheckIn = async (ticketCode: string) => {
+    if (!ticketCode) return;
 
-    setIsCheckingInByOrderItemId((prev) => ({ ...prev, [orderItemId]: true }));
+    setIsCheckingInByOrderItemId((prev) => ({ ...prev, [ticketCode]: true }));
+
     try {
-      await checkInOrganizerAttendee(orderItemId);
+      await checkInOrganizerAttendee(ticketCode);
+
       setAttendees((prev) =>
         prev.map((item) =>
-          item.orderItemId === orderItemId
-            ? {
-                ...item,
-                checkedIn: true,
-              }
-            : item,
+          item.ticketCode === ticketCode ? { ...item, checkedIn: true } : item,
         ),
       );
+
       showToast({ tone: "success", message: "Check-in successful." });
     } catch (error) {
       showToast({
@@ -189,7 +189,7 @@ export function OrganizerAttendeesContent() {
     } finally {
       setIsCheckingInByOrderItemId((prev) => ({
         ...prev,
-        [orderItemId]: false,
+        [ticketCode]: false,
       }));
     }
   };
@@ -215,7 +215,7 @@ export function OrganizerAttendeesContent() {
         </div>
       ) : null}
 
-      <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 p-5 sm:p-8">
+      <div className="mx-auto flex w-full max-w-300 flex-col gap-6 p-5 sm:p-8">
         <section className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-zinc-900">
@@ -348,7 +348,7 @@ export function OrganizerAttendeesContent() {
           ) : null}
 
           <div className="overflow-x-auto">
-            <table className="min-w-[920px] w-full">
+            <table className="min-w-230 w-full">
               <thead className="bg-gray-100/70">
                 <tr>
                   <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wide text-gray-700">
@@ -387,7 +387,7 @@ export function OrganizerAttendeesContent() {
                 ) : (
                   attendees.map((attendee) => {
                     const isCheckingIn =
-                      !!isCheckingInByOrderItemId[attendee.orderItemId];
+                      !!isCheckingInByOrderItemId[attendee.ticketCode];
 
                     return (
                       <tr
@@ -420,9 +420,9 @@ export function OrganizerAttendeesContent() {
                               isLoadingAttendees
                             }
                             onClick={() =>
-                              void handleCheckIn(attendee.orderItemId)
+                              void handleCheckIn(attendee.ticketCode)
                             }
-                            className="rounded-xl bg-gradient-to-r from-sky-700 to-violet-700 px-4 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                            className="rounded-xl bg-linear-to-r from-sky-700 to-violet-700 px-4 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             {attendee.checkedIn
                               ? "Done"
