@@ -1,82 +1,102 @@
-import axiosClient from "@/features/httpClient/axiosClient";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { getOrganizerEvents } from "@/features/organizer/events/services/create-event.service";
 import type { OrganizerOrderRow, OrganizerStatCard } from "./types";
 
-interface DashboardStats {
+type DashboardStats = {
   totalEvents: number;
   ticketsSold: number;
   totalRevenue: number;
   upcomingEvents: number;
+};
+
+function formatCurrency(value: number) {
+  if (!value) return "0 VND";
+
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+    maximumFractionDigits: 0,
+  }).format(value);
 }
 
-interface Order {
-  id: string;
-  customerName: string;
-  customerEmail: string;
-  customerAvatar?: string;
-  eventName: string;
-  ticketType: "VIP" | "Standard";
-  amount: string;
-  status: "Completed" | "Pending";
-}
-
-/**
- * Fetch organizer dashboard statistics
- * GET /api/organizer/dashboard/stats
- */
 export async function fetchDashboardStats(): Promise<DashboardStats | null> {
   try {
-    const response = await axiosClient.get<DashboardStats>("/api/organizer/dashboard/stats");
-    return response.data;
+    const pageData = await getOrganizerEvents({
+      page: 0,
+      size: 100,
+    });
+
+    const events = pageData.items || [];
+    const now = new Date();
+
+    const totalEvents = events.length;
+
+    const ticketsSold = events.reduce((sum, event: any) => {
+      const totalTickets = Number(event.totalTickets || 0);
+      const availableTickets = Number(event.availableTickets || 0);
+      return sum + Math.max(totalTickets - availableTickets, 0);
+    }, 0);
+
+    const totalRevenue = events.reduce((sum, event: any) => {
+      const minPrice = Number(event.minPrice || 0);
+      const totalTickets = Number(event.totalTickets || 0);
+      const availableTickets = Number(event.availableTickets || 0);
+      const sold = Math.max(totalTickets - availableTickets, 0);
+
+      return sum + sold * minPrice;
+    }, 0);
+
+    const upcomingEvents = events.filter((event: any) => {
+      const startTime = event.startTime || event.date;
+      if (!startTime) return false;
+
+      return new Date(startTime).getTime() >= now.getTime();
+    }).length;
+
+    return {
+      totalEvents,
+      ticketsSold,
+      totalRevenue,
+      upcomingEvents,
+    };
   } catch (error) {
     console.error("[Dashboard Service] Failed to fetch stats:", error);
     return null;
   }
 }
 
-/**
- * Fetch organizer recent orders
- * GET /api/organizer/dashboard/orders
- */
-export async function fetchRecentOrders(): Promise<Order[] | null> {
-  try {
-    const response = await axiosClient.get<Order[]>("/api/organizer/dashboard/orders");
-    return response.data;
-  } catch (error) {
-    console.error("[Dashboard Service] Failed to fetch orders:", error);
-    return null;
-  }
+export async function fetchRecentOrders(): Promise<OrganizerOrderRow[] | null> {
+  return [];
 }
 
-/**
- * Transform dashboard stats to stat cards format
- */
-export function transformStatsToCards(stats: DashboardStats): OrganizerStatCard[] {
+export function transformStatsToCards(
+  stats: DashboardStats,
+): OrganizerStatCard[] {
   return [
     {
       label: "Total Events",
-      value: stats.totalEvents.toString(),
+      value: String(stats.totalEvents),
       icon: "ticket",
       tone: "sky",
-      badgeText: stats.totalEvents > 20 ? "+2 this month" : "Active",
+      badgeText: "From backend",
     },
     {
       label: "Tickets Sold",
-      value: stats.ticketsSold.toLocaleString(),
+      value: stats.ticketsSold.toLocaleString("vi-VN"),
       icon: "calendar",
       tone: "violet",
-      badgeText: "+12% vs last\nweek",
-      badgeMultiLine: true,
+      badgeText: "Calculated",
     },
     {
       label: "Total Revenue",
-      value: `$${(stats.totalRevenue / 1000).toFixed(0)}k`,
+      value: formatCurrency(stats.totalRevenue),
       icon: "analytics",
       tone: "rose",
-      badgeText: "Record high",
+      badgeText: "Estimated",
     },
     {
       label: "Upcoming Events",
-      value: stats.upcomingEvents.toString(),
+      value: String(stats.upcomingEvents),
       icon: "events",
       tone: "slate",
       showStackedDots: true,
