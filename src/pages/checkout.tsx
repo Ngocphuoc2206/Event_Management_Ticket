@@ -191,7 +191,7 @@ function getTicketQrValue(ticket: CustomerTicketResponse) {
     ticket.qrCodeUrl ||
     ticket.qrImageUrl ||
     ticket.publicUrl ||
-    ticket.imageUrl ||
+    ticket.eventBannerUrl ||
     ticket.qrCode ||
     ""
   );

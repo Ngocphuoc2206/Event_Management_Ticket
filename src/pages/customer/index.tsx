@@ -88,7 +88,8 @@ export default function CustomerDashboardPage() {
               "",
             palette: "from-white via-white to-slate-100",
             artTitle: "EVENTHUB",
-            imageSrc: ticket.imageUrl || "",
+            imageSrc:
+              ticket.eventBannerUrl || "/images/default-event-banner.jpg",
           })),
         );
 

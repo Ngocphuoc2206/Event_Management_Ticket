@@ -14,7 +14,12 @@ import {
 import type { CustomerTicketResponse } from "@/features/customer/tickets.service";
 import { getMyTickets } from "@/features/customer/tickets.service";
 
-type TicketStatus = "Active" | "Selling Fast" | "Live Now" | "Completed" | "Cancelled";
+type TicketStatus =
+  | "Active"
+  | "Selling Fast"
+  | "Live Now"
+  | "Completed"
+  | "Cancelled";
 
 type TicketRecord = {
   id: string;
@@ -61,7 +66,9 @@ function formatTime(value?: string) {
   }).format(date);
 }
 
-function getQrFallbackSrc(ticket: Pick<TicketRecord, "code" | "title" | "date" | "time" | "type">) {
+function getQrFallbackSrc(
+  ticket: Pick<TicketRecord, "code" | "title" | "date" | "time" | "type">,
+) {
   const payload = `EventHub|${ticket.code}|${ticket.title}|${ticket.date}|${ticket.time}|${ticket.type}`;
   return `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(payload)}`;
 }
@@ -81,14 +88,17 @@ function isAbsoluteUrl(value?: string) {
 
 function resolveQrCodeSrc(
   ticket: CustomerTicketResponse,
-  fallbackTicket: Pick<TicketRecord, "code" | "title" | "date" | "time" | "type">,
+  fallbackTicket: Pick<
+    TicketRecord,
+    "code" | "title" | "date" | "time" | "type"
+  >,
 ) {
   const directImageUrlCandidates = [
     ticket.qrPublicUrl,
     ticket.qrCodeUrl,
     ticket.qrImageUrl,
     ticket.publicUrl,
-    ticket.imageUrl,
+    ticket.eventBannerUrl,
   ];
 
   const directImageUrl = directImageUrlCandidates.find((candidate) =>
@@ -108,7 +118,11 @@ function resolveQrCodeSrc(
   return getQrFallbackSrc(fallbackTicket);
 }
 
-function mapTicketStatus(status?: string, used?: boolean, group?: "upcoming" | "past"): TicketStatus {
+function mapTicketStatus(
+  status?: string,
+  used?: boolean,
+  group?: "upcoming" | "past",
+): TicketStatus {
   if (group === "past" || used) return "Completed";
   if (status === "USED" || status === "COMPLETED") return "Completed";
   if (status === "CANCELLED" || status === "EXPIRED") return "Cancelled";
@@ -117,24 +131,46 @@ function mapTicketStatus(status?: string, used?: boolean, group?: "upcoming" | "
   return "Active";
 }
 
-function mapTicket(ticket: CustomerTicketResponse, index: number, group?: "upcoming" | "past"): TicketRecord {
+function mapTicket(
+  ticket: CustomerTicketResponse,
+  index: number,
+  group?: "upcoming" | "past",
+): TicketRecord {
   const code = ticket.ticketCode || ticket.code || ticket.id;
   const title = ticket.eventName || ticket.eventTitle || "Purchased Ticket";
-  const type = ticket.ticketTypeName || ticket.ticketCategory || ticket.ticketTypeId || "Ticket";
-  const dateSource = ticket.eventStartTime || ticket.eventDate || ticket.startTime || ticket.issuedAt || ticket.createdAt;
+  const type =
+    ticket.ticketTypeName ||
+    ticket.ticketCategory ||
+    ticket.ticketTypeId ||
+    "Ticket";
+  const dateSource =
+    ticket.eventStartTime ||
+    ticket.eventDate ||
+    ticket.startTime ||
+    ticket.issuedAt ||
+    ticket.createdAt;
   const mappedTicket = {
     id: ticket.id,
     title,
     category: ticket.ticketCategory || "Event Ticket",
     date: formatDate(dateSource),
-    time: formatTime(ticket.eventStartTime || ticket.startTime || ticket.eventDate),
-    venue: ticket.venueName || ticket.venue || [ticket.address, ticket.city].filter(Boolean).join(", ") || ticket.location || "Venue pending",
+    time: formatTime(
+      ticket.eventStartTime || ticket.startTime || ticket.eventDate,
+    ),
+    venue:
+      ticket.venueName ||
+      ticket.venue ||
+      [ticket.address, ticket.city].filter(Boolean).join(", ") ||
+      ticket.location ||
+      "Venue pending",
     type,
     status: mapTicketStatus(ticket.status, ticket.used, group),
     code,
     qrCodeSrc: "",
     imageSrc: index % 2 === 0 ? "/images/upc1.png" : "/images/upc2.png",
-    detailHref: ticket.eventId ? `/event/${ticket.eventId}` : "/customer/events",
+    detailHref: ticket.eventId
+      ? `/event/${ticket.eventId}`
+      : "/customer/events",
   };
 
   return {
@@ -158,8 +194,12 @@ function TicketInfoRow({
         <CustomerDashboardIcon type={icon} className="h-4 w-4" />
       </div>
       <div>
-        <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">{label}</div>
-        <div className="mt-1 text-sm font-semibold leading-5 text-slate-700">{value}</div>
+        <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">
+          {label}
+        </div>
+        <div className="mt-1 text-sm font-semibold leading-5 text-slate-700">
+          {value}
+        </div>
       </div>
     </div>
   );
@@ -197,8 +237,12 @@ function TicketCard({
       <div className="p-4 sm:p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-violet-600">{ticket.category}</div>
-            <h2 className="mt-2 text-[1.5rem] font-bold leading-[1.1] tracking-tight text-slate-900 sm:text-[1.7rem]">{ticket.title}</h2>
+            <div className="text-[10px] font-bold uppercase tracking-[0.28em] text-violet-600">
+              {ticket.category}
+            </div>
+            <h2 className="mt-2 text-[1.5rem] font-bold leading-[1.1] tracking-tight text-slate-900 sm:text-[1.7rem]">
+              {ticket.title}
+            </h2>
           </div>
           <button
             type="button"
@@ -207,7 +251,13 @@ function TicketCard({
             aria-label={`Open QR code for ${ticket.title}`}
             title="Open QR"
           >
-            <img src={ticket.qrCodeSrc} alt={`QR for ${ticket.code}`} width={56} height={56} className="rounded-[10px]" />
+            <img
+              src={ticket.qrCodeSrc}
+              alt={`QR for ${ticket.code}`}
+              width={56}
+              height={56}
+              className="rounded-[10px]"
+            />
           </button>
         </div>
 
@@ -219,8 +269,12 @@ function TicketCard({
         </div>
 
         <div className="mt-4 rounded-2xl bg-slate-50 px-4 py-3">
-          <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">Ticket Code</div>
-          <div className="mt-1 text-sm font-semibold tracking-[0.24em] text-slate-700">{ticket.code}</div>
+          <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">
+            Ticket Code
+          </div>
+          <div className="mt-1 text-sm font-semibold tracking-[0.24em] text-slate-700">
+            {ticket.code}
+          </div>
         </div>
 
         <div className="mt-5 flex items-center gap-3">
@@ -237,9 +291,17 @@ function TicketCard({
             aria-label={`View details for ${ticket.title}`}
             title="View details"
           >
-            <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="1.8">
+            <svg
+              viewBox="0 0 24 24"
+              className="h-4 w-4 fill-none stroke-current"
+              strokeWidth="1.8"
+            >
               <path d="M7 12h10" strokeLinecap="round" />
-              <path d="m13.5 8.5 3.5 3.5-3.5 3.5" strokeLinecap="round" strokeLinejoin="round" />
+              <path
+                d="m13.5 8.5 3.5 3.5-3.5 3.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
               <path d="M7 6.5h5" strokeLinecap="round" />
               <path d="M7 17.5h5" strokeLinecap="round" />
             </svg>
@@ -255,7 +317,9 @@ export default function CustomerMyTicketsPage() {
   const router = useRouter();
   const [upcomingTickets, setUpcomingTickets] = useState<TicketRecord[]>([]);
   const [pastTickets, setPastTickets] = useState<TicketRecord[]>([]);
-  const [selectedQrTicket, setSelectedQrTicket] = useState<TicketRecord | null>(null);
+  const [selectedQrTicket, setSelectedQrTicket] = useState<TicketRecord | null>(
+    null,
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const purchaseSuccess = router.query.purchase === "success";
@@ -278,8 +342,16 @@ export default function CustomerMyTicketsPage() {
         ]);
 
         if (isMounted) {
-          setUpcomingTickets(upcomingResponse.map((ticket, index) => mapTicket(ticket, index, "upcoming")));
-          setPastTickets(pastResponse.map((ticket, index) => mapTicket(ticket, index, "past")));
+          setUpcomingTickets(
+            upcomingResponse.map((ticket, index) =>
+              mapTicket(ticket, index, "upcoming"),
+            ),
+          );
+          setPastTickets(
+            pastResponse.map((ticket, index) =>
+              mapTicket(ticket, index, "past"),
+            ),
+          );
         }
       } catch {
         if (isMounted) {
@@ -337,72 +409,93 @@ export default function CustomerMyTicketsPage() {
 
           <section className="flex-1 px-5 py-6 sm:px-8 lg:px-10 xl:px-12">
             <div className="mx-auto w-full max-w-[1600px]">
-            <div className="text-xs font-medium text-slate-500">Dashboard &nbsp;&rsaquo;&nbsp; My Tickets</div>
-            <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <div className="text-xs font-bold uppercase tracking-[0.34em] text-blue-600">Customer Area</div>
-                <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">My Tickets</h1>
-                <p className="mt-3 max-w-2xl text-sm text-slate-500 sm:text-base">
-                  View your active passes, event details, and saved QR codes in one place.
-                </p>
+              <div className="text-xs font-medium text-slate-500">
+                Dashboard &nbsp;&rsaquo;&nbsp; My Tickets
               </div>
-            </header>
-
-            {purchaseSuccess ? (
-              <div className="mt-6 rounded-[26px] border border-emerald-100 bg-emerald-50 px-5 py-4 text-sm font-semibold text-emerald-700 shadow-[0_18px_44px_rgba(148,163,184,0.12)]">
-                Payment success{purchasedEventName ? ` for ${purchasedEventName}` : ""}.
-                {purchasedOrderId
-                  ? ` Order ${purchasedOrderId} was completed and your QR ticket should appear below.`
-                  : ""}
-              </div>
-            ) : null}
-
-            <section className="mt-10">
-              <div className="flex items-center justify-between gap-4">
-                <h2 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">Upcoming Tickets</h2>
-                <span className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-[0_10px_24px_rgba(148,163,184,0.12)]">
-                  {upcomingTickets.length} active
-                </span>
-              </div>
-              {isLoading ? (
-                <div className="mt-6 rounded-[26px] bg-white px-6 py-12 text-center text-sm font-bold uppercase tracking-[0.28em] text-slate-400 shadow-[0_18px_44px_rgba(148,163,184,0.16)]">
-                  Loading tickets...
+              <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <div className="text-xs font-bold uppercase tracking-[0.34em] text-blue-600">
+                    Customer Area
+                  </div>
+                  <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
+                    My Tickets
+                  </h1>
+                  <p className="mt-3 max-w-2xl text-sm text-slate-500 sm:text-base">
+                    View your active passes, event details, and saved QR codes
+                    in one place.
+                  </p>
                 </div>
-              ) : (
-                <>
-                  {errorMessage ? (
-                    <div className="mt-6 rounded-2xl border border-rose-100 bg-rose-50 px-5 py-4 text-sm font-bold text-rose-600">
-                      {errorMessage}
-                    </div>
-                  ) : null}
-                  {upcomingTickets.length > 0 ? (
-                    <div className="mt-6 grid gap-5 xl:grid-cols-2">
-                      {upcomingTickets.map((ticket) => (
-                        <TicketCard key={ticket.id} ticket={ticket} onOpenQr={setSelectedQrTicket} />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="mt-6 rounded-[26px] bg-white px-6 py-12 text-center text-sm font-semibold text-slate-500 shadow-[0_18px_44px_rgba(148,163,184,0.16)]">
-                      No active tickets yet. Complete payment to generate your ticket QR code.
-                    </div>
-                  )}
-                </>
-              )}
-            </section>
+              </header>
 
-            <section className="mt-12">
-              <div className="flex items-center justify-between gap-4">
-                <h2 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">Past Tickets</h2>
-                <span className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-[0_10px_24px_rgba(148,163,184,0.12)]">
-                  {pastTickets.length} archived
-                </span>
-              </div>
-              <div className="mt-6 grid gap-5 xl:grid-cols-2">
-                {pastTickets.map((ticket) => (
-                  <TicketCard key={ticket.id} ticket={ticket} onOpenQr={setSelectedQrTicket} />
-                ))}
-              </div>
-            </section>
+              {purchaseSuccess ? (
+                <div className="mt-6 rounded-[26px] border border-emerald-100 bg-emerald-50 px-5 py-4 text-sm font-semibold text-emerald-700 shadow-[0_18px_44px_rgba(148,163,184,0.12)]">
+                  Payment success
+                  {purchasedEventName ? ` for ${purchasedEventName}` : ""}.
+                  {purchasedOrderId
+                    ? ` Order ${purchasedOrderId} was completed and your QR ticket should appear below.`
+                    : ""}
+                </div>
+              ) : null}
+
+              <section className="mt-10">
+                <div className="flex items-center justify-between gap-4">
+                  <h2 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+                    Upcoming Tickets
+                  </h2>
+                  <span className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-[0_10px_24px_rgba(148,163,184,0.12)]">
+                    {upcomingTickets.length} active
+                  </span>
+                </div>
+                {isLoading ? (
+                  <div className="mt-6 rounded-[26px] bg-white px-6 py-12 text-center text-sm font-bold uppercase tracking-[0.28em] text-slate-400 shadow-[0_18px_44px_rgba(148,163,184,0.16)]">
+                    Loading tickets...
+                  </div>
+                ) : (
+                  <>
+                    {errorMessage ? (
+                      <div className="mt-6 rounded-2xl border border-rose-100 bg-rose-50 px-5 py-4 text-sm font-bold text-rose-600">
+                        {errorMessage}
+                      </div>
+                    ) : null}
+                    {upcomingTickets.length > 0 ? (
+                      <div className="mt-6 grid gap-5 xl:grid-cols-2">
+                        {upcomingTickets.map((ticket) => (
+                          <TicketCard
+                            key={ticket.id}
+                            ticket={ticket}
+                            onOpenQr={setSelectedQrTicket}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="mt-6 rounded-[26px] bg-white px-6 py-12 text-center text-sm font-semibold text-slate-500 shadow-[0_18px_44px_rgba(148,163,184,0.16)]">
+                        No active tickets yet. Complete payment to generate your
+                        ticket QR code.
+                      </div>
+                    )}
+                  </>
+                )}
+              </section>
+
+              <section className="mt-12">
+                <div className="flex items-center justify-between gap-4">
+                  <h2 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+                    Past Tickets
+                  </h2>
+                  <span className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-[0_10px_24px_rgba(148,163,184,0.12)]">
+                    {pastTickets.length} archived
+                  </span>
+                </div>
+                <div className="mt-6 grid gap-5 xl:grid-cols-2">
+                  {pastTickets.map((ticket) => (
+                    <TicketCard
+                      key={ticket.id}
+                      ticket={ticket}
+                      onOpenQr={setSelectedQrTicket}
+                    />
+                  ))}
+                </div>
+              </section>
             </div>
           </section>
         </div>
@@ -435,7 +528,11 @@ export default function CustomerMyTicketsPage() {
                 className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-50 text-slate-400 transition hover:bg-slate-100 hover:text-slate-900"
                 aria-label="Close QR"
               >
-                <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current" strokeWidth="3">
+                <svg
+                  viewBox="0 0 24 24"
+                  className="h-4 w-4 fill-none stroke-current"
+                  strokeWidth="3"
+                >
                   <path d="M6 6l12 12M18 6 6 18" strokeLinecap="round" />
                 </svg>
               </button>
