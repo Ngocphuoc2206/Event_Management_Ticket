@@ -11,6 +11,8 @@ import {
   getOrganizerAttendees,
 } from "@/features/organizer/attendees/services/attendees.service";
 
+import { Html5QrcodeScanner } from "html5-qrcode";
+
 type ToastState = {
   tone: "success" | "error";
   message: string;
@@ -65,10 +67,26 @@ function normalizeAttendeesPayload(payload: unknown): OrganizerAttendee[] {
   });
 }
 
+function extractTicketCodeFromQr(value: string) {
+  const text = value.trim();
+
+  if (text.startsWith("ticket_code:")) {
+    return text.replace("ticket_code:", "").trim();
+  }
+
+  if (text.startsWith("TIX-")) {
+    return text;
+  }
+
+  return "";
+}
+
 export function OrganizerAttendeesContent() {
   const [events, setEvents] = useState<OrganizerEvent[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<string>("");
   const [attendees, setAttendees] = useState<OrganizerAttendee[]>([]);
+  //Scann
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
 
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -232,6 +250,14 @@ export function OrganizerAttendeesContent() {
             className="rounded-2xl bg-gray-200 px-5 py-2.5 text-sm font-semibold text-zinc-900 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isLoadingAttendees ? "Refreshing..." : "Refresh"}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsScannerOpen(true)}
+            className="rounded-2xl bg-indigo-700 px-5 py-2.5 text-sm font-semibold text-white"
+          >
+            Scan QR
           </button>
         </section>
 
@@ -437,8 +463,81 @@ export function OrganizerAttendeesContent() {
               </tbody>
             </table>
           </div>
+
+          {isScannerOpen ? (
+            <QrScannerModal
+              onClose={() => setIsScannerOpen(false)}
+              onScanSuccess={(ticketCode) => {
+                setIsScannerOpen(false);
+                void handleCheckIn(ticketCode);
+              }}
+            />
+          ) : null}
         </section>
       </div>
     </section>
+  );
+}
+
+function QrScannerModal({
+  onClose,
+  onScanSuccess,
+}: {
+  onClose: () => void;
+  onScanSuccess: (ticketCode: string) => void;
+}) {
+  useEffect(() => {
+    const scanner = new Html5QrcodeScanner(
+      "organizer-qr-reader",
+      {
+        fps: 10,
+        qrbox: { width: 250, height: 250 },
+      },
+      false,
+    );
+
+    scanner.render(
+      (decodedText) => {
+        const ticketCode = extractTicketCodeFromQr(decodedText);
+
+        if (!ticketCode) {
+          return;
+        }
+
+        void scanner.clear().then(() => {
+          onScanSuccess(ticketCode);
+        });
+      },
+      () => {},
+    );
+
+    return () => {
+      void scanner.clear().catch(() => {});
+    };
+  }, [onScanSuccess]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+      <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-zinc-900">Scan ticket QR</h2>
+            <p className="text-sm text-gray-500">
+              Point the camera at the customer ticket QR.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-xl bg-gray-100 px-4 py-2 text-sm font-semibold"
+          >
+            Close
+          </button>
+        </div>
+
+        <div id="organizer-qr-reader" />
+      </div>
+    </div>
   );
 }
