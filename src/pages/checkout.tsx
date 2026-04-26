@@ -9,21 +9,14 @@ import {
   getMyTickets,
   type CustomerTicketResponse,
 } from "@/features/customer/tickets.service";
-import {
-  createOrder,
-} from "@/features/customer/orders.service";
+import { createOrder } from "@/features/customer/orders.service";
 import {
   initPayment,
   mockPaymentWebhook,
 } from "@/features/customer/payments.service";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import {
-  useEffect,
-  useMemo,
-  useState,
-  type ChangeEvent,
-} from "react";
+import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 import {
   ArrowRight,
   Banknote,
@@ -100,9 +93,11 @@ function getOrderErrorMessage(error: unknown) {
     return error.message;
   }
 
-  const responseData = (error as {
-    response?: { data?: { code?: number; message?: string } };
-  })?.response?.data;
+  const responseData = (
+    error as {
+      response?: { data?: { code?: number; message?: string } };
+    }
+  )?.response?.data;
 
   if (responseData?.message) {
     return responseData.message;
@@ -309,8 +304,7 @@ export default function CheckoutPage() {
   const previewTotal = subtotal + serviceFee + taxAmount;
 
   const handleFieldChange =
-    (field: keyof BuyerFormState) =>
-    (event: ChangeEvent<HTMLInputElement>) => {
+    (field: keyof BuyerFormState) => (event: ChangeEvent<HTMLInputElement>) => {
       const value =
         field === "saveCard" ? event.target.checked : event.target.value;
 
@@ -329,17 +323,20 @@ export default function CheckoutPage() {
     setPromoMessage("Promo validation will be added with backend support.");
   };
 
-  const navigateToResult = async (status: "success" | "failed", extras?: {
-    amount?: number;
-    orderId?: string;
-    paymentId?: string;
-    provider?: string;
-    paymentStatus?: string;
-    qrCode?: string;
-    ticketId?: string;
-    ticketCode?: string;
-    message?: string;
-  }) => {
+  const navigateToResult = async (
+    status: "success" | "failed",
+    extras?: {
+      amount?: number;
+      orderId?: string;
+      paymentId?: string;
+      provider?: string;
+      paymentStatus?: string;
+      qrCode?: string;
+      ticketId?: string;
+      ticketCode?: string;
+      message?: string;
+    },
+  ) => {
     await router.push({
       pathname: "/checkout/result",
       query: {
@@ -405,7 +402,7 @@ export default function CheckoutPage() {
 
       const payment = await initPayment({
         orderId: order.id,
-        method: "MOCK",
+        paymentMethod: "MOCK",
       });
 
       if (!payment?.paymentId || !payment.orderId) {
@@ -440,11 +437,10 @@ export default function CheckoutPage() {
         qrCode: issuedTicket ? getTicketQrValue(issuedTicket) : "",
         ticketId: issuedTicket?.id,
         ticketCode: issuedTicket?.ticketCode || issuedTicket?.code,
-        message:
-          issuedTicket
-            ? webhookResponse?.message ||
-              "Payment confirmed and your QR ticket is ready."
-            : "Payment confirmed, but the ticket QR is still being generated.",
+        message: issuedTicket
+          ? webhookResponse?.message ||
+            "Payment confirmed and your QR ticket is ready."
+          : "Payment confirmed, but the ticket QR is still being generated.",
       });
     } catch (error) {
       const message = getOrderErrorMessage(error);

@@ -13,7 +13,7 @@ export type PaymentMethod = "MOCK";
 
 export type InitPaymentPayload = {
   orderId: string;
-  method: PaymentMethod;
+  paymentMethod: PaymentMethod;
 };
 
 export type PaymentResponse = {
@@ -102,23 +102,24 @@ function normalizePaymentResponse(payload: unknown): PaymentResponse | null {
     provider: getStringValue(payload, ["provider"]) || "MOCK_GATEWAY",
     status: getStringValue(payload, ["status"]) || "PENDING",
     paymentUrl: getStringValue(payload, ["paymentUrl", "paymentURL"]),
-    providerTransactionId: getStringValue(payload, [
-      "providerTransactionId",
-    ]),
+    providerTransactionId: getStringValue(payload, ["providerTransactionId"]),
     clientSecret: getStringValue(payload, ["clientSecret"]),
     createdAt: getStringValue(payload, ["createdAt"]),
     expiredAt: getStringValue(payload, ["expiredAt", "expiredTime"]),
   };
 }
 
-function normalizeWebhookResponse(payload: unknown): PaymentWebhookMockResponse | null {
+function normalizeWebhookResponse(
+  payload: unknown,
+): PaymentWebhookMockResponse | null {
   if (!isRecord(payload)) {
     return null;
   }
 
   return {
     success: Boolean(payload.success),
-    message: getStringValue(payload, ["message"]) || "Webhook processed successfully",
+    message:
+      getStringValue(payload, ["message"]) || "Webhook processed successfully",
   };
 }
 
@@ -130,7 +131,9 @@ export async function initPayment(payload: InitPaymentPayload) {
     );
 
     ensureApiResultSuccess(response.data, "Could not initialize payment.");
-    return normalizePaymentResponse(getApiResultData<PaymentResponse>(response.data));
+    return normalizePaymentResponse(
+      getApiResultData<PaymentResponse>(response.data),
+    );
   } catch (error) {
     throw new Error(getApiErrorMessage(error, "Could not initialize payment."));
   }
@@ -138,17 +141,18 @@ export async function initPayment(payload: InitPaymentPayload) {
 
 export async function mockPaymentWebhook(payload: PaymentWebhookMockPayload) {
   try {
-    const response = await axiosClient.post<ApiResult<PaymentWebhookMockResponse>>(
-      `${PAYMENTS_ENDPOINT}/webhook/mock`,
-      payload,
-      {
-        headers: {
-          "X-Skip-Auth": "true",
-        },
+    const response = await axiosClient.post<
+      ApiResult<PaymentWebhookMockResponse>
+    >(`${PAYMENTS_ENDPOINT}/webhook/mock`, payload, {
+      headers: {
+        "X-Skip-Auth": "true",
       },
-    );
+    });
 
-    ensureApiResultSuccess(response.data, "Could not process payment callback.");
+    ensureApiResultSuccess(
+      response.data,
+      "Could not process payment callback.",
+    );
     return normalizeWebhookResponse(
       getApiResultData<PaymentWebhookMockResponse>(response.data),
     );
