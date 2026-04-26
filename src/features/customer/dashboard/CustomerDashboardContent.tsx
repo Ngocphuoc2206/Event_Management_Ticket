@@ -122,6 +122,7 @@ function TicketQr({ ticket }: { ticket: CustomerTicketCard }) {
         width={32}
         height={32}
         className="rounded-sm object-contain"
+        unoptimized
       />
     </button>
   );
@@ -546,7 +547,7 @@ export function CustomerDashboardContent({
               <div className="grid gap-6 xl:grid-cols-2">
                 {upcomingTickets.map((ticket) => (
                   <article
-                    key={ticket.title}
+                    key={ticket.ticketCode}
                     className="group overflow-hidden rounded-[28px] border border-slate-100 bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl sm:grid sm:grid-cols-[0.92fr_1.18fr]"
                   >
                     <TicketArtwork
@@ -710,7 +711,8 @@ export function CustomerDashboardContent({
                   alt={`Large QR for ${selectedQrTicket.ticketCode}`}
                   width={240}
                   height={240}
-                  className="rounded-xl"
+                  className="rounded-xl object-contain"
+                  unoptimized
                 />
               </div>
               <div className="mt-6 text-[10px] font-black uppercase tracking-widest text-slate-400">
