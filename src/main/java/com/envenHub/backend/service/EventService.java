@@ -19,6 +19,8 @@ import com.envenHub.backend.repository.OrderItemRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -51,6 +53,11 @@ public class EventService {
     private static final Set<String> ALLOWED_SORT_FIELDS_ATTENDEES =
             Set.of("fullName", "ticketType","check-in");
 
+    @Cacheable(
+            value = "publicEvents",
+            key = "'search=' + #search + ':category=' + #category + ':city=' + #city + ':page=' + #page " +
+                    "+ ':size=' + #size + ':sortBy=' + #sortBy + ':sortDir=' + #sortDir"
+    )
     public PagedResponse<EventListResponse> getPublicEvents(
             String search,
             String category,
@@ -97,6 +104,7 @@ public class EventService {
                 .build();
     }
 
+    @Cacheable(value = "publicEventDetail", key = "#id")
     public EventDetailResponse getPublicEventDetail(String id) {
         log.info("getPublicEventDetail called: eventId={}", id);
         Event event = eventRepository.findOne(
@@ -135,6 +143,7 @@ public class EventService {
                 .build();
     }
 
+    @CacheEvict(value = {"publicEvents", "publicEventDetail"}, allEntries = true)
     public EventDetailResponse createEvent(
             EventRequest request,
             Authentication authentication)
@@ -157,6 +166,7 @@ public class EventService {
         return eventMapper.toDetailResponse(savedEvent);
     }
 
+    @CacheEvict(value = {"publicEvents", "publicEventDetail"}, allEntries = true)
     public EventDetailResponse updateEvent(
             EventRequest request,
             String eventId,
@@ -310,6 +320,7 @@ public class EventService {
         return eventMapper.toDetailResponse(event);
     }
 
+    @CacheEvict(value = {"publicEvents", "publicEventDetail"}, allEntries = true)
     public EventDetailResponse submitEvent(String eventId, Authentication authentication) {
         UserResponse user = userService.getCurrentUser(authentication);
         log.info("submitEvent called: eventId={}, organizerId={}", eventId, user.getId());
@@ -338,6 +349,7 @@ public class EventService {
         return eventMapper.toDetailResponse(event);
     }
 
+    @CacheEvict(value = {"publicEvents", "publicEventDetail"}, allEntries = true)
     public void approveEvent(String id){
         log.info("approveEvent called: eventId={}", id);
         Event event = eventRepository.findById(id)
@@ -359,6 +371,7 @@ public class EventService {
 
     }
 
+    @CacheEvict(value = {"publicEvents", "publicEventDetail"}, allEntries = true)
     public void rejectEvent(String id, String reason) {
         log.info("rejectEvent called: eventId={}, reason={}", id, reason);
 
@@ -418,7 +431,7 @@ public class EventService {
             throw new AppException(ErrorCode.FORBIDDEN_EVENT_ACCESS);
         }
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), "issuedAt");
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page, size, sort);
 
         Page<IssuedTicket> result = issuedTicketRepository.findAttendeesByEvent(
                 eventId,
