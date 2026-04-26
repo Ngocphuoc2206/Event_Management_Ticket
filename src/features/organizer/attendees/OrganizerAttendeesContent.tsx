@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { AlertCircle, CheckCircle2, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -16,7 +17,7 @@ type ToastState = {
 };
 
 type OrganizerAttendee = {
-  orderItemId: string;
+  ticketId: string;
   ticketCode: string;
   fullName: string;
   ticketType: string;
@@ -30,40 +31,36 @@ type StatusFilter = "ALL" | "true" | "false";
 const DEFAULT_PAGE_SIZE = 50;
 
 function normalizeAttendeesPayload(payload: unknown): OrganizerAttendee[] {
-  if (!Array.isArray(payload)) {
-    return [];
-  }
+  const items = Array.isArray(payload)
+    ? payload
+    : payload &&
+        typeof payload === "object" &&
+        Array.isArray((payload as any).items)
+      ? (payload as any).items
+      : [];
 
-  return payload.map((item, index) => {
+  return items.map((item: any, index: any) => {
     const obj = item as Record<string, unknown>;
 
-    const ticketCode =
-      (typeof obj.ticketCode === "string" && obj.ticketCode) || "";
-
-    const orderItemId =
-      (typeof obj.orderItemId === "string" && obj.orderItemId) ||
-      (typeof obj.id === "string" && obj.id) ||
-      `order-item-${index + 1}`;
-
-    const fullName =
-      (typeof obj.fullName === "string" && obj.fullName) ||
-      (typeof obj.username === "string" && obj.username) ||
-      "Unknown attendee";
-
-    const ticketType =
-      (typeof obj.ticketTypeName === "string" && obj.ticketTypeName) ||
-      (typeof obj.ticketType === "string" && obj.ticketType) ||
-      "-";
-
-    const checkedInRaw = obj.checkedIn ?? obj.checkIn ?? obj.status;
-    const checkedIn = checkedInRaw === true || checkedInRaw === "true";
-
     return {
-      orderItemId,
-      ticketCode,
-      fullName,
-      ticketType,
-      checkedIn,
+      ticketId:
+        (typeof obj.ticketId === "string" && obj.ticketId) ||
+        (typeof obj.id === "string" && obj.id) ||
+        `ticket-${index + 1}`,
+
+      ticketCode: (typeof obj.ticketCode === "string" && obj.ticketCode) || "",
+
+      fullName:
+        (typeof obj.fullName === "string" && obj.fullName) ||
+        (typeof obj.username === "string" && obj.username) ||
+        "Unknown attendee",
+
+      ticketType:
+        (typeof obj.ticketTypeName === "string" && obj.ticketTypeName) ||
+        (typeof obj.ticketType === "string" && obj.ticketType) ||
+        "-",
+
+      checkedIn: obj.checkedIn === true || obj.checkedIn === "true",
     };
   });
 }
@@ -157,7 +154,6 @@ export function OrganizerAttendeesContent() {
   }, [selectedEventId, debouncedSearch, statusFilter, sortBy, sortDir]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadAttendees();
   }, [loadAttendees]);
 
@@ -180,7 +176,10 @@ export function OrganizerAttendeesContent() {
         ),
       );
 
-      showToast({ tone: "success", message: "Check-in successful." });
+      showToast({
+        tone: "success",
+        message: "Check-in successful.",
+      });
     } catch (error) {
       showToast({
         tone: "error",
@@ -391,7 +390,7 @@ export function OrganizerAttendeesContent() {
 
                     return (
                       <tr
-                        key={attendee.orderItemId}
+                        key={attendee.ticketId || attendee.ticketCode}
                         className="border-t border-gray-100"
                       >
                         <td className="px-6 py-4 text-sm font-semibold text-zinc-900">
