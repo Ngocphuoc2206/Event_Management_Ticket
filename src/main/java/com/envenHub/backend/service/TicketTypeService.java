@@ -61,6 +61,33 @@ public class TicketTypeService {
         return ticketMapper.toTicketTypeResponse(ticketType);
     }
 
+    public PagedResponse<TicketTypeResponse> getPublicTicketTypesByEvent(
+            String eventId,
+            int page,
+            int size
+    ) {
+        Sort sort = Sort.by(Sort.Direction.ASC, "saleStart");
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Specification<TicketType> specification = Specification
+                .where(TicketTypeSpecification.belongsToEvent(eventId))
+                .and(TicketTypeSpecification.hasStatus("ACTIVE"));
+
+        Page<TicketType> result = ticketTypeRepository.findAll(specification, pageable);
+
+        List<TicketTypeResponse> tickets =
+                ticketMapper.toTicketTypeResponseList(result.getContent());
+
+        return PagedResponse.<TicketTypeResponse>builder()
+                .items(tickets)
+                .page(result.getNumber())
+                .size(result.getSize())
+                .totalItems(result.getTotalElements())
+                .totalPages(result.getTotalPages())
+                .hasNext(result.hasNext())
+                .build();
+    }
+
     public TicketTypeResponse updateTicketType(
             TicketTypeRequest request,
             String ticketId,
